@@ -30,7 +30,7 @@
     "memoizee": "^0.4.14",
     "rimraf": "^3.0.0",
     "util": "^0.12.1",
-    "vscode-languageserver": "^5.2.1",
+    "vscode-languageserver": "^6.0.0",
     "vscode-uri": "^2.1.1",
     "walk-sync": "^2.0.2"
   },
