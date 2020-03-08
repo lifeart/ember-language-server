@@ -2,7 +2,7 @@ import { Diagnostic, Files, TextDocument } from 'vscode-languageserver';
 import { getExtension } from './utils/file-extension';
 import { toDiagnostic } from './utils/diagnostic';
 import { searchAndExtractHbs } from 'extract-tagged-template-literals';
-import { log } from './utils/logger';
+import { log, logError } from './utils/logger';
 
 import * as path from 'path';
 import * as fs from 'fs';
@@ -23,6 +23,13 @@ export interface TemplateLinterError {
 
 const extensionsToLint: string[] = ['.hbs', '.js', '.ts'];
 
+function setCwd(cwd: string) {
+  try {
+    process.chdir(cwd);
+  } catch (err) {
+    logError(`chdir: ${err}`);
+  }
+}
 export default class TemplateLinter {
   private _linterCache = new Map<Project, any>();
 
@@ -35,54 +42,41 @@ export default class TemplateLinter {
       return;
     }
 
-    const config = this.getLinterConfig(textDocument.uri);
-
-    if (!config) {
+    const project = this.server.projectRoots.projectForUri(textDocument.uri);
+    if (!project) {
       return;
     }
 
-    const TemplateLinter = await this.getLinter(textDocument.uri);
-
+    const TemplateLinter = await this.getLinter(project);
+    const cwd = process.cwd();
+    setCwd(project.root);
     let linter = null;
     try {
-      linter = new TemplateLinter(config);
+      linter = new TemplateLinter();
     } catch (e) {
+      setCwd(cwd);
       return;
     }
 
     const documentContent = textDocument.getText();
     const source = ext === '.hbs' ? documentContent : searchAndExtractHbs(documentContent);
-
+    if (!source.trim().length) {
+      setCwd(cwd);
+      return;
+    }
     const errors = linter.verify({
       source,
       moduleId: textDocument.uri
     });
+
+    setCwd(cwd);
 
     const diagnostics: Diagnostic[] = errors.map((error: TemplateLinterError) => toDiagnostic(source, error));
 
     return diagnostics;
   }
 
-  private getLinterConfig(uri: string): { configPath: string } | undefined {
-    const project = this.server.projectRoots.projectForUri(uri);
-    if (!project) {
-      return;
-    }
-
-    const configPath = path.join(project.root, '.template-lintrc.js');
-    if (!fs.existsSync(configPath)) {
-      return;
-    }
-
-    return { configPath };
-  }
-
-  private async getLinter(uri: string) {
-    const project = this.server.projectRoots.projectForUri(uri);
-    if (!project) {
-      return;
-    }
-
+  private async getLinter(project: Project) {
     if (this._linterCache.has(project)) {
       return this._linterCache.get(project);
     }
