@@ -2,7 +2,7 @@ import { Diagnostic, Files, TextDocument } from 'vscode-languageserver';
 import { getExtension } from './utils/file-extension';
 import { toDiagnostic } from './utils/diagnostic';
 import { searchAndExtractHbs } from 'extract-tagged-template-literals';
-import { log, logError } from './utils/logger';
+import { log, logError, logInfo } from './utils/logger';
 import * as findUp from 'find-up';
 import * as path from 'path';
 import * as fs from 'fs';
@@ -55,11 +55,13 @@ export default class TemplateLinter {
       return;
     }
 
+    logInfo(`cwd: ${cwd}`);
     const TemplateLinter = await this.getLinter(project);
 
     let linter = null;
     try {
       setCwd(project.root);
+      logInfo(`new cwd: ${process.cwd()}`);
       linter = new TemplateLinter();
     } catch (e) {
       setCwd(cwd);
