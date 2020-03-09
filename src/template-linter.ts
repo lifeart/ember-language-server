@@ -3,7 +3,7 @@ import { getExtension } from './utils/file-extension';
 import { toDiagnostic } from './utils/diagnostic';
 import { searchAndExtractHbs } from 'extract-tagged-template-literals';
 import { uriToFilePath } from 'vscode-languageserver/lib/files';
-import { log, logError, logInfo } from './utils/logger';
+import { log, logError } from './utils/logger';
 import * as findUp from 'find-up';
 import * as path from 'path';
 import * as fs from 'fs';
@@ -28,7 +28,7 @@ function setCwd(cwd: string) {
   try {
     process.chdir(cwd);
   } catch (err) {
-    logError(`chdir: ${err}`);
+    logError(`chdir: ${err.toString()}`);
   }
 }
 export default class TemplateLinter {
@@ -56,13 +56,11 @@ export default class TemplateLinter {
       return;
     }
 
-    logInfo(`cwd: ${cwd}`);
     const TemplateLinter = await this.getLinter(project);
 
     let linter = null;
     try {
       setCwd(project.root);
-      logInfo(`new cwd: ${process.cwd()}`);
       linter = new TemplateLinter();
     } catch (e) {
       setCwd(cwd);
@@ -71,7 +69,7 @@ export default class TemplateLinter {
 
     const errors = linter.verify({
       source,
-      moduleId: textDocument.uri,
+      moduleId: uriToFilePath(textDocument.uri),
       filePath: uriToFilePath(textDocument.uri)
     });
 
