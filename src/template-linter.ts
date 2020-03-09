@@ -3,7 +3,7 @@ import { getExtension } from './utils/file-extension';
 import { toDiagnostic } from './utils/diagnostic';
 import { searchAndExtractHbs } from 'extract-tagged-template-literals';
 import { log, logError } from './utils/logger';
-
+import * as findUp from 'find-up';
 import * as path from 'path';
 import * as fs from 'fs';
 
@@ -77,12 +77,19 @@ export default class TemplateLinter {
 
     return diagnostics;
   }
+  private templateLintConfig(cwd: string) {
+    return findUp.sync('.template-lintrc.js', { cwd });
+  }
   private async getLinter(project: Project) {
     if (this._linterCache.has(project)) {
       return this._linterCache.get(project);
     }
 
     try {
+      // don't resolve template-lint (due to resolution error) if no linter config found;
+      if (!this.templateLintConfig(project.root)) {
+        return;
+      }
       let nodePath = Files.resolveGlobalNodePath();
       if (!nodePath) {
         return;

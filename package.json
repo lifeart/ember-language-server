@@ -23,6 +23,7 @@
     "dag-map": "^2.0.2",
     "ember-meta-explorer": "^0.1.1",
     "extract-tagged-template-literals": "^1.0.1",
+    "find-up": "^4.1.0",
     "fs-extra": "^8.1.0",
     "fuzzaldrin": "^2.1.0",
     "i": "^0.3.5",
