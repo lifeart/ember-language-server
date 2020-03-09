@@ -2,6 +2,7 @@ import { Diagnostic, Files, TextDocument } from 'vscode-languageserver';
 import { getExtension } from './utils/file-extension';
 import { toDiagnostic } from './utils/diagnostic';
 import { searchAndExtractHbs } from 'extract-tagged-template-literals';
+import { uriToFilePath } from 'vscode-languageserver/lib/files';
 import { log, logError, logInfo } from './utils/logger';
 import * as findUp from 'find-up';
 import * as path from 'path';
@@ -70,7 +71,8 @@ export default class TemplateLinter {
 
     const errors = linter.verify({
       source,
-      moduleId: textDocument.uri
+      moduleId: textDocument.uri,
+      filePath: uriToFilePath(textDocument.uri)
     });
 
     setCwd(cwd);
