@@ -102,6 +102,9 @@ export class Project {
     this.destructors.forEach((fn) => {
       fn(this);
     });
+    logInfo('--------------------');
+    logInfo(`Ember-cli Project: ${this.root} unloaded`);
+    logInfo('--------------------');
   }
   init(server: Server) {
     this.builtinProviders.initFunctions.forEach((initFn) => initFn(server, this));
