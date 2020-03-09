@@ -2717,7 +2717,7 @@ Object {
         "els.executeInEmberCLI",
         "els.getRelatedFiles",
         "els.setConfig",
-        "els.reloadProject"
+        "els.reloadProject",
       ],
     },
     "referencesProvider": true,
