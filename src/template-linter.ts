@@ -42,28 +42,30 @@ export default class TemplateLinter {
       return;
     }
 
-    const project = this.server.projectRoots.projectForUri(textDocument.uri);
-    if (!project) {
-      return;
-    }
-
-    const TemplateLinter = await this.getLinter(project);
     const cwd = process.cwd();
-    setCwd(project.root);
-    let linter = null;
-    try {
-      linter = new TemplateLinter();
-    } catch (e) {
-      setCwd(cwd);
+    const project = this.server.projectRoots.projectForUri(textDocument.uri);
+
+    if (!project) {
       return;
     }
 
     const documentContent = textDocument.getText();
     const source = ext === '.hbs' ? documentContent : searchAndExtractHbs(documentContent);
     if (!source.trim().length) {
+      return;
+    }
+
+    const TemplateLinter = await this.getLinter(project);
+
+    let linter = null;
+    try {
+      setCwd(project.root);
+      linter = new TemplateLinter();
+    } catch (e) {
       setCwd(cwd);
       return;
     }
+
     const errors = linter.verify({
       source,
       moduleId: textDocument.uri
@@ -75,7 +77,6 @@ export default class TemplateLinter {
 
     return diagnostics;
   }
-
   private async getLinter(project: Project) {
     if (this._linterCache.has(project)) {
       return this._linterCache.get(project);
