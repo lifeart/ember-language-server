@@ -18,7 +18,7 @@
   "main": "lib/start-server.js",
   "typings": "lib/start-server.d.ts",
   "dependencies": {
-    "@glimmer/syntax": "^0.47.4",
+    "@glimmer/syntax": "^0.48.0",
     "ast-types": "^0.13.2",
     "dag-map": "^2.0.2",
     "ember-meta-explorer": "^0.1.1",
