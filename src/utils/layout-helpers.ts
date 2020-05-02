@@ -4,6 +4,8 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { CompletionItem, CompletionItemKind } from 'vscode-languageserver';
 import { Project } from '../project-roots';
+import { preprocess, traverse } from '@glimmer/syntax';
+import { normalizeToClassicComponent } from './normalizers';
 
 // const GLOBAL_REGISTRY = ['primitive-name'][['relatedFiles']];
 type GLOBAL_REGISTRY_ITEM = Map<string, Set<string>>;
@@ -53,6 +55,9 @@ export function removeFromRegistry(normalizedName: string, kind: REGISTRY_KIND, 
     if (regItem) {
       files.forEach((file) => {
         regItem.delete(file);
+        if (file.endsWith('.hbs')) {
+          updateTemplateTokens(kind, normalizedName, null);
+        }
       });
       if (regItem.size === 0) {
         GLOBAL_REGISTRY[kind].delete(normalizedName);
@@ -60,6 +65,84 @@ export function removeFromRegistry(normalizedName: string, kind: REGISTRY_KIND, 
     }
   }
 }
+
+interface TemplateTokenMeta {
+  source: string;
+  tokens: string[];
+}
+
+const TEMPLATE_TOKENS: {
+  component: {
+    [key: string]: TemplateTokenMeta;
+  };
+} = {
+  component: {}
+};
+
+function extractTokensFromTemplate(template: string): string[] {
+  if (template === '') {
+    return [];
+  }
+  const ast = preprocess(template);
+  const results: string[] = [];
+  traverse(ast, {
+    ElementNode(node: any) {
+      if (node.tag.charAt(0) === node.tag.charAt(0).toUpperCase()) {
+        results.push(normalizeToClassicComponent(node.tag));
+      }
+    }
+  });
+  return results;
+}
+
+export interface Usage {
+  name: string;
+  path: string;
+  type: 'component';
+  usages: Usage[];
+}
+
+export function findRelatedFiles(token: string): Usage[] {
+  const results: Usage[] = [];
+  const components = TEMPLATE_TOKENS['component'];
+  Object.keys(components).forEach((normalizedComponentName: string) => {
+    if (components[normalizedComponentName].tokens.includes(token)) {
+      results.push({
+        name: normalizedComponentName,
+        path: components[normalizedComponentName].source,
+        type: 'component',
+        usages: []
+      });
+    }
+  });
+  return results;
+}
+
+function updateTemplateTokens(_: REGISTRY_KIND, normalizedName: string, file: string | null) {
+  if (file === null) {
+    delete TEMPLATE_TOKENS['component'][normalizedName];
+    return;
+  }
+  try {
+    const tokens = extractTokensFromTemplate(fs.readFileSync(file, 'utf8'));
+    TEMPLATE_TOKENS['component'][normalizedName] = {
+      source: file,
+      tokens
+    };
+  } catch (e) {
+    //
+  }
+}
+
+// function updateRegistry(normalizedName: string, kind: REGISTRY_KIND, files: string[]) {
+//   if (kind === 'component') {
+//     files.forEach((filePath) => {
+//       if (filePath.endsWith('.hbs')) {
+//         updateTemplateTokens(kind, normalizedName, filePath);
+//       }
+//     });
+//   }
+// }
 
 export function addToRegistry(normalizedName: string, kind: REGISTRY_KIND, files: string[]) {
   if (!(kind in GLOBAL_REGISTRY)) {
@@ -73,6 +156,9 @@ export function addToRegistry(normalizedName: string, kind: REGISTRY_KIND, files
     if (regItem) {
       files.forEach((file) => {
         regItem.add(file);
+        if (kind === 'component' && file.endsWith('.hbs')) {
+          updateTemplateTokens(kind, normalizedName, file);
+        }
       });
     }
   }
