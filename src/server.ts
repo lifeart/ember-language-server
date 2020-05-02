@@ -43,7 +43,7 @@ import TemplateCompletionProvider from './completion-provider/template-completio
 import ScriptCompletionProvider from './completion-provider/script-completion-provider';
 import { uriToFilePath } from 'vscode-languageserver/lib/files';
 import { getGlobalRegistry, addToRegistry, Usage, REGISTRY_KIND, normalizeRoutePath, findRelatedFiles } from './utils/layout-helpers';
-
+import { normalizeToAngleBracketComponent } from './utils/normalizers';
 export default class Server {
   initializers: any[] = [];
   lazyInit: boolean = false;
@@ -148,10 +148,18 @@ export default class Server {
         if (item) {
           if (item.type === 'component') {
             return {
-              name: item.name,
+              name: normalizeToAngleBracketComponent(item.name),
               path: filePath,
               type: item.type,
-              usages: this.getUsages(item.name)
+              usages: this.getUsages(item.name).map((usage) => {
+                if (usage.type !== 'component') {
+                  return usage;
+                }
+                return {
+                  name: normalizeToAngleBracketComponent(usage.name),
+                  ...usage
+                };
+              })
             };
           }
           return [];

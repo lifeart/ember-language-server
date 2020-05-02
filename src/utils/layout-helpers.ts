@@ -75,8 +75,12 @@ const TEMPLATE_TOKENS: {
   component: {
     [key: string]: TemplateTokenMeta;
   };
+  routePath: {
+    [key: string]: TemplateTokenMeta;
+  };
 } = {
-  component: {}
+  component: {},
+  routePath: {}
 };
 
 function extractTokensFromTemplate(template: string): string[] {
@@ -95,37 +99,42 @@ function extractTokensFromTemplate(template: string): string[] {
   return results;
 }
 
+type UsageType = 'component' | 'routePath';
+
 export interface Usage {
   name: string;
   path: string;
-  type: 'component';
+  type: UsageType;
   usages: Usage[];
 }
 
 export function findRelatedFiles(token: string): Usage[] {
   const results: Usage[] = [];
-  const components = TEMPLATE_TOKENS['component'];
-  Object.keys(components).forEach((normalizedComponentName: string) => {
-    if (components[normalizedComponentName].tokens.includes(token)) {
-      results.push({
-        name: normalizedComponentName,
-        path: components[normalizedComponentName].source,
-        type: 'component',
-        usages: []
-      });
-    }
+  Object.keys(TEMPLATE_TOKENS).forEach((kindName) => {
+    const components = TEMPLATE_TOKENS[kindName as UsageType];
+    Object.keys(components).forEach((normalizedComponentName: string) => {
+      if (components[normalizedComponentName].tokens.includes(token)) {
+        results.push({
+          name: normalizedComponentName,
+          path: components[normalizedComponentName].source,
+          type: kindName as UsageType,
+          usages: []
+        });
+      }
+    });
   });
+
   return results;
 }
 
-function updateTemplateTokens(_: REGISTRY_KIND, normalizedName: string, file: string | null) {
+function updateTemplateTokens(kind: UsageType, normalizedName: string, file: string | null) {
   if (file === null) {
-    delete TEMPLATE_TOKENS['component'][normalizedName];
+    delete TEMPLATE_TOKENS[kind][normalizedName];
     return;
   }
   try {
     const tokens = extractTokensFromTemplate(fs.readFileSync(file, 'utf8'));
-    TEMPLATE_TOKENS['component'][normalizedName] = {
+    TEMPLATE_TOKENS[kind][normalizedName] = {
       source: file,
       tokens
     };
@@ -156,7 +165,7 @@ export function addToRegistry(normalizedName: string, kind: REGISTRY_KIND, files
     if (regItem) {
       files.forEach((file) => {
         regItem.add(file);
-        if (kind === 'component' && file.endsWith('.hbs')) {
+        if ((kind === 'component' || kind === 'routePath') && file.endsWith('.hbs')) {
           updateTemplateTokens(kind, normalizedName, file);
         }
       });
