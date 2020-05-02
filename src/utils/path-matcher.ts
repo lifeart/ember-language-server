@@ -7,7 +7,7 @@ export class ClassicPathMatcher {
     service: ['/services/'],
     modifier: ['/modifiers/'],
     controller: ['/controllers/'],
-    route: ['/routes/'],
+    route: ['/routes/', '!/components/'],
     template: ['/templates/', '!/templates/components/'],
     component: ['/components/'],
     model: ['/models/'],

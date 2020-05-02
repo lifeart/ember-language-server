@@ -129,6 +129,8 @@ describe('ClassicPathMatcher', () => {
     expect(m('foo/bar/.git/app/components/foo/index.ts')).toEqual(null);
   });
   it('components', () => {
+    expect(m('foo/bar/app/components/routes/foo/index.ts')).toEqual({ type: 'component', name: 'routes/foo' });
+    expect(m('foo/bar/app/components/route/foo/index.ts')).toEqual({ type: 'component', name: 'route/foo' });
     expect(m('foo/bar/app/components/foo/index.ts')).toEqual({ type: 'component', name: 'foo' });
     expect(m('foo/bar/app/components/foo/index.js')).toEqual({ type: 'component', name: 'foo' });
     expect(m('foo/bar/app/components/foo/index.hbs')).toEqual({ type: 'component', name: 'foo' });
