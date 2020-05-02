@@ -156,8 +156,8 @@ export default class Server {
                   return usage;
                 }
                 return {
-                  name: normalizeToAngleBracketComponent(usage.name),
-                  ...usage
+                  ...usage,
+                  name: normalizeToAngleBracketComponent(usage.name)
                 };
               })
             };
