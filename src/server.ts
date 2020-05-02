@@ -147,7 +147,12 @@ export default class Server {
         const item = project.matchPathToType(fullPath);
         if (item) {
           if (item.type === 'component') {
-            return this.getUsages(item.name);
+            return {
+              name: item.name,
+              path: filePath,
+              type: item.type,
+              usages: this.getUsages(item.name)
+            };
           }
           return [];
         }
