@@ -653,7 +653,7 @@ Array [
     "label": "component",
     "textEdit": Object {
       "newText": "component}}
-  
+
 {{/component}}",
       "range": Object {
         "end": Object {
@@ -679,7 +679,7 @@ Array [
     "label": "each",
     "textEdit": Object {
       "newText": "each}}
-  
+
 {{/each}}",
       "range": Object {
         "end": Object {
@@ -702,7 +702,7 @@ Array [
     "label": "each-in",
     "textEdit": Object {
       "newText": "each-in}}
-  
+
 {{/each-in}}",
       "range": Object {
         "end": Object {
@@ -726,7 +726,7 @@ Array [
     "label": "in-element",
     "textEdit": Object {
       "newText": "in-element}}
-  
+
 {{/in-element}}",
       "range": Object {
         "end": Object {
@@ -749,7 +749,7 @@ Array [
     "label": "let",
     "textEdit": Object {
       "newText": "let}}
-  
+
 {{/let}}",
       "range": Object {
         "end": Object {
@@ -772,7 +772,7 @@ Array [
     "label": "if",
     "textEdit": Object {
       "newText": "if}}
-  
+
 {{/if}}",
       "range": Object {
         "end": Object {
@@ -797,7 +797,7 @@ Array [
     "label": "unless",
     "textEdit": Object {
       "newText": "unless}}
-  
+
 {{/unless}}",
       "range": Object {
         "end": Object {
@@ -822,7 +822,7 @@ Array [
     "label": "with",
     "textEdit": Object {
       "newText": "with}}
-  
+
 {{/with}}",
       "range": Object {
         "end": Object {
@@ -845,7 +845,7 @@ Array [
     "label": "darling",
     "textEdit": Object {
       "newText": "darling}}
-  
+
 {{/darling}}",
       "range": Object {
         "end": Object {
@@ -865,7 +865,7 @@ Array [
     "label": "hello",
     "textEdit": Object {
       "newText": "hello}}
-  
+
 {{/hello}}",
       "range": Object {
         "end": Object {
@@ -2716,6 +2716,7 @@ Object {
         "els:registerProjectPath",
         "els.executeInEmberCLI",
         "els.getRelatedFiles",
+        "els.getKindUsages",
         "els.setConfig",
         "els.reloadProject",
       ],

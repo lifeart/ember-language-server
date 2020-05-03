@@ -56,7 +56,7 @@ export function removeFromRegistry(normalizedName: string, kind: REGISTRY_KIND, 
       files.forEach((file) => {
         regItem.delete(file);
         if (file.endsWith('.hbs')) {
-          updateTemplateTokens(kind, normalizedName, null);
+          updateTemplateTokens(kind as UsageType, normalizedName, null);
         }
       });
       if (regItem.size === 0) {
@@ -89,14 +89,30 @@ function extractTokensFromTemplate(template: string): string[] {
   }
   const ast = preprocess(template);
   const results: string[] = [];
+  const ignored = ['if', 'else', 'unless', 'let', 'each'];
   traverse(ast, {
     ElementNode(node: any) {
       if (node.tag.charAt(0) === node.tag.charAt(0).toUpperCase()) {
         results.push(normalizeToClassicComponent(node.tag));
       }
+    },
+    ElementModifierStatement(node: any) {
+      if (node.path && node.path.type === 'PathExpression' && node.path.original && !ignored.includes(node.path.original)) {
+        results.push(node.path.original);
+      }
+    },
+    BlockStatement(node: any) {
+      if (node.path && node.path.type === 'PathExpression' && node.path.original && !ignored.includes(node.path.original)) {
+        results.push(node.path.original);
+      }
+    },
+    MustacheStatement(node: any) {
+      if (node.path && node.path.type === 'PathExpression' && node.path.original && !ignored.includes(node.path.original)) {
+        results.push(node.path.original);
+      }
     }
   });
-  return results;
+  return Array.from(new Set(results));
 }
 
 type UsageType = 'component' | 'routePath';
