@@ -43,6 +43,7 @@ import TemplateCompletionProvider from './completion-provider/template-completio
 import ScriptCompletionProvider from './completion-provider/script-completion-provider';
 import { uriToFilePath } from 'vscode-languageserver/lib/files';
 import { getGlobalRegistry, addToRegistry, Usage, REGISTRY_KIND, normalizeRoutePath, findRelatedFiles } from './utils/layout-helpers';
+
 export default class Server {
   initializers: any[] = [];
   lazyInit: boolean = false;

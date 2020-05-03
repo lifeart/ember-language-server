@@ -164,16 +164,6 @@ function updateTemplateTokens(kind: UsageType, normalizedName: string, file: str
   }
 }
 
-// function updateRegistry(normalizedName: string, kind: REGISTRY_KIND, files: string[]) {
-//   if (kind === 'component') {
-//     files.forEach((filePath) => {
-//       if (filePath.endsWith('.hbs')) {
-//         updateTemplateTokens(kind, normalizedName, filePath);
-//       }
-//     });
-//   }
-// }
-
 export function addToRegistry(normalizedName: string, kind: REGISTRY_KIND, files: string[]) {
   if (!(kind in GLOBAL_REGISTRY)) {
     return;
