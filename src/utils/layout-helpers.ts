@@ -106,6 +106,11 @@ function extractTokensFromTemplate(template: string): string[] {
         results.push(node.path.original);
       }
     },
+    SubExpression(node: any) {
+      if (node.path && node.path.type === 'PathExpression' && node.path.original && !ignored.includes(node.path.original)) {
+        results.push(node.path.original);
+      }
+    },
     MustacheStatement(node: any) {
       if (node.path && node.path.type === 'PathExpression' && node.path.original && !ignored.includes(node.path.original)) {
         results.push(node.path.original);
