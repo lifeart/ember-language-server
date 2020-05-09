@@ -19,6 +19,9 @@ import {
   InitializeResult,
   Diagnostic,
   InitializeParams,
+  CodeActionParams,
+  Command,
+  CodeAction,
   DocumentSymbolParams,
   SymbolInformation,
   TextDocumentPositionParams,
@@ -147,6 +150,10 @@ export default class Server {
       return [];
     };
   }
+  private onCodeAction(params: CodeActionParams): (Command | CodeAction)[] | undefined | null {
+    logInfo(JSON.stringify(params));
+    return null;
+  }
   constructor() {
     // Make the text document manager listen on the connection
     // for open, change and close text document events
@@ -166,6 +173,7 @@ export default class Server {
     this.connection.onCompletionResolve(this.onCompletionResolve.bind(this));
     this.connection.onExecuteCommand(this.onExecute.bind(this));
     this.connection.onReferences(this.onReference.bind(this));
+    this.connection.onCodeAction(this.onCodeAction.bind(this));
     this.connection.telemetry.logEvent({ connected: true });
 
     // this.displayInfoMessage('Ember Language Server [activated]');
@@ -273,6 +281,7 @@ export default class Server {
           commands: ['els:registerProjectPath', 'els.executeInEmberCLI', 'els.getRelatedFiles', 'els.getKindUsages', 'els.setConfig', 'els.reloadProject']
         },
         documentSymbolProvider: true,
+        codeActionProvider: true,
         referencesProvider: true,
         workspace: {
           workspaceFolders: {
