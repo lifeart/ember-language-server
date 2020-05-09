@@ -294,7 +294,7 @@ export default class Server {
           let result = null;
           if (project) {
             if (params.command in project.executors) {
-              result = await project.executors[params.command](this, params.command, args);
+              result = await project.executors[params.command](this, uri, args);
             }
           }
           return result;
