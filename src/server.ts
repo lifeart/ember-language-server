@@ -128,7 +128,10 @@ export default class Server {
       };
       this.connection.workspace.applyEdit(edit);
       try {
-        await this.executors['els.executeInEmberCLI'](this, '', [`g component ${componentName}`]);
+        await this.onExecute({
+          command: 'els.executeInEmberCLI',
+          arguments: [`g component ${componentName}`]
+        });
         const registry = this.getRegistry(filePath);
         logInfo(JSON.stringify(registry));
         const fileName = registry['components'][componentName].find((file: string) => file.includes('/components/') && !file.includes('/test'));
