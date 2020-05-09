@@ -9,6 +9,7 @@ import { getExtension } from '../utils/file-extension';
 import { log } from '../utils/logger';
 import { searchAndExtractHbs } from 'extract-tagged-template-literals';
 import { TextDocument } from 'vscode-languageserver-textdocument';
+import { Position as EsTreePosition } from 'estree';
 
 const extensionsToProvideTemplateCompletions = ['.hbs', '.js', '.ts'];
 const PLACEHOLDER = 'ELSCompletionDummy';
@@ -24,6 +25,12 @@ export default class TemplateCompletionProvider {
       project,
       document
     };
+  }
+  getAST(textContent: string) {
+    return preprocess(textContent);
+  }
+  createFocusPath(ast: any, position: EsTreePosition, validText: string) {
+    return ASTPath.toPosition(ast, position, validText);
   }
   getFocusPath(
     document: TextDocument,
@@ -70,7 +77,7 @@ export default class TemplateCompletionProvider {
       normalPlaceholder = cases.shift();
       try {
         validText = this.getTextForGuessing(originalText, offset, normalPlaceholder);
-        ast = preprocess(validText);
+        ast = this.getAST(validText);
         log('validText', validText);
         break;
       } catch (e) {
@@ -83,7 +90,7 @@ export default class TemplateCompletionProvider {
       return null;
     }
 
-    const focusPath = ASTPath.toPosition(ast, toPosition(position), validText);
+    const focusPath = this.createFocusPath(ast, toPosition(position), validText);
     if (!focusPath) {
       return null;
     }

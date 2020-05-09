@@ -50,7 +50,7 @@ import ScriptCompletionProvider from './completion-provider/script-completion-pr
 import { uriToFilePath } from 'vscode-languageserver/lib/files';
 import { getRegistryForRoot, addToRegistry, REGISTRY_KIND, normalizeMatchNaming } from './utils/registry-api';
 import { Usage, findRelatedFiles } from './utils/usages-api';
-import { toLSRange } from './estree-utils';
+import ASTPath from './glimmer-utils';
 
 export default class Server {
   initializers: any[] = [];
@@ -173,19 +173,23 @@ export default class Server {
       return;
     }
 
-    const data = this.templateCompletionProvider.getFocusPath(document, range.start, '');
+    let focusPath: ASTPath | undefined = undefined;
 
-    if (!data) {
+    try {
+      const text = document.getText(range);
+      const ast = this.templateCompletionProvider.getAST(document.getText(range));
+      focusPath = this.templateCompletionProvider.createFocusPath(ast, ast.loc.start, text);
+      if (!focusPath) {
+        return;
+      }
+    } catch (e) {
       return;
     }
 
-    const focusPath = data.focusPath;
-
-    logInfo(JSON.stringify(params.range));
-    logInfo(JSON.stringify(toLSRange(focusPath.node.loc)));
+    logInfo(focusPath.sourceForNode() as string);
     // ed.replace(Range.create(range.start, range.start.translate(0, 3)), '123');
     // .translate(0, 3)
-    const textEdit = TextEdit.replace(toLSRange(focusPath.node.loc), '123') as TextEdit;
+    const textEdit = TextEdit.replace(range, '123') as TextEdit;
     const edit: WorkspaceEdit = {
       changes: {
         [params.textDocument.uri]: [textEdit]
