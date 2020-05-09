@@ -194,7 +194,7 @@ export default class Server {
     const fix = CodeAction.create('Extract to component', edit, CodeActionKind.QuickFix);
 
     // fix.edit.replace(params.textDocument.uri, new Range(range.start, range.start.translate(0, 3)), '123');
-    logInfo(JSON.stringify(params));
+    logInfo(focusPath.sourceForNode() as string);
     return [fix];
   }
   constructor() {
