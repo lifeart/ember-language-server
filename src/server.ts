@@ -8,7 +8,7 @@ import * as path from 'path';
 import * as fs from 'fs';
 
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { URI } from 'vscode-uri';
+// import { URI } from 'vscode-uri';
 
 import {
   IPCMessageReader,
@@ -20,7 +20,7 @@ import {
   InitializeResult,
   Diagnostic,
   // CodeActionKind,
-  WorkspaceEdit,
+  // WorkspaceEdit,
   InitializeParams,
   CodeActionParams,
   Command,
@@ -34,8 +34,8 @@ import {
   TextDocumentSyncKind,
   StreamMessageWriter,
   ReferenceParams,
-  Location,
-  TextEdit
+  Location
+  // TextEdit
 } from 'vscode-languageserver';
 
 import ProjectRoots, { Project, Executors } from './project-roots';
@@ -52,8 +52,8 @@ import { uriToFilePath } from 'vscode-languageserver/lib/files';
 import { getRegistryForRoot, addToRegistry, REGISTRY_KIND, normalizeMatchNaming } from './utils/registry-api';
 import { Usage, findRelatedFiles } from './utils/usages-api';
 import ASTPath from './glimmer-utils';
-import { Position } from 'vscode-languageserver';
-import { normalizeToAngleBracketComponent } from './utils/normalizers';
+// import { Position } from 'vscode-languageserver';
+// import { normalizeToAngleBracketComponent } from './utils/normalizers';
 
 export default class Server {
   initializers: any[] = [];
@@ -118,40 +118,40 @@ export default class Server {
         this.projectRoots.reloadProjects();
       }
     };
-    this.executors['els.extractSourceCodeToComponent'] = async (_, __, [filePath, componentName, { range, source, uri }]) => {
-      const project = this.projectRoots.projectForPath(filePath);
-      if (!project) {
-        return;
-      }
-      try {
-        await this.onExecute({
-          command: 'els.executeInEmberCLI',
-          arguments: [filePath, `g component ${componentName}`]
-        });
-        // going to wait for file changes api
-        await new Promise((resolve) => setTimeout(resolve, 2000));
-        const registry = this.getRegistry(project.root);
-        if (!(componentName in registry.component)) {
-          logError(`Unable to find component ${componentName} in registry ${JSON.stringify(registry.component)}`);
-          return;
-        }
-        const fileName = registry['component'][componentName].find((file: string) => file.endsWith('.hbs'));
-        if (!fileName) {
-          logError(`Unable to find template file for component ${componentName}`);
-          return;
-        }
-        const fileUri = URI.file(fileName).toString();
-        const edit: WorkspaceEdit = {
-          changes: {
-            [uri]: [TextEdit.replace(range, `<${normalizeToAngleBracketComponent(componentName)} />`)],
-            [fileUri]: [TextEdit.insert(Position.create(0, 0), source)]
-          }
-        };
-        await this.connection.workspace.applyEdit(edit);
-      } catch (e) {
-        logError(e);
-      }
-    };
+    // this.executors['els.extractSourceCodeToComponent'] = async (_, __, [filePath, componentName, { range, source, uri }]) => {
+    //   const project = this.projectRoots.projectForPath(filePath);
+    //   if (!project) {
+    //     return;
+    //   }
+    //   try {
+    //     await this.onExecute({
+    //       command: 'els.executeInEmberCLI',
+    //       arguments: [filePath, `g component ${componentName}`]
+    //     });
+    //     // going to wait for file changes api
+    //     await new Promise((resolve) => setTimeout(resolve, 2000));
+    //     const registry = this.getRegistry(project.root);
+    //     if (!(componentName in registry.component)) {
+    //       logError(`Unable to find component ${componentName} in registry ${JSON.stringify(registry.component)}`);
+    //       return;
+    //     }
+    //     const fileName = registry['component'][componentName].find((file: string) => file.endsWith('.hbs'));
+    //     if (!fileName) {
+    //       logError(`Unable to find template file for component ${componentName}`);
+    //       return;
+    //     }
+    //     const fileUri = URI.file(fileName).toString();
+    //     const edit: WorkspaceEdit = {
+    //       changes: {
+    //         [uri]: [TextEdit.replace(range, `<${normalizeToAngleBracketComponent(componentName)} />`)],
+    //         [fileUri]: [TextEdit.insert(Position.create(0, 0), source)]
+    //       }
+    //     };
+    //     await this.connection.workspace.applyEdit(edit);
+    //   } catch (e) {
+    //     logError(e);
+    //   }
+    // };
     this.executors['els.getRelatedFiles'] = async (_, __, [filePath]) => {
       const fullPath = path.resolve(filePath);
       const project = this.projectRoots.projectForPath(filePath);
