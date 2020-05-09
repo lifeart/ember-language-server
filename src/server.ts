@@ -8,6 +8,7 @@ import * as path from 'path';
 import * as fs from 'fs';
 
 import { TextDocument } from 'vscode-languageserver-textdocument';
+import { URI } from 'vscode-uri';
 
 import {
   IPCMessageReader,
@@ -19,7 +20,7 @@ import {
   InitializeResult,
   Diagnostic,
   // CodeActionKind,
-  // WorkspaceEdit,
+  WorkspaceEdit,
   InitializeParams,
   CodeActionParams,
   Command,
@@ -33,8 +34,8 @@ import {
   TextDocumentSyncKind,
   StreamMessageWriter,
   ReferenceParams,
-  Location
-  // TextEdit
+  Location,
+  TextEdit
 } from 'vscode-languageserver';
 
 import ProjectRoots, { Project, Executors } from './project-roots';
@@ -51,6 +52,7 @@ import { uriToFilePath } from 'vscode-languageserver/lib/files';
 import { getRegistryForRoot, addToRegistry, REGISTRY_KIND, normalizeMatchNaming } from './utils/registry-api';
 import { Usage, findRelatedFiles } from './utils/usages-api';
 import ASTPath from './glimmer-utils';
+import { Position } from 'vscode-languageserver';
 
 export default class Server {
   initializers: any[] = [];
@@ -115,15 +117,29 @@ export default class Server {
         this.projectRoots.reloadProjects();
       }
     };
-    this.executors['els.extractSourceCodeToComponent'] = async (_, __, ...args) => {
-      logInfo(JSON.stringify(args));
-      // const textEdit = TextEdit.replace(range, '123');
-      // const edit: WorkspaceEdit = {
-      // changes: {
-      // [params.textDocument.uri]: [textEdit]
-      // }
-      // };
-      // this.connection.workspace.applyEdit()
+    this.executors['els.extractSourceCodeToComponent'] = async (_, __, [filePath, componentName, { range, source, uri }]) => {
+      logInfo(filePath);
+      const textEdit = TextEdit.replace(range, '123');
+      const edit: WorkspaceEdit = {
+        changes: {
+          [uri]: [textEdit]
+        }
+      };
+      this.connection.workspace.applyEdit(edit);
+      try {
+        await this.executors['els.executeInEmberCLI'](this, '', [`ember g component ${componentName}`]);
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        const registry = this.getRegistry(filePath);
+        const fileName = registry['components'][componentName].find((file: string) => file.includes('/components/') && !file.includes('/test'));
+        const edit: WorkspaceEdit = {
+          changes: {
+            [URI.file(fileName).toString()]: [TextEdit.insert(Position.create(0, 0), source)]
+          }
+        };
+        this.connection.workspace.applyEdit(edit);
+      } catch (e) {
+        logError(e);
+      }
     };
     this.executors['els.getRelatedFiles'] = async (_, __, [filePath]) => {
       const fullPath = path.resolve(filePath);
