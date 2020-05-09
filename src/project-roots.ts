@@ -34,8 +34,6 @@ export class Project {
     return this.classicMatcher.metaFromPath(filePath) || this.podMatcher.metaFromPath(filePath);
   }
   trackChange(uri: string, change: FileChangeType) {
-    logInfo('trackChange');
-    logInfo(uri);
     // prevent leaks
     if (this.files.size > 10000) {
       logError('too many files for project ' + this.root);
@@ -47,6 +45,7 @@ export class Project {
     }
     const filePath = path.resolve(rawPath);
     let item = this.matchPathToType(filePath);
+    logInfo(JSON.stringify(item));
     let normalizedItem: undefined | NormalizedRegistryItem = undefined;
     if (item) {
       normalizedItem = normalizeMatchNaming(item) as NormalizedRegistryItem;

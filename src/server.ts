@@ -119,6 +119,10 @@ export default class Server {
       }
     };
     this.executors['els.extractSourceCodeToComponent'] = async (_, __, [filePath, componentName, { range, source, uri }]) => {
+      const project = this.projectRoots.projectForPath(filePath);
+      if (!project) {
+        return;
+      }
       logInfo(filePath);
       const textEdit = TextEdit.replace(range, `<${normalizeToAngleBracketComponent(componentName)} />`);
       const edit: WorkspaceEdit = {
@@ -134,7 +138,7 @@ export default class Server {
         });
         // going to wait for file changes api
         await new Promise((resolve) => setTimeout(resolve, 3000));
-        const registry = this.getRegistry(filePath);
+        const registry = this.getRegistry(project.root);
         if (!(componentName in registry.component)) {
           logError(`Unable to find component ${componentName} in registry ${JSON.stringify(registry.component)}`);
           return;
