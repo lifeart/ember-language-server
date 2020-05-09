@@ -18,8 +18,8 @@ import {
   TextDocuments,
   InitializeResult,
   Diagnostic,
-  CodeActionKind,
-  WorkspaceEdit,
+  // CodeActionKind,
+  // WorkspaceEdit,
   InitializeParams,
   CodeActionParams,
   Command,
@@ -33,8 +33,8 @@ import {
   TextDocumentSyncKind,
   StreamMessageWriter,
   ReferenceParams,
-  Location,
-  TextEdit
+  Location
+  // TextEdit
 } from 'vscode-languageserver';
 
 import ProjectRoots, { Project, Executors } from './project-roots';
@@ -115,6 +115,16 @@ export default class Server {
         this.projectRoots.reloadProjects();
       }
     };
+    this.executors['els.extractSourceCodeToComponent'] = async (_, __, ...args) => {
+      logInfo(JSON.stringify(args));
+      // const textEdit = TextEdit.replace(range, '123');
+      // const edit: WorkspaceEdit = {
+      // changes: {
+      // [params.textDocument.uri]: [textEdit]
+      // }
+      // };
+      // this.connection.workspace.applyEdit()
+    };
     this.executors['els.getRelatedFiles'] = async (_, __, [filePath]) => {
       const fullPath = path.resolve(filePath);
       const project = this.projectRoots.projectForPath(filePath);
@@ -155,18 +165,7 @@ export default class Server {
     };
   }
   private async onCodeAction(params: CodeActionParams): Promise<(Command | CodeAction)[] | undefined | null> {
-    await new Promise((resolve) => setTimeout(resolve, 4000));
-    /*
-      {
-        "textDocument":{
-          "uri":"file:///c%3A/Users/lifeart/Documents/repos/brn/frontend/app/components/task-player/single-words/template.hbs"
-        },
-        "range":{"start":{"line":5,"character":4},"end":{"line":5,"character":25}},
-        "context":{"diagnostics":[]}
-      }
-    */
     const range = params.range;
-
     const { project, document } = this.templateCompletionProvider.getRoots(params.textDocument);
 
     if (!project || !document) {
@@ -187,20 +186,22 @@ export default class Server {
     }
 
     logInfo(focusPath.sourceForNode() as string);
-    // ed.replace(Range.create(range.start, range.start.translate(0, 3)), '123');
-    // .translate(0, 3)
-    const textEdit = TextEdit.replace(range, '123') as TextEdit;
-    const edit: WorkspaceEdit = {
-      changes: {
-        [params.textDocument.uri]: [textEdit]
+    const act = Command.create(
+      'Extract to component 2',
+      'els.getUserInput',
+      {
+        placeHolder: 'Enter ComponentName'
+      },
+      'els.extractSourceCodeToComponent',
+      {
+        source: focusPath.sourceForNode(),
+        range,
+        uri: params.textDocument.uri
       }
-    };
-    // const edit = WorkspaceEdit.is()
-    const fix = CodeAction.create('Extract to component', edit, CodeActionKind.QuickFix);
+    );
 
-    // fix.edit.replace(params.textDocument.uri, new Range(range.start, range.start.translate(0, 3)), '123');
-    // logInfo(focusPath.sourceForNode() as string);
-    return [fix];
+    // const fix = CodeAction.create('Extract to component', edit, CodeActionKind.QuickFix);
+    return [act];
   }
   constructor() {
     // Make the text document manager listen on the connection
