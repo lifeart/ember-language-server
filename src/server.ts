@@ -181,6 +181,8 @@ export default class Server {
 
     const focusPath = data.focusPath;
 
+    logInfo(JSON.stringify(params.range));
+    logInfo(JSON.stringify(toLSRange(focusPath.node.loc)));
     // ed.replace(Range.create(range.start, range.start.translate(0, 3)), '123');
     // .translate(0, 3)
     const textEdit = TextEdit.replace(toLSRange(focusPath.node.loc), '123') as TextEdit;
@@ -193,7 +195,7 @@ export default class Server {
     const fix = CodeAction.create('Extract to component', edit, CodeActionKind.QuickFix);
 
     // fix.edit.replace(params.textDocument.uri, new Range(range.start, range.start.translate(0, 3)), '123');
-    logInfo(focusPath.sourceForNode() as string);
+    // logInfo(focusPath.sourceForNode() as string);
     return [fix];
   }
   constructor() {
