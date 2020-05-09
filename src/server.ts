@@ -8,7 +8,6 @@ import * as path from 'path';
 import * as fs from 'fs';
 
 import { TextDocument } from 'vscode-languageserver-textdocument';
-// import { URI } from 'vscode-uri';
 
 import {
   IPCMessageReader,
@@ -19,8 +18,6 @@ import {
   TextDocuments,
   InitializeResult,
   Diagnostic,
-  // CodeActionKind,
-  // WorkspaceEdit,
   InitializeParams,
   CodeActionParams,
   Command,
@@ -35,7 +32,6 @@ import {
   StreamMessageWriter,
   ReferenceParams,
   Location
-  // TextEdit
 } from 'vscode-languageserver';
 
 import ProjectRoots, { Project, Executors } from './project-roots';
@@ -45,15 +41,13 @@ import DocumentSymbolProvider from './symbols/document-symbol-provider';
 import JSDocumentSymbolProvider from './symbols/js-document-symbol-provider';
 import HBSDocumentSymbolProvider from './symbols/hbs-document-symbol-provider';
 import { ReferenceProvider } from './reference-provider/entry';
+import { CodeActionProvider } from './code-action-provider/entry';
 import { log, setConsole, logError, logInfo } from './utils/logger';
 import TemplateCompletionProvider from './completion-provider/template-completion-provider';
 import ScriptCompletionProvider from './completion-provider/script-completion-provider';
 import { uriToFilePath } from 'vscode-languageserver/lib/files';
 import { getRegistryForRoot, addToRegistry, REGISTRY_KIND, normalizeMatchNaming } from './utils/registry-api';
 import { Usage, findRelatedFiles } from './utils/usages-api';
-import ASTPath from './glimmer-utils';
-// import { Position } from 'vscode-languageserver';
-// import { normalizeToAngleBracketComponent } from './utils/normalizers';
 
 export default class Server {
   initializers: any[] = [];
@@ -95,6 +89,7 @@ export default class Server {
   templateLinter: TemplateLinter = new TemplateLinter(this);
 
   referenceProvider: ReferenceProvider = new ReferenceProvider(this);
+  codeActionProvider: CodeActionProvider = new CodeActionProvider(this);
   executeInitializers() {
     this.initializers.forEach((cb: any) => cb());
     this.initializers = [];
@@ -118,40 +113,6 @@ export default class Server {
         this.projectRoots.reloadProjects();
       }
     };
-    // this.executors['els.extractSourceCodeToComponent'] = async (_, __, [filePath, componentName, { range, source, uri }]) => {
-    //   const project = this.projectRoots.projectForPath(filePath);
-    //   if (!project) {
-    //     return;
-    //   }
-    //   try {
-    //     await this.onExecute({
-    //       command: 'els.executeInEmberCLI',
-    //       arguments: [filePath, `g component ${componentName}`]
-    //     });
-    //     // going to wait for file changes api
-    //     await new Promise((resolve) => setTimeout(resolve, 2000));
-    //     const registry = this.getRegistry(project.root);
-    //     if (!(componentName in registry.component)) {
-    //       logError(`Unable to find component ${componentName} in registry ${JSON.stringify(registry.component)}`);
-    //       return;
-    //     }
-    //     const fileName = registry['component'][componentName].find((file: string) => file.endsWith('.hbs'));
-    //     if (!fileName) {
-    //       logError(`Unable to find template file for component ${componentName}`);
-    //       return;
-    //     }
-    //     const fileUri = URI.file(fileName).toString();
-    //     const edit: WorkspaceEdit = {
-    //       changes: {
-    //         [uri]: [TextEdit.replace(range, `<${normalizeToAngleBracketComponent(componentName)} />`)],
-    //         [fileUri]: [TextEdit.insert(Position.create(0, 0), source)]
-    //       }
-    //     };
-    //     await this.connection.workspace.applyEdit(edit);
-    //   } catch (e) {
-    //     logError(e);
-    //   }
-    // };
     this.executors['els.getRelatedFiles'] = async (_, __, [filePath]) => {
       const fullPath = path.resolve(filePath);
       const project = this.projectRoots.projectForPath(filePath);
@@ -192,43 +153,13 @@ export default class Server {
     };
   }
   private async onCodeAction(params: CodeActionParams): Promise<(Command | CodeAction)[] | undefined | null> {
-    const range = params.range;
-    const { project, document } = this.templateCompletionProvider.getRoots(params.textDocument);
-
-    if (!project || !document) {
-      return;
-    }
-
-    let focusPath: ASTPath | undefined = undefined;
-
     try {
-      const text = document.getText(range);
-      const ast = this.templateCompletionProvider.getAST(document.getText(range));
-      focusPath = this.templateCompletionProvider.createFocusPath(ast, ast.loc.start, text);
-      if (!focusPath) {
-        return;
-      }
+      const results = await this.codeActionProvider.provideCodeActions(params);
+      return results;
     } catch (e) {
-      return;
+      logError(e);
+      return null;
     }
-
-    logInfo(focusPath.sourceForNode() as string);
-    const act = Command.create(
-      'Extract to component 2',
-      'els.getUserInput',
-      {
-        placeHolder: 'Enter ComponentName'
-      },
-      'els.extractSourceCodeToComponent',
-      {
-        source: focusPath.sourceForNode(),
-        range,
-        uri: params.textDocument.uri
-      }
-    );
-
-    // const fix = CodeAction.create('Extract to component', edit, CodeActionKind.QuickFix);
-    return [act];
   }
   constructor() {
     // Make the text document manager listen on the connection
@@ -251,18 +182,6 @@ export default class Server {
     this.connection.onReferences(this.onReference.bind(this));
     this.connection.onCodeAction(this.onCodeAction.bind(this));
     this.connection.telemetry.logEvent({ connected: true });
-
-    // this.displayInfoMessage('Ember Language Server [activated]');
-    // 'els.showStatusBarText'
-
-    // let params: ExecuteCommandParams = {
-    // command,
-    // arguments: args
-    // };
-    // return client.sendRequest(ExecuteCommandRequest.type, params)
-
-    // this.connection.client.sendRequest()
-    // this.connection.onEx
   }
 
   /**
