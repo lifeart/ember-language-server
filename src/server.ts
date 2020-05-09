@@ -51,6 +51,7 @@ import ScriptCompletionProvider from './completion-provider/script-completion-pr
 import { uriToFilePath } from 'vscode-languageserver/lib/files';
 import { getRegistryForRoot, addToRegistry, REGISTRY_KIND, normalizeMatchNaming } from './utils/registry-api';
 import { Usage, findRelatedFiles } from './utils/usages-api';
+import { toLSPosition } from './estree-utils';
 
 export default class Server {
   initializers: any[] = [];
@@ -170,19 +171,20 @@ export default class Server {
     const { project, document } = this.templateCompletionProvider.getRoots(params.textDocument);
 
     if (!project || !document) {
-      return [];
+      return;
     }
 
     const data = this.templateCompletionProvider.getFocusPath(document, range.start, '');
 
-    if (data) {
-      logInfo(JSON.stringify(data.focusPath));
+    if (!data) {
+      return;
     }
+
+    const focusPath = data.focusPath;
 
     // ed.replace(Range.create(range.start, range.start.translate(0, 3)), '123');
     // .translate(0, 3)
-
-    const textEdit = TextEdit.replace(Range.create(range.start, range.end), '123') as TextEdit;
+    const textEdit = TextEdit.replace(Range.create(toLSPosition(focusPath.node.loc.start), focusPath.node.loc.end), '123') as TextEdit;
     const edit: WorkspaceEdit = {
       changes: {
         [params.textDocument.uri]: [textEdit]
