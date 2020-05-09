@@ -132,6 +132,8 @@ export default class Server {
           command: 'els.executeInEmberCLI',
           arguments: [filePath, `g component ${componentName}`]
         });
+        // going to wait for file changes api
+        await new Promise((resolve) => setTimeout(resolve, 3000));
         const registry = this.getRegistry(filePath);
         logInfo(JSON.stringify(registry));
         const fileName = registry['components'][componentName].find((file: string) => file.includes('/components/') && !file.includes('/test'));
