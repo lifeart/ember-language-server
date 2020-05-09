@@ -129,16 +129,18 @@ export default class Server {
           arguments: [filePath, `g component ${componentName}`]
         });
         // going to wait for file changes api
-        await new Promise((resolve) => setTimeout(resolve, 3000));
+        await new Promise((resolve) => setTimeout(resolve, 2000));
         const registry = this.getRegistry(project.root);
         if (!(componentName in registry.component)) {
           logError(`Unable to find component ${componentName} in registry ${JSON.stringify(registry.component)}`);
           return;
         }
         const fileName = registry['component'][componentName].find((file: string) => file.endsWith('.hbs'));
-        logInfo('fileName: ' + fileName);
+        if (!fileName) {
+          logError(`Unable to find template file for component ${componentName}`);
+          return;
+        }
         const fileUri = URI.file(fileName).toString();
-        logInfo('fileUri: ' + fileUri);
         const edit: WorkspaceEdit = {
           changes: {
             [uri]: [TextEdit.replace(range, `<${normalizeToAngleBracketComponent(componentName)} />`)],

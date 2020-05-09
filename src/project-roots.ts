@@ -45,7 +45,6 @@ export class Project {
     }
     const filePath = path.resolve(rawPath);
     let item = this.matchPathToType(filePath);
-    logInfo(JSON.stringify(item));
     let normalizedItem: undefined | NormalizedRegistryItem = undefined;
     if (item) {
       normalizedItem = normalizeMatchNaming(item) as NormalizedRegistryItem;
