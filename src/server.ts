@@ -123,14 +123,6 @@ export default class Server {
       if (!project) {
         return;
       }
-      logInfo(filePath);
-      const textEdit = TextEdit.replace(range, `<${normalizeToAngleBracketComponent(componentName)} />`);
-      const edit: WorkspaceEdit = {
-        changes: {
-          [uri]: [textEdit]
-        }
-      };
-      this.connection.workspace.applyEdit(edit);
       try {
         await this.onExecute({
           command: 'els.executeInEmberCLI',
@@ -144,12 +136,16 @@ export default class Server {
           return;
         }
         const fileName = registry['component'][componentName].find((file: string) => file.endsWith('.hbs'));
+        logInfo('fileName: ' + fileName);
+        const fileUri = URI.file(fileName).toString();
+        logInfo('fileUri: ' + fileUri);
         const edit: WorkspaceEdit = {
           changes: {
-            [URI.file(fileName).toString()]: [TextEdit.insert(Position.create(0, 0), source)]
+            [uri]: [TextEdit.replace(range, `<${normalizeToAngleBracketComponent(componentName)} />`)],
+            [fileUri]: [TextEdit.insert(Position.create(0, 0), source)]
           }
         };
-        this.connection.workspace.applyEdit(edit);
+        await this.connection.workspace.applyEdit(edit);
       } catch (e) {
         logError(e);
       }
