@@ -2695,6 +2695,7 @@ Array [
 exports[`integration Initialize request returns an initialize request 1`] = `
 Object {
   "capabilities": Object {
+    "codeActionProvider": true,
     "completionProvider": Object {
       "resolveProvider": true,
       "triggerCharacters": Array [

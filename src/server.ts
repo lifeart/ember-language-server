@@ -167,6 +167,18 @@ export default class Server {
     */
     const range = params.range;
 
+    const { project, document } = this.templateCompletionProvider.getRoots(params.textDocument);
+
+    if (!project || !document) {
+      return [];
+    }
+
+    const data = this.templateCompletionProvider.getFocusPath(document, range.start, '');
+
+    if (data) {
+      logInfo(JSON.stringify(data.focusPath));
+    }
+
     // ed.replace(Range.create(range.start, range.start.translate(0, 3)), '123');
     // .translate(0, 3)
 
