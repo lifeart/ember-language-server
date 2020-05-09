@@ -53,6 +53,7 @@ import { getRegistryForRoot, addToRegistry, REGISTRY_KIND, normalizeMatchNaming 
 import { Usage, findRelatedFiles } from './utils/usages-api';
 import ASTPath from './glimmer-utils';
 import { Position } from 'vscode-languageserver';
+import { normalizeToAngleBracketComponent } from './utils/normalizers';
 
 export default class Server {
   initializers: any[] = [];
@@ -119,7 +120,7 @@ export default class Server {
     };
     this.executors['els.extractSourceCodeToComponent'] = async (_, __, [filePath, componentName, { range, source, uri }]) => {
       logInfo(filePath);
-      const textEdit = TextEdit.replace(range, '123');
+      const textEdit = TextEdit.replace(range, `<${normalizeToAngleBracketComponent(componentName)} />`);
       const edit: WorkspaceEdit = {
         changes: {
           [uri]: [textEdit]
