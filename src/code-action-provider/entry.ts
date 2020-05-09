@@ -17,7 +17,6 @@ export class CodeActionProvider {
       results: [],
       project: project,
       document: document,
-      text: document.getText(range),
       server: this.server
     });
     return addonResults;
