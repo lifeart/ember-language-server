@@ -135,8 +135,11 @@ export default class Server {
         // going to wait for file changes api
         await new Promise((resolve) => setTimeout(resolve, 3000));
         const registry = this.getRegistry(filePath);
-        logInfo(JSON.stringify(registry));
-        const fileName = registry['components'][componentName].find((file: string) => file.includes('/components/') && !file.includes('/test'));
+        if (!(componentName in registry.component)) {
+          logError(`Unable to find component ${componentName} in registry ${JSON.stringify(registry.component)}`);
+          return;
+        }
+        const fileName = registry['component'][componentName].find((file: string) => file.endsWith('.hbs'));
         const edit: WorkspaceEdit = {
           changes: {
             [URI.file(fileName).toString()]: [TextEdit.insert(Position.create(0, 0), source)]

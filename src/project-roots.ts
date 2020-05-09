@@ -34,6 +34,8 @@ export class Project {
     return this.classicMatcher.metaFromPath(filePath) || this.podMatcher.metaFromPath(filePath);
   }
   trackChange(uri: string, change: FileChangeType) {
+    logInfo('trackChange');
+    logInfo(uri);
     // prevent leaks
     if (this.files.size > 10000) {
       logError('too many files for project ' + this.root);
