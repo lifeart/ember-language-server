@@ -14,10 +14,13 @@ import {
   IPCMessageWriter,
   createConnection,
   DidChangeWatchedFilesParams,
+  Range,
   IConnection,
   TextDocuments,
   InitializeResult,
   Diagnostic,
+  CodeActionKind,
+  WorkspaceEdit,
   InitializeParams,
   CodeActionParams,
   Command,
@@ -150,9 +153,23 @@ export default class Server {
       return [];
     };
   }
-  private onCodeAction(params: CodeActionParams): (Command | CodeAction)[] | undefined | null {
+  private async onCodeAction(params: CodeActionParams): Promise<(Command | CodeAction)[] | undefined | null> {
+    await new Promise((resolve) => setTimeout(resolve, 4000));
+    /*
+      {
+        "textDocument":{
+          "uri":"file:///c%3A/Users/lifeart/Documents/repos/brn/frontend/app/components/task-player/single-words/template.hbs"
+        },
+        "range":{"start":{"line":5,"character":4},"end":{"line":5,"character":25}},
+        "context":{"diagnostics":[]}
+      }
+    */
+    const range = params.range;
+    const fix = new CodeAction(`Extract to component`, CodeActionKind.QuickFix);
+    fix.edit = new WorkspaceEdit();
+    fix.edit.replace(params.textDocument.uri, new Range(range.start, range.start.translate(0, 3)), '123');
     logInfo(JSON.stringify(params));
-    return null;
+    return [fix];
   }
   constructor() {
     // Make the text document manager listen on the connection
