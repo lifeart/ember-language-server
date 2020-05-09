@@ -130,7 +130,7 @@ export default class Server {
       try {
         await this.onExecute({
           command: 'els.executeInEmberCLI',
-          arguments: [`g component ${componentName}`]
+          arguments: [filePath, `g component ${componentName}`]
         });
         const registry = this.getRegistry(filePath);
         logInfo(JSON.stringify(registry));
@@ -282,7 +282,6 @@ export default class Server {
         return this.executors[params.command](this, params.command, params.arguments);
       } else {
         let [uri, ...args] = params.arguments;
-        logInfo(JSON.stringify(params));
         try {
           const project = this.projectRoots.projectForPath(uri);
           let result = null;
