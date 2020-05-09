@@ -327,7 +327,15 @@ export default class Server {
         textDocumentSync: TextDocumentSyncKind.Full,
         definitionProvider: true,
         executeCommandProvider: {
-          commands: ['els:registerProjectPath', 'els.executeInEmberCLI', 'els.getRelatedFiles', 'els.getKindUsages', 'els.setConfig', 'els.reloadProject']
+          commands: [
+            'els:registerProjectPath',
+            'els.extractSourceCodeToComponent',
+            'els.executeInEmberCLI',
+            'els.getRelatedFiles',
+            'els.getKindUsages',
+            'els.setConfig',
+            'els.reloadProject'
+          ]
         },
         documentSymbolProvider: true,
         codeActionProvider: true,
