@@ -170,7 +170,7 @@ export default class Server {
     // ed.replace(Range.create(range.start, range.start.translate(0, 3)), '123');
     // .translate(0, 3)
 
-    const textEdit = TextEdit.replace(Range.create(range.start, range.start), '123') as TextEdit;
+    const textEdit = TextEdit.replace(Range.create(range.start, range.end), '123') as TextEdit;
     const edit: WorkspaceEdit = {
       changes: {
         [params.textDocument.uri]: [textEdit]
