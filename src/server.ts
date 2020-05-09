@@ -34,7 +34,8 @@ import {
   TextDocumentSyncKind,
   StreamMessageWriter,
   ReferenceParams,
-  Location
+  Location,
+  TextEdit
 } from 'vscode-languageserver';
 
 import ProjectRoots, { Project, Executors } from './project-roots';
@@ -165,9 +166,20 @@ export default class Server {
       }
     */
     const range = params.range;
-    const fix = new CodeAction(`Extract to component`, CodeActionKind.QuickFix);
-    fix.edit = new WorkspaceEdit();
-    fix.edit.replace(params.textDocument.uri, new Range(range.start, range.start.translate(0, 3)), '123');
+
+    // ed.replace(Range.create(range.start, range.start.translate(0, 3)), '123');
+    // .translate(0, 3)
+
+    const textEdit = TextEdit.replace(Range.create(range.start, range.start), '123') as TextEdit;
+    const edit: WorkspaceEdit = {
+      changes: {
+        [params.textDocument.uri]: [textEdit]
+      }
+    };
+    // const edit = WorkspaceEdit.is()
+    const fix = CodeAction.create('Extract to component', edit, CodeActionKind.QuickFix);
+
+    // fix.edit.replace(params.textDocument.uri, new Range(range.start, range.start.translate(0, 3)), '123');
     logInfo(JSON.stringify(params));
     return [fix];
   }
