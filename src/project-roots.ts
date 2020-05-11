@@ -109,6 +109,7 @@ export class Project {
           this.destructors.push(initResult);
         }
       } catch (e) {
+        logError(e);
         this.initIssues.push(e);
       }
     });
@@ -120,6 +121,7 @@ export class Project {
           this.destructors.push(initResult);
         }
       } catch (e) {
+        logError(e);
         this.initIssues.push(e);
       }
     });
