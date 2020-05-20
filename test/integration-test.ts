@@ -508,6 +508,34 @@ describe('integration', function() {
 
       expect(result).toMatchSnapshot();
     });
+
+    it('go to definition working if we have test for component', async () => {
+      const result = await getResult(
+        DefinitionRequest.type,
+        connection,
+        {
+          app: {
+            components: {
+              'hello.ts': 'hbs`<Darling />`',
+              'darling.ts': ''
+            }
+          },
+          tests: {
+            integration: {
+              components: {
+                darling: {
+                  'component-test.js': ''
+                }
+              }
+            }
+          }
+        },
+        'app/components/hello.ts',
+        { line: 0, character: 6 }
+      );
+
+      expect(result).toMatchSnapshot();
+    });
   });
 
   describe('GlimmerX', () => {
