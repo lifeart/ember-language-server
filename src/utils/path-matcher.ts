@@ -13,9 +13,11 @@ export type MatchResultType =
   | 'adapter'
   | 'serializer';
 
+export type MatchResultKind = 'test' | 'script' | 'template' | 'style';
 export interface MatchResult {
   type: MatchResultType;
   name: string;
+  kind: MatchResultKind;
 }
 
 export class ClassicPathMatcher {
@@ -69,6 +71,10 @@ export class ClassicPathMatcher {
   }
   metaFromPath(rawAbsPath: string): MatchResult | null {
     let absPath = rawAbsPath.split(path.sep).join('/');
+    const isTest = absPath.includes('/tests/');
+    const isTemplate = absPath.endsWith('.hbs');
+    const isStyle = absPath.endsWith('.css') || absPath.endsWith('.less') || absPath.endsWith('.scss');
+    const kind = isStyle ? 'style' : isTemplate ? 'template' : isTest ? 'test' : 'script';
     const extName = path.extname(absPath);
     const fileName = path.basename(absPath, extName);
     const results: [string, string][] = [];
@@ -82,7 +88,8 @@ export class ClassicPathMatcher {
     }
     return {
       type: results[0][0] as MatchResultType,
-      name: results[0][1]
+      name: results[0][1],
+      kind
     };
   }
 }
