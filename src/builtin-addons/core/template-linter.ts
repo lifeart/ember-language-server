@@ -3,6 +3,7 @@ import { Command, CodeAction, WorkspaceEdit, CodeActionKind, TextEdit } from 'vs
 import { uriToFilePath } from 'vscode-languageserver/lib/files';
 import Server from '../../server';
 import { Project } from '../../project-roots';
+import { logInfo } from '../../utils/logger';
 
 export default class ProjectTemplateLinter implements AddonAPI {
   private server!: Server;
@@ -15,7 +16,9 @@ export default class ProjectTemplateLinter implements AddonAPI {
     if (!params.textDocument.uri.endsWith('.hbs')) {
       return null;
     }
+    logInfo('onCodeAction', 'template-linter');
     const diagnostics = params.context.diagnostics;
+    logInfo(JSON.stringify(diagnostics));
     const fixableIssues = diagnostics.filter((el) => el.source === 'ember-template-lint' && el.message.endsWith('(fixable)'));
     if (!fixableIssues) {
       return null;

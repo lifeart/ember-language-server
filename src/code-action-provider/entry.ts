@@ -1,6 +1,7 @@
 import { Command, CodeAction, CodeActionParams } from 'vscode-languageserver';
 import Server from '../server';
 import { queryELSAddonsAPIChain } from './../utils/addon-api';
+import { logInfo } from '../utils/logger';
 
 export class CodeActionProvider {
   constructor(private server: Server) {}
@@ -21,7 +22,6 @@ export class CodeActionProvider {
       document: document,
       server: this.server,
     });
-
     const addonResults = await queryELSAddonsAPIChain(project.providers.codeActionProviders, project.root, {
       textDocument,
       context,
@@ -31,6 +31,7 @@ export class CodeActionProvider {
       document: document,
       server: this.server,
     });
+
     return [...internalResults, ...addonResults].filter(Boolean);
   }
 }
