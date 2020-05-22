@@ -101,7 +101,7 @@ export default class ProjectTemplateLinter implements AddonAPI {
             },
           };
 
-          return CodeAction.create(`QuickFix: ${issue.code}`, edit, CodeActionKind.QuickFix);
+          return CodeAction.create(`fix: ${issue.code}`, edit, CodeActionKind.QuickFix);
         })
         .filter((el) => el !== null) as CodeAction[];
     } catch (e) {
