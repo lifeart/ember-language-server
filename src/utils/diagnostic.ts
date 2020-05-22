@@ -30,6 +30,7 @@ function toMessage({ message, isFixable }: TemplateLinterError): string {
   }
 
   message = message.replace(OnLineErrorExp, '');
+
   if (isFixable) {
     message = `${message} (fixable)`;
   }

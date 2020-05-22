@@ -50,15 +50,18 @@ export default class TemplateLinter {
 
   private sourceForDocument(textDocument: TextDocument) {
     const ext = getExtension(textDocument);
+
     if (ext !== null && !extensionsToLint.includes(ext)) {
       return;
     }
+
     const documentContent = textDocument.getText();
     const source = ext === '.hbs' ? documentContent : searchAndExtractHbs(documentContent);
 
     if (!source.trim().length) {
       return;
     }
+
     return source;
   }
   async lint(textDocument: TextDocument) {

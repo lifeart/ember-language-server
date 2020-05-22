@@ -106,7 +106,7 @@ export function initBuiltinProviders(): ProjectProviders {
     initFunctions: [
       templateCodeActionProvider.onInit.bind(templateCodeActionProvider),
       templateCompletion.initRegistry.bind(templateCompletion),
-      scriptCompletion.initRegistry.bind(scriptCompletion)
+      scriptCompletion.initRegistry.bind(scriptCompletion),
     ],
     info: [],
     completionProviders: [scriptCompletion.onComplete.bind(scriptCompletion), templateCompletion.onComplete.bind(templateCompletion)],
