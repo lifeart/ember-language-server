@@ -44,9 +44,9 @@ export default class ProjectTemplateLinter implements AddonAPI {
           });
           logInfo(`output -> ${output}, isFixed -> ${isFixed}`);
 
-          if (!isFixed) {
-            return null;
-          }
+          // if (!isFixed) {
+          //   return null;
+          // }
           const edit: WorkspaceEdit = {
             changes: {
               [params.textDocument.uri]: [TextEdit.replace(issue.range, output)]
