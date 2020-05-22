@@ -3,8 +3,24 @@ import { Command, CodeAction, WorkspaceEdit, CodeActionKind, TextEdit } from 'vs
 import { uriToFilePath } from 'vscode-languageserver/lib/files';
 import Server from '../../server';
 import { Project } from '../../project-roots';
-import { logInfo, logError } from '../../utils/logger';
+import { logError } from '../../utils/logger';
+import { toPosition, toLSRange } from '../../estree-utils';
+import ASTPath from '../../glimmer-utils';
 
+function findValidNodeSelection(focusPath: ASTPath) {
+  const validNodes = ['ElementNode', 'ElementModifierStatement', 'BlockStatement', 'MustacheStatement', 'Template'];
+  let cursor: ASTPath | undefined = focusPath;
+  while (cursor) {
+    if (validNodes.includes(cursor.node.type)) {
+      return {
+        selection: focusPath.sourceForNode(),
+        location: focusPath.node.loc
+      };
+    }
+    cursor = cursor.parentPath;
+  }
+  return null;
+}
 export default class ProjectTemplateLinter implements AddonAPI {
   private server!: Server;
   private project!: Project;
@@ -17,16 +33,26 @@ export default class ProjectTemplateLinter implements AddonAPI {
       return null;
     }
     const diagnostics = params.context.diagnostics;
-    logInfo(JSON.stringify(diagnostics));
     const fixableIssues = diagnostics.filter((el) => el.source === 'ember-template-lint' && el.message.endsWith('(fixable)'));
     if (!fixableIssues) {
-      logInfo('no fixable issues found');
       return null;
     }
     const linterKlass = await this.server.templateLinter.linterForProject(this.project);
     if (!linterKlass) {
-      logInfo('no linter class found');
-
+      return null;
+    }
+    const documentContent = params.document.getText();
+    const ast = this.server.templateCompletionProvider.getAST(documentContent);
+    let focusPath = this.server.templateCompletionProvider.createFocusPath(ast, toPosition(params.range.start), documentContent);
+    if (!focusPath) {
+      return null;
+    }
+    focusPath = this.server.templateCompletionProvider.createFocusPath(ast, toPosition(params.range.end), documentContent);
+    if (!focusPath) {
+      return null;
+    }
+    const meta = findValidNodeSelection(focusPath);
+    if (!meta) {
       return null;
     }
     const cwd = process.cwd();
@@ -36,21 +62,17 @@ export default class ProjectTemplateLinter implements AddonAPI {
     try {
       codeActions = fixableIssues
         .map((issue) => {
-          const codePart = params.document.getText(issue.range);
-          logInfo(`${codePart} <- codePart`);
           const { output, isFixed } = linter.verifyAndFix({
-            source: codePart,
+            source: meta.selection,
             moduleId: uriToFilePath(params.textDocument.uri),
             filePath: uriToFilePath(params.textDocument.uri)
           });
-          logInfo(`output -> ${output}, isFixed -> ${isFixed}`);
-
-          // if (!isFixed) {
-          //   return null;
-          // }
+          if (!isFixed) {
+            return null;
+          }
           const edit: WorkspaceEdit = {
             changes: {
-              [params.textDocument.uri]: [TextEdit.replace(issue.range, output + '[fixed]')]
+              [params.textDocument.uri]: [TextEdit.replace(toLSRange(meta.location), output)]
             }
           };
           return CodeAction.create(`Ember Template Lint - Fix: [${issue.code}]`, edit, CodeActionKind.QuickFix);
