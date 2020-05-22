@@ -4,10 +4,16 @@ import { uriToFilePath } from 'vscode-languageserver/lib/files';
 import Server from '../../server';
 import { Project } from '../../project-roots';
 import { logError } from '../../utils/logger';
+import { SourceLocation } from 'estree';
 import { toPosition, toLSRange } from '../../estree-utils';
 import ASTPath from '../../glimmer-utils';
 
-function findValidNodeSelection(focusPath: ASTPath) {
+function findValidNodeSelection(
+  focusPath: ASTPath
+): null | {
+  selection: string | undefined;
+  location: SourceLocation;
+} {
   const validNodes = ['ElementNode', 'ElementModifierStatement', 'BlockStatement', 'MustacheStatement', 'Template'];
   let cursor: ASTPath | undefined = focusPath;
 
@@ -28,7 +34,7 @@ function findValidNodeSelection(focusPath: ASTPath) {
 export default class ProjectTemplateLinter implements AddonAPI {
   private server!: Server;
   private project!: Project;
-  onInit(server: Server, project: Project) {
+  onInit(server: Server, project: Project): void {
     this.server = server;
     this.project = project;
   }

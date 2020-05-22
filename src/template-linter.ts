@@ -64,7 +64,7 @@ export default class TemplateLinter {
 
     return source;
   }
-  async lint(textDocument: TextDocument) {
+  async lint(textDocument: TextDocument): Promise<Diagnostic[] | undefined> {
     const cwd = process.cwd();
     const project = this.getProjectForDocument(textDocument);
 
@@ -103,12 +103,14 @@ export default class TemplateLinter {
 
     return diagnostics;
   }
-  private templateLintConfig(cwd: string) {
+  private templateLintConfig(cwd: string): string | undefined {
     return findUp.sync('.template-lintrc.js', { cwd });
   }
+  // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
   public async linterForProject(project: Project) {
     return await this.getLinter(project);
   }
+  // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
   private async getLinter(project: Project) {
     if (this._linterCache.has(project)) {
       return this._linterCache.get(project);
