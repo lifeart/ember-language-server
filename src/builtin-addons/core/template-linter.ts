@@ -16,7 +16,6 @@ export default class ProjectTemplateLinter implements AddonAPI {
     if (!params.textDocument.uri.endsWith('.hbs')) {
       return null;
     }
-    logInfo('onCodeAction', 'template-linter');
     const diagnostics = params.context.diagnostics;
     logInfo(JSON.stringify(diagnostics));
     const fixableIssues = diagnostics.filter((el) => el.source === 'ember-template-lint' && el.message.endsWith('(fixable)'));
@@ -52,7 +51,7 @@ export default class ProjectTemplateLinter implements AddonAPI {
               [params.textDocument.uri]: [TextEdit.replace(issue.range, output + '[fixed]')]
             }
           };
-          return CodeAction.create('Fix ' + issue.code, edit, CodeActionKind.QuickFix);
+          return CodeAction.create(`Ember Template Lint - Fix: [${issue.code}]`, edit, CodeActionKind.QuickFix);
         })
         .filter((el) => el !== null) as CodeAction[];
     } catch (e) {

@@ -1,7 +1,6 @@
 import { Command, CodeAction, CodeActionParams } from 'vscode-languageserver';
 import Server from '../server';
 import { queryELSAddonsAPIChain } from './../utils/addon-api';
-import { logInfo } from '../utils/logger';
 
 export class CodeActionProvider {
   constructor(private server: Server) {}
