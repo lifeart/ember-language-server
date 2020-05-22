@@ -37,24 +37,41 @@ export default class TemplateLinter {
 
   constructor(private server: Server) {}
 
-  async lint(textDocument: TextDocument) {
+  private getProjectForDocument(textDocument: TextDocument) {
     const ext = getExtension(textDocument);
 
     if (ext !== null && !extensionsToLint.includes(ext)) {
       return;
     }
 
+    return this.server.projectRoots.projectForUri(textDocument.uri);
+  }
+
+  private sourceForDocument(textDocument: TextDocument) {
+    const ext = getExtension(textDocument);
+    if (ext !== null && !extensionsToLint.includes(ext)) {
+      return;
+    }
+    const documentContent = textDocument.getText();
+    const source = ext === '.hbs' ? documentContent : searchAndExtractHbs(documentContent);
+
+    if (!source.trim().length) {
+      return;
+    }
+    return source;
+  }
+
+  async lint(textDocument: TextDocument) {
     const cwd = process.cwd();
-    const project = this.server.projectRoots.projectForUri(textDocument.uri);
+    const project = this.getProjectForDocument(textDocument);
 
     if (!project) {
       return;
     }
 
-    const documentContent = textDocument.getText();
-    const source = ext === '.hbs' ? documentContent : searchAndExtractHbs(documentContent);
+    const source = this.sourceForDocument(textDocument);
 
-    if (!source.trim().length) {
+    if (!source) {
       return;
     }
 
