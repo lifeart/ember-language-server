@@ -3,7 +3,7 @@ import { Command, CodeAction, WorkspaceEdit, CodeActionKind, TextEdit } from 'vs
 import { uriToFilePath } from 'vscode-languageserver/lib/files';
 import Server from '../../server';
 import { Project } from '../../project-roots';
-import { logInfo } from '../../utils/logger';
+import { logInfo, logError } from '../../utils/logger';
 
 export default class ProjectTemplateLinter implements AddonAPI {
   private server!: Server;
@@ -31,26 +31,34 @@ export default class ProjectTemplateLinter implements AddonAPI {
       return null;
     }
     const linter = new linterKlass();
-    const codeActions = fixableIssues
-      .map((issue) => {
-        const codePart = params.document.getText(issue.range);
-        logInfo(`${codePart} <- codePart`);
-        const { output, isFixed } = linter.verifyAndFix({
-          source: codePart,
-          moduleId: uriToFilePath(params.textDocument.uri),
-          filePath: uriToFilePath(params.textDocument.uri)
-        });
-        if (!isFixed) {
-          return null;
-        }
-        const edit: WorkspaceEdit = {
-          changes: {
-            [params.textDocument.uri]: [TextEdit.replace(issue.range, output)]
+    let codeActions: CodeAction[] = [];
+    try {
+      codeActions = fixableIssues
+        .map((issue) => {
+          const codePart = params.document.getText(issue.range);
+          logInfo(`${codePart} <- codePart`);
+          const { output, isFixed } = linter.verifyAndFix({
+            source: codePart,
+            moduleId: uriToFilePath(params.textDocument.uri),
+            filePath: uriToFilePath(params.textDocument.uri)
+          });
+          logInfo(`output -> ${output}, isFixed -> ${isFixed}`);
+
+          if (!isFixed) {
+            return null;
           }
-        };
-        return CodeAction.create('Fix ' + issue.code, edit, CodeActionKind.QuickFix);
-      })
-      .filter((el) => el !== null);
+          const edit: WorkspaceEdit = {
+            changes: {
+              [params.textDocument.uri]: [TextEdit.replace(issue.range, output)]
+            }
+          };
+          return CodeAction.create('Fix ' + issue.code, edit, CodeActionKind.QuickFix);
+        })
+        .filter((el) => el !== null) as CodeAction[];
+    } catch (e) {
+      logError(e);
+    }
+
     return codeActions as CodeAction[];
   }
 }
