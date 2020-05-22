@@ -1,5 +1,5 @@
-import ProjectTemplateLinter from '../../../lib/builtin-addons/core/template-linter';
-import TemplateCompletionProvider from '../../../lib/completion-provider/template-completion-provider';
+import ProjectTemplateLinter from '../../../src/builtin-addons/core/template-linter';
+import TemplateCompletionProvider from '../../../src/completion-provider/template-completion-provider';
 
 describe('ProjectTemplateLinter', () => {
   let server, project, instance;
