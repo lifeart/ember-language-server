@@ -17,6 +17,7 @@ export interface TemplateLinterError {
   rule?: string;
   severity: number;
   message: string;
+  isFixable?: boolean;
   line?: number;
   column?: number;
   source?: string;
@@ -102,6 +103,9 @@ export default class TemplateLinter {
   }
   private templateLintConfig(cwd: string) {
     return findUp.sync('.template-lintrc.js', { cwd });
+  }
+  public async linterForProject(project: Project) {
+    return this.getLinter(project);
   }
   private async getLinter(project: Project) {
     if (this._linterCache.has(project)) {

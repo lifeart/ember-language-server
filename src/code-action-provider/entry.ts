@@ -12,7 +12,7 @@ export class CodeActionProvider {
       return [];
     }
 
-    const addonResults = await queryELSAddonsAPIChain(project.providers.codeActionProviders, project.root, {
+    const internalResults = await queryELSAddonsAPIChain(project.builtinProviders.codeActionProviders, project.root, {
       textDocument,
       context,
       range,
@@ -22,6 +22,15 @@ export class CodeActionProvider {
       server: this.server,
     });
 
-    return addonResults;
+    const addonResults = await queryELSAddonsAPIChain(project.providers.codeActionProviders, project.root, {
+      textDocument,
+      context,
+      range,
+      results: [],
+      project: project,
+      document: document,
+      server: this.server,
+    });
+    return [...internalResults, ...addonResults].filter(Boolean);
   }
 }
