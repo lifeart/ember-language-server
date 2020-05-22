@@ -75,7 +75,7 @@ export default class ProjectTemplateLinter implements AddonAPI {
               [params.textDocument.uri]: [TextEdit.replace(toLSRange(meta.location), output)]
             }
           };
-          return CodeAction.create(`Ember Template Lint - Fix: [${issue.code}]`, edit, CodeActionKind.QuickFix);
+          return CodeAction.create(`QuickFix: ${issue.code}`, edit, CodeActionKind.QuickFix);
         })
         .filter((el) => el !== null) as CodeAction[];
     } catch (e) {
