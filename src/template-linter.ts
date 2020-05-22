@@ -61,7 +61,6 @@ export default class TemplateLinter {
     }
     return source;
   }
-
   async lint(textDocument: TextDocument) {
     const cwd = process.cwd();
     const project = this.getProjectForDocument(textDocument);
@@ -105,7 +104,7 @@ export default class TemplateLinter {
     return findUp.sync('.template-lintrc.js', { cwd });
   }
   public async linterForProject(project: Project) {
-    return this.getLinter(project);
+    return await this.getLinter(project);
   }
   private async getLinter(project: Project) {
     if (this._linterCache.has(project)) {

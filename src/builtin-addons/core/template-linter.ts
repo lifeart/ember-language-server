@@ -29,6 +29,8 @@ export default class ProjectTemplateLinter implements AddonAPI {
 
       return null;
     }
+    const cwd = process.cwd();
+    process.chdir(this.project.root);
     const linter = new linterKlass();
     let codeActions: CodeAction[] = [];
     try {
@@ -57,7 +59,7 @@ export default class ProjectTemplateLinter implements AddonAPI {
     } catch (e) {
       logError(e);
     }
-
+    process.chdir(cwd);
     return codeActions as CodeAction[];
   }
 }
