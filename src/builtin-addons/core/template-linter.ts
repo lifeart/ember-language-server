@@ -49,7 +49,7 @@ export default class ProjectTemplateLinter implements AddonAPI {
           // }
           const edit: WorkspaceEdit = {
             changes: {
-              [params.textDocument.uri]: [TextEdit.replace(issue.range, output)]
+              [params.textDocument.uri]: [TextEdit.replace(issue.range, output + '[fixed]')]
             }
           };
           return CodeAction.create('Fix ' + issue.code, edit, CodeActionKind.QuickFix);
