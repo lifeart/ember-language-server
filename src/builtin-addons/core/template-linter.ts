@@ -21,16 +21,20 @@ export default class ProjectTemplateLinter implements AddonAPI {
     logInfo(JSON.stringify(diagnostics));
     const fixableIssues = diagnostics.filter((el) => el.source === 'ember-template-lint' && el.message.endsWith('(fixable)'));
     if (!fixableIssues) {
+      logInfo('no fixable issues found');
       return null;
     }
     const linterKlass = await this.server.templateLinter.linterForProject(this.project);
     if (!linterKlass) {
+      logInfo('no linter class found');
+
       return null;
     }
     const linter = new linterKlass();
     const codeActions = fixableIssues
       .map((issue) => {
         const codePart = params.document.getText(issue.range);
+        logInfo(`${codePart} <- codePart`);
         const { output, isFixed } = linter.verifyAndFix({
           source: codePart,
           moduleId: uriToFilePath(params.textDocument.uri),
