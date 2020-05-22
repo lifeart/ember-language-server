@@ -1,5 +1,6 @@
 import { AddonAPI, CodeActionFunctionParams } from '../../utils/addon-api';
 import { Command, CodeAction, WorkspaceEdit, CodeActionKind, TextEdit } from 'vscode-languageserver';
+import { uriToFilePath } from 'vscode-languageserver/lib/files';
 import Server from '../../server';
 import { Project } from '../../project-roots';
 
@@ -19,21 +20,30 @@ export default class ProjectTemplateLinter implements AddonAPI {
     if (!fixableIssues) {
       return null;
     }
-    const linter = await this.server.templateLinter.linterForProject(this.project);
-    if (!linter) {
+    const linterKlass = await this.server.templateLinter.linterForProject(this.project);
+    if (!linterKlass) {
       return null;
     }
-    const codeActions = fixableIssues.map((issue) => {
-      const codePart = params.document.getText(issue.range);
-      console.log('codePart', codePart);
-      const { code } = linter.verifyAndFix(codePart);
-      const edit: WorkspaceEdit = {
-        changes: {
-          [params.textDocument.uri]: [TextEdit.replace(issue.range, code)]
+    const linter = new linterKlass();
+    const codeActions = fixableIssues
+      .map((issue) => {
+        const codePart = params.document.getText(issue.range);
+        const { output, isFixed } = linter.verifyAndFix({
+          source: codePart,
+          moduleId: uriToFilePath(params.textDocument.uri),
+          filePath: uriToFilePath(params.textDocument.uri)
+        });
+        if (!isFixed) {
+          return null;
         }
-      };
-      return CodeAction.create('Fix ' + issue.code, edit, CodeActionKind.QuickFix);
-    });
-    return codeActions;
+        const edit: WorkspaceEdit = {
+          changes: {
+            [params.textDocument.uri]: [TextEdit.replace(issue.range, output)]
+          }
+        };
+        return CodeAction.create('Fix ' + issue.code, edit, CodeActionKind.QuickFix);
+      })
+      .filter((el) => el !== null);
+    return codeActions as CodeAction[];
   }
 }
