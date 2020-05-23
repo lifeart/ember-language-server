@@ -73,4 +73,47 @@ describe('ProjectTemplateLinter', () => {
       },
     ]);
   });
+
+  test('it return valid result on template with linebreaks', async () => {
+    const params = {
+      context: {
+        diagnostics: [
+          {
+            source: 'ember-template-lint',
+            message: '(fixable)',
+            code: 'no-unfixed-codebase',
+          },
+        ],
+      },
+      textDocument: {
+        uri: 'layout.hbs',
+      },
+      document: {
+        getText: (): string => '<button>\n</button>',
+      },
+      range: {
+        start: {
+          line: 0,
+          col: 0,
+        },
+        end: {
+          line: 2,
+          col: 8,
+        },
+      },
+    };
+    const result = await instance.onCodeAction('', params);
+
+    expect(result).toStrictEqual([
+      {
+        edit: {
+          changes: {
+            'layout.hbs': [{ newText: '<button type="button">\n</button>', range: { end: { character: 8, line: 2 }, start: { character: 0, line: 0 } } }],
+          },
+        },
+        kind: 'quickfix',
+        title: 'fix: no-unfixed-codebase',
+      },
+    ]);
+  });
 });
