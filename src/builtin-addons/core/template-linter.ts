@@ -17,11 +17,11 @@ function findValidNodeSelection(
   const validNodes = ['ElementNode', 'ElementModifierStatement', 'BlockStatement', 'MustacheStatement', 'Template'];
   let cursor: ASTPath | undefined = focusPath;
 
-  while (cursor) {
+  while (cursor && cursor.node) {
     if (validNodes.includes(cursor.node.type)) {
       return {
-        selection: focusPath.sourceForNode(),
-        location: focusPath.node.loc,
+        selection: cursor.sourceForNode(),
+        location: cursor.node.loc,
       };
     }
 
