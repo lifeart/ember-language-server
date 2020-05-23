@@ -46,7 +46,7 @@ export default class ProjectTemplateLinter implements AddonAPI {
     const diagnostics = params.context.diagnostics;
     const fixableIssues = diagnostics.filter((el) => el.source === 'ember-template-lint' && el.message.endsWith('(fixable)'));
 
-    if (!fixableIssues) {
+    if (!fixableIssues.length) {
       return null;
     }
 
