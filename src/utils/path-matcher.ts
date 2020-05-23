@@ -140,7 +140,11 @@ export class PodMatcher extends ClassicPathMatcher {
     serializer: ['/serializer.'],
   };
   rightPartFromFirstMatch(_: string, fileName: string, extName: string, str: string) {
-    const fullName = str.slice(str.indexOf(this.podPrefix) + this.podPrefix.length + 1, str.length).slice(0, -(1 + extName.length + fileName.length));
+    let fullName = str.slice(str.indexOf(this.podPrefix) + this.podPrefix.length + 1, str.length).slice(0, -(1 + extName.length + fileName.length));
+
+    if (fullName.startsWith('components/')) {
+      fullName = fullName.replace('components/', '');
+    }
 
     return fullName;
   }
