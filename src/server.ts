@@ -136,17 +136,23 @@ export default class Server {
       }
     };
 
-    this.executors['els.getRelatedFiles'] = async (_, __, [filePath]) => {
+    this.executors['els.getRelatedFiles'] = async (_, __, [filePath, flags]) => {
       const fullPath = path.resolve(filePath);
       const project = this.projectRoots.projectForPath(filePath);
+      const includeMeta = typeof flags === 'object' && flags.includeMeta === true;
 
       if (project) {
         const item = project.matchPathToType(fullPath);
 
         if (item) {
           const normalizedItem = normalizeMatchNaming(item);
+          const registryResults: string[] = this.getRegistry(project.root)[normalizedItem.type][normalizedItem.name] || [];
 
-          return this.getRegistry(project.root)[normalizedItem.type][normalizedItem.name] || [];
+          if (!includeMeta) {
+            return registryResults;
+          }
+
+          return registryResults.map((filePath) => project.matchPathToType(filePath));
         }
       }
 
