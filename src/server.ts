@@ -152,7 +152,12 @@ export default class Server {
             return registryResults;
           }
 
-          return registryResults.map((filePath) => project.matchPathToType(filePath));
+          return registryResults.map((filePath) => {
+            return {
+              path: filePath,
+              meta: project.matchPathToType(filePath),
+            };
+          });
         }
       }
 

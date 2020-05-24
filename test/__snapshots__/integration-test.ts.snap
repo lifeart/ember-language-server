@@ -2404,6 +2404,26 @@ Array [
 ]
 `;
 
+exports[`integration Diffent commands handle "els.getRelatedFiles" command 1`] = `
+Array [
+  "tests/integration/components/hello-test.js",
+]
+`;
+
+exports[`integration Diffent commands handle "els.getRelatedFiles" command with meta flag 1`] = `
+Array [
+  Object {
+    "meta": Object {
+      "kind": "test",
+      "name": "hello",
+      "scope": "application",
+      "type": "component",
+    },
+    "path": "tests/integration/components/hello-test.js",
+  },
+]
+`;
+
 exports[`integration DocumentSymbolProvider able to provide symbols for script document 1`] = `Array []`;
 
 exports[`integration DocumentSymbolProvider able to provide symbols for template document 1`] = `Array []`;

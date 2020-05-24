@@ -15,6 +15,8 @@ import {
   ReferencesRequest,
 } from 'vscode-languageserver-protocol';
 
+type UnknownResult = Record<string, unknown>;
+
 function startServer() {
   const serverPath = './lib/start-server.js';
 
@@ -32,7 +34,7 @@ async function reloadProjects(connection, project = undefined) {
   return result;
 }
 
-async function createProject(files, connection) {
+async function createProject(files, connection): Promise<{ normalizedPath: string; result: UnknownResult; destroy(): void }> {
   const dir = await createTempDir();
 
   dir.write(files);
@@ -100,8 +102,12 @@ function replaceDynamicUriPart(uri: string) {
   return uri.replace(dirname.replace(/\\/g, '/'), '/path-to-tests').replace(dirname, '/path-to-tests').replace(/\\/g, '/');
 }
 
+function normalizePath(file: string) {
+  return file.split('\\').join('/');
+}
+
 function replaceTempUriPart(uri: string, base: string) {
-  return path.normalize(uri.replace('file://', '')).replace(base, '').split(path.sep).join('/');
+  return normalizePath(path.normalize(uri.replace('file://', '')).replace(base, ''));
 }
 
 function normalizeUri(objects: Definition, base?: string) {
@@ -514,6 +520,79 @@ describe('integration', function () {
       );
 
       expect(result).toMatchSnapshot();
+    });
+  });
+
+  describe('Diffent commands', () => {
+    it('handle "els.getRelatedFiles" command', async () => {
+      const project = await createProject(
+        {
+          app: {
+            components: {
+              hello: {
+                'template.hbs': '',
+                'component.js': '',
+              },
+            },
+          },
+          tests: {
+            integration: {
+              components: {
+                'hello-test.js': '',
+              },
+            },
+          },
+        },
+        connection
+      );
+
+      // wait for async registry initialization;
+      const result: string[] = await connection.sendRequest((ExecuteCommandRequest.type as unknown) as string, {
+        command: 'els.getRelatedFiles',
+        arguments: [path.join(project.normalizedPath, 'app', 'components', 'hello', 'template.hbs')],
+      });
+
+      expect(result.map((el) => normalizePath(path.relative(project.normalizedPath, el)))).toMatchSnapshot();
+
+      await project.destroy();
+    });
+    it('handle "els.getRelatedFiles" command with meta flag', async () => {
+      const project = await createProject(
+        {
+          app: {
+            components: {
+              hello: {
+                'index.hbs': '',
+                'index.js': '',
+              },
+            },
+          },
+          tests: {
+            integration: {
+              components: {
+                'hello-test.js': '',
+              },
+            },
+          },
+        },
+        connection
+      );
+
+      const result: { path: string; meta: UnknownResult }[] = await connection.sendRequest((ExecuteCommandRequest.type as unknown) as string, {
+        command: 'els.getRelatedFiles',
+        arguments: [path.join(project.normalizedPath, 'app', 'components', 'hello', 'index.hbs'), { includeMeta: true }],
+      });
+
+      expect(
+        result.map((el) => {
+          return {
+            path: normalizePath(path.relative(project.normalizedPath, el.path)),
+            meta: el.meta,
+          };
+        })
+      ).toMatchSnapshot();
+
+      await project.destroy();
     });
   });
 
