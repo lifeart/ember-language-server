@@ -2407,6 +2407,8 @@ Array [
 exports[`integration Diffent commands handle "els.getRelatedFiles" command 1`] = `
 Array [
   "tests/integration/components/hello-test.js",
+  "app/components/hello/component.js",
+  "app/components/hello/template.hbs",
 ]
 `;
 
@@ -2420,6 +2422,24 @@ Array [
       "type": "component",
     },
     "path": "tests/integration/components/hello-test.js",
+  },
+  Object {
+    "meta": Object {
+      "kind": "template",
+      "name": "hello",
+      "scope": "application",
+      "type": "component",
+    },
+    "path": "app/components/hello/index.hbs",
+  },
+  Object {
+    "meta": Object {
+      "kind": "script",
+      "name": "hello",
+      "scope": "application",
+      "type": "component",
+    },
+    "path": "app/components/hello/index.js",
   },
 ]
 `;
@@ -2619,11 +2639,37 @@ Array [
     },
     "uri": "/app/templates/components/darling.hbs",
   },
+  Object {
+    "range": Object {
+      "end": Object {
+        "character": 0,
+        "line": 0,
+      },
+      "start": Object {
+        "character": 0,
+        "line": 0,
+      },
+    },
+    "uri": "/app/templates/components/darling.hbs",
+  },
 ]
 `;
 
 exports[`integration Go to definition works for all supported cases go to local template-only component 1`] = `
 Array [
+  Object {
+    "range": Object {
+      "end": Object {
+        "character": 0,
+        "line": 0,
+      },
+      "start": Object {
+        "character": 0,
+        "line": 0,
+      },
+    },
+    "uri": "/app/components/darling.hbs",
+  },
   Object {
     "range": Object {
       "end": Object {
@@ -2655,6 +2701,19 @@ Array [
     },
     "uri": "/app/components/darling/index.hbs",
   },
+  Object {
+    "range": Object {
+      "end": Object {
+        "character": 0,
+        "line": 0,
+      },
+      "start": Object {
+        "character": 0,
+        "line": 0,
+      },
+    },
+    "uri": "/app/components/darling/index.hbs",
+  },
 ]
 `;
 
@@ -2673,11 +2732,37 @@ Array [
     },
     "uri": "/app/components/darling/template.hbs",
   },
+  Object {
+    "range": Object {
+      "end": Object {
+        "character": 0,
+        "line": 0,
+      },
+      "start": Object {
+        "character": 0,
+        "line": 0,
+      },
+    },
+    "uri": "/app/components/darling/template.hbs",
+  },
 ]
 `;
 
 exports[`integration Go to definition works for all supported cases go to local template-only component in templates dir 1`] = `
 Array [
+  Object {
+    "range": Object {
+      "end": Object {
+        "character": 0,
+        "line": 0,
+      },
+      "start": Object {
+        "character": 0,
+        "line": 0,
+      },
+    },
+    "uri": "/app/templates/components/darling.hbs",
+  },
   Object {
     "range": Object {
       "end": Object {

@@ -501,11 +501,11 @@ export function listComponents(root: string): CompletionItem[] {
   return items;
 }
 
-export function findTestsForProject(project: Project) {
-  const entry = path.resolve(path.join(project.root, 'tests'));
+function findRegistryItemsForProject(project: Project, prefix: string, globs: string[]): void {
+  const entry = path.resolve(path.join(project.root, prefix));
   const paths = safeWalkSync(entry, {
     directories: false,
-    globs: ['**/*.{js,ts}'],
+    globs,
   });
 
   paths.forEach((filePath: string) => {
@@ -518,6 +518,18 @@ export function findTestsForProject(project: Project) {
       addToRegistry(normalizedItem.name, normalizedItem.type, [fullPath]);
     }
   });
+}
+
+export function findTestsForProject(project: Project) {
+  findRegistryItemsForProject(project, 'tests', ['**/*.{js,ts}']);
+}
+
+export function findAppItemsForProject(project: Project) {
+  findRegistryItemsForProject(project, 'app', ['**/*.{js,ts,css,less,sass,hbs}']);
+}
+
+export function findAddonItemsForProject(project: Project) {
+  findRegistryItemsForProject(project, 'addon', ['**/*.{js,ts,css,less,sass,hbs}']);
 }
 
 function listCollection(

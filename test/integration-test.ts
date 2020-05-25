@@ -99,7 +99,7 @@ function replaceDynamicUriPart(uri: string) {
     dirname = dirname.substr(2);
   }
 
-  return uri.replace(dirname.replace(/\\/g, '/'), '/path-to-tests').replace(dirname, '/path-to-tests').replace(/\\/g, '/');
+  return uri.replace('/c%3A', '').replace(dirname.replace(/\\/g, '/'), '/path-to-tests').replace(dirname, '/path-to-tests').replace(/\\/g, '/');
 }
 
 function normalizePath(file: string) {
