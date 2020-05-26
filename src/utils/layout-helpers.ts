@@ -398,7 +398,8 @@ export function listPodsComponents(root: string): CompletionItem[] {
     return [];
   }
 
-  const entryPath = path.join(root, 'app', podModulePrefix, 'components');
+  const entryPath = path.resolve(path.join(root, 'app', podModulePrefix, 'components'));
+
   const jsPaths = safeWalkSync(entryPath, {
     directories: false,
     globs: ['**/*.{js,ts,hbs,css,less,scss}'],
@@ -419,7 +420,7 @@ export function listPodsComponents(root: string): CompletionItem[] {
 }
 
 export function listMUComponents(root: string): CompletionItem[] {
-  const entryPath = path.join(root, 'src', 'ui', 'components');
+  const entryPath = path.resolve(path.join(root, 'src', 'ui', 'components'));
   const jsPaths = safeWalkSync(entryPath, {
     directories: false,
     globs: ['**/*.{js,ts,hbs}'],
@@ -448,8 +449,9 @@ export function builtinModifiers(): CompletionItem[] {
   ];
 }
 
-export function listComponents(root: string): CompletionItem[] {
+export function listComponents(_root: string): CompletionItem[] {
   // log('listComponents');
+  const root = path.resolve(_root);
   const scriptEntry = path.join(root, 'app', 'components');
   const templateEntry = path.join(root, 'app', 'templates', 'components');
   const addonComponents = path.join(root, 'addon', 'components');
@@ -539,7 +541,7 @@ function listCollection(
   kindType: CompletionItemKind,
   detail: 'transform' | 'service' | 'model' | 'helper' | 'modifier'
 ) {
-  const entry = path.join(root, prefix, collectionName);
+  const entry = path.resolve(path.join(root, prefix, collectionName));
   const paths = safeWalkSync(entry, {
     directories: false,
     globs: ['**/*.{js,ts}'],
@@ -578,8 +580,8 @@ export function listTransforms(root: string): CompletionItem[] {
   return listCollection(root, 'app', 'transforms', CompletionItemKind.Function, 'transform');
 }
 
-export function listRoutes(root: string): CompletionItem[] {
-  // log('listRoutes');
+export function listRoutes(_root: string): CompletionItem[] {
+  const root = path.resolve(_root);
   const scriptEntry = path.join(root, 'app', 'routes');
   const templateEntry = path.join(root, 'app', 'templates');
   const controllersEntry = path.join(root, 'app', 'controllers');
