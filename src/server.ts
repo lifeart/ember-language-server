@@ -146,7 +146,7 @@ export default class Server {
 
         if (item) {
           const normalizedItem = normalizeMatchNaming(item);
-          const registryResults: string[] = this.getRegistry(project.root)[normalizedItem.type][normalizedItem.name] || [];
+          const registryResults: string[] = (this.getRegistry(project.root)[normalizedItem.type][normalizedItem.name] || []).sort();
 
           if (!includeMeta) {
             return registryResults;
