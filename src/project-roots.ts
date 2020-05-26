@@ -251,7 +251,7 @@ export default class ProjectRoots {
       return {
         initIssues: project.initIssues,
         providers: project.providers,
-        registry: this.server.getRegistry(project.root)
+        registry: this.server.getRegistry(project.root),
       };
     } catch (e) {
       logError(e);
