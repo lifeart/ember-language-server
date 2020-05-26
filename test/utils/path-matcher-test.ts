@@ -2,9 +2,11 @@ import { ClassicPathMatcher, PodMatcher } from '../../src/utils/path-matcher';
 
 describe('PodMatcher', () => {
   const matcher = new PodMatcher();
+
   function m(str: string) {
     return matcher.metaFromPath(str);
   }
+
   it('components', () => {
     expect(m('foo/bar/app/pods/foo/component.ts')).toEqual({ type: 'component', name: 'foo', scope: 'application', kind: 'script' });
     expect(m('foo/bar/app/pods/foo/component.js')).toEqual({ type: 'component', name: 'foo', scope: 'application', kind: 'script' });
@@ -60,14 +62,28 @@ describe('PodMatcher', () => {
 
 describe('PodMatcher :customPrefix', () => {
   const matcher = new PodMatcher('app');
+
   function m(str: string) {
     return matcher.metaFromPath(str);
   }
+
   it('components', () => {
     expect(m('foo/bar/app/foo/component.ts')).toEqual({ type: 'component', name: 'foo', scope: 'application', kind: 'script' });
     expect(m('foo/bar/app/foo/component.js')).toEqual({ type: 'component', name: 'foo', scope: 'application', kind: 'script' });
     expect(m('foo/bar/app/foo/component.hbs')).toEqual({ type: 'component', name: 'foo', scope: 'application', kind: 'template' });
     expect(m('foo/bar/app/foo/component.css')).toEqual({ type: 'component', name: 'foo', scope: 'application', kind: 'style' });
+    expect(m('repos/els-addon-typed-templates/app/components/my-component/component.ts')).toEqual({
+      type: 'component',
+      name: 'my-component',
+      scope: 'application',
+      kind: 'script',
+    });
+    expect(m('repos/els-addon-typed-templates/app/components/my-component/component.hbs')).toEqual({
+      type: 'component',
+      name: 'my-component',
+      scope: 'application',
+      kind: 'template',
+    });
   });
   it('routes', () => {
     expect(m('foo/bar/app/foo/route.ts')).toEqual({ type: 'route', name: 'foo', scope: 'application', kind: 'script' });
@@ -117,9 +133,11 @@ describe('PodMatcher :customPrefix', () => {
 });
 describe('ClassicPathMatcher', () => {
   const matcher = new ClassicPathMatcher();
+
   function m(str: string) {
     return matcher.metaFromPath(str);
   }
+
   it('support in-repo addons', () => {
     expect(m('foo/bar/lib/my-addon/app/components/routes/foo/index.ts')).toEqual({ type: 'component', name: 'routes/foo', scope: 'addon', kind: 'script' });
     expect(m('foo/bar/lib/my-addon/app/components/route/foo/index.ts')).toEqual({ type: 'component', name: 'route/foo', scope: 'addon', kind: 'script' });
@@ -159,13 +177,13 @@ describe('ClassicPathMatcher', () => {
       type: 'component',
       name: 'login-form/input',
       scope: 'application',
-      kind: 'test'
+      kind: 'test',
     });
     expect(m('repos/brn/frontend/tests/integration/components/login-form/component-test.js')).toEqual({
       type: 'component',
       name: 'login-form',
       scope: 'application',
-      kind: 'test'
+      kind: 'test',
     });
 
     expect(m('frontend/app/components/audio-player/styles.css')).toEqual({ type: 'component', name: 'audio-player', scope: 'application', kind: 'style' });
@@ -181,19 +199,56 @@ describe('ClassicPathMatcher', () => {
       type: 'component',
       name: 'foo',
       scope: 'application',
-      kind: 'template'
+      kind: 'template',
     });
     expect(m('foo/bar/tests/integration/components/cart-widgget/item-test.js')).toEqual({
       type: 'component',
       name: 'cart-widgget/item',
       scope: 'application',
-      kind: 'test'
+      kind: 'test',
     });
     expect(m('foo/bar/tests/integration/components/cart-widgget/index-test.js')).toEqual({
       type: 'component',
       name: 'cart-widgget',
       scope: 'application',
-      kind: 'test'
+      kind: 'test',
+    });
+
+    expect(m('repos/els-addon-typed-templates/app/components/my-component/component.ts')).toEqual({
+      type: 'component',
+      name: 'my-component',
+      scope: 'application',
+      kind: 'script',
+    });
+    expect(m('repos/els-addon-typed-templates/app/components/my-component/template.hbs')).toEqual({
+      type: 'component',
+      name: 'my-component',
+      scope: 'application',
+      kind: 'template',
+    });
+    expect(m('repos/els-addon-typed-templates/app/components/my-component/index.ts')).toEqual({
+      type: 'component',
+      name: 'my-component',
+      scope: 'application',
+      kind: 'script',
+    });
+    expect(m('repos/els-addon-typed-templates/app/components/my-component/index.hbs')).toEqual({
+      type: 'component',
+      name: 'my-component',
+      scope: 'application',
+      kind: 'template',
+    });
+    expect(m('repos/els-addon-typed-templates/app/components/my-component.ts')).toEqual({
+      type: 'component',
+      name: 'my-component',
+      scope: 'application',
+      kind: 'script',
+    });
+    expect(m('repos/els-addon-typed-templates/app/components/my-component.hbs')).toEqual({
+      type: 'component',
+      name: 'my-component',
+      scope: 'application',
+      kind: 'template',
     });
   });
   it('routes', () => {
@@ -203,7 +258,7 @@ describe('ClassicPathMatcher', () => {
       type: 'route',
       name: 'cart-widgget/index',
       scope: 'application',
-      kind: 'test'
+      kind: 'test',
     });
   });
   it('controllers', () => {
@@ -213,7 +268,7 @@ describe('ClassicPathMatcher', () => {
       type: 'controller',
       name: 'cart-widgget/index',
       scope: 'application',
-      kind: 'test'
+      kind: 'test',
     });
   });
   it('templates', () => {

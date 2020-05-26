@@ -10,7 +10,7 @@ export function toDiagnostic(source: string, error: TemplateLinterError): Diagno
     range: toRange(source, error),
     message: toMessage(error),
     code: error.rule,
-    source: error.rule ? 'ember-template-lint' : 'glimmer-engine'
+    source: error.rule ? 'ember-template-lint' : 'glimmer-engine',
   };
 }
 
@@ -24,12 +24,16 @@ function toLineRange(source: string, idx: number): [number, number] {
   return [start, end];
 }
 
-function toMessage({ message }: TemplateLinterError): string {
+function toMessage({ message, isFixable }: TemplateLinterError): string {
   if (ParseErrorExp.test(message)) {
     return message.split('\n').pop() || '';
   }
 
   message = message.replace(OnLineErrorExp, '');
+
+  if (isFixable) {
+    message = `${message} (fixable)`;
+  }
 
   return message;
 }
@@ -39,6 +43,7 @@ function toRange(source: string, error: TemplateLinterError): Range {
   let column: number;
 
   const match = error.message.match(ParseErrorExp) || error.message.match(OnLineErrorExp);
+
   if (match) {
     line = Number(match[1]) - 1;
   } else if (error.line) {
@@ -57,6 +62,6 @@ function toRange(source: string, error: TemplateLinterError): Range {
 
   return {
     start: { line, character: column },
-    end: { line, character: end }
+    end: { line, character: end },
   };
 }

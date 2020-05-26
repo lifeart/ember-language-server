@@ -10,8 +10,9 @@ import {
   isGlimmerXProject,
   getPodModulePrefix,
   findTestsForProject,
+  findAddonItemsForProject,
   findAppItemsForProject,
-  isELSAddonRoot
+  isELSAddonRoot,
 } from './utils/layout-helpers';
 import { addToRegistry, removeFromRegistry, normalizeMatchNaming, NormalizedRegistryItem } from './utils/registry-api';
 import { ProjectProviders, collectProjectProviders, initBuiltinProviders } from './utils/addon-api';
@@ -37,7 +38,7 @@ export class Project {
   linters: Linter[] = [];
   initIssues: Error[] = [];
   files: Map<string, { version: number }> = new Map();
-  podModulePrefix: string = '';
+  podModulePrefix = '';
   matchPathToType(filePath: string) {
     return this.classicMatcher.metaFromPath(filePath) || this.podMatcher.metaFromPath(filePath);
   }
@@ -47,18 +48,24 @@ export class Project {
       logError('too many files for project ' + this.root);
       this.files.clear();
     }
+
     const rawPath = uriToFilePath(uri);
+
     if (!rawPath) {
       return;
     }
+
     const filePath = path.resolve(rawPath);
-    let item = this.matchPathToType(filePath);
+    const item = this.matchPathToType(filePath);
     let normalizedItem: undefined | NormalizedRegistryItem = undefined;
+
     if (item) {
       normalizedItem = normalizeMatchNaming(item) as NormalizedRegistryItem;
     }
+
     if (change === 3) {
       this.files.delete(filePath);
+
       if (normalizedItem) {
         removeFromRegistry(normalizedItem.name, normalizedItem.type, [filePath]);
       }
@@ -66,14 +73,18 @@ export class Project {
       if (normalizedItem) {
         addToRegistry(normalizedItem.name, normalizedItem.type, [filePath]);
       }
+
       if (!this.files.has(filePath)) {
         this.files.set(filePath, { version: 0 });
       }
-      let file = this.files.get(filePath);
+
+      const file = this.files.get(filePath);
+
       if (file) {
         file.version++;
       }
     }
+
     this.watchers.forEach((cb) => cb(uri, change));
   }
   addCommandExecutor(key: string, cb: Executor) {
@@ -89,9 +100,11 @@ export class Project {
     this.providers = collectProjectProviders(root, addons);
     this.builtinProviders = initBuiltinProviders();
     const maybePrefix = getPodModulePrefix(root);
+
     if (maybePrefix) {
       this.podModulePrefix = 'app/' + maybePrefix;
     }
+
     this.classicMatcher = new ClassicPathMatcher();
     this.podMatcher = new PodMatcher();
   }
@@ -111,7 +124,8 @@ export class Project {
   init(server: Server) {
     this.builtinProviders.initFunctions.forEach((initFn) => {
       try {
-        let initResult = initFn(server, this);
+        const initResult = initFn(server, this);
+
         if (typeof initResult === 'function') {
           this.destructors.push(initResult);
         }
@@ -120,11 +134,14 @@ export class Project {
         this.initIssues.push(e);
       }
     });
+    // prefer explicit registry tree building
     findTestsForProject(this);
     findAppItemsForProject(this);
+    findAddonItemsForProject(this);
     this.providers.initFunctions.forEach((initFn) => {
       try {
-        let initResult = initFn(server, this);
+        const initResult = initFn(server, this);
+
         if (typeof initResult === 'function') {
           this.destructors.push(initResult);
         }
@@ -133,6 +150,7 @@ export class Project {
         this.initIssues.push(e);
       }
     });
+
     if (this.providers.info.length) {
       logInfo('--------------------');
       logInfo('loded language server addons:');
@@ -165,15 +183,18 @@ export default class ProjectRoots {
 
   removeProject(projectRoot: string) {
     const project = this.projectForPath(projectRoot);
+
     if (project) {
       project.unload();
     }
+
     this.projects.delete(projectRoot);
   }
 
   setLocalAddons(paths: string[]) {
     paths.forEach((element: string) => {
       const addonPath = path.resolve(element);
+
       if (fs.existsSync(addonPath) && isELSAddonRoot(addonPath)) {
         if (!this.localAddons.includes(addonPath)) {
           this.localAddons.push(addonPath);
@@ -186,12 +207,13 @@ export default class ProjectRoots {
     const roots = walkSync(workspaceRoot, {
       directories: false,
       globs: ['**/ember-cli-build.js', '**/package.json'],
-      ignore: ['**/.git/**', '**/bower_components/**', '**/dist/**', '**/node_modules/**', '**/tmp/**']
+      ignore: ['**/.git/**', '**/bower_components/**', '**/dist/**', '**/node_modules/**', '**/tmp/**'],
     });
 
     roots.forEach((rootPath: string) => {
       const filePath = path.join(workspaceRoot, rootPath);
       const fullPath = path.dirname(filePath);
+
       if (filePath.endsWith('package.json')) {
         try {
           if (isGlimmerNativeProject(fullPath) || isGlimmerXProject(fullPath)) {
@@ -216,11 +238,14 @@ export default class ProjectRoots {
     if (this.projects.has(path)) {
       return false;
     }
+
     try {
       const project = new Project(path, this.localAddons);
+
       this.projects.set(path, project);
       logInfo(`Ember CLI project added at ${path}`);
       project.init(this.server);
+
       return {
         initIssues: project.initIssues,
         providers: project.providers,
@@ -228,19 +253,22 @@ export default class ProjectRoots {
       };
     } catch (e) {
       logError(e);
+
       return false;
     }
   }
 
   projectForUri(uri: string): Project | undefined {
-    let path = uriToFilePath(uri);
+    const path = uriToFilePath(uri);
 
     if (!path) return;
+
     return this.projectForPath(path);
   }
 
   projectForPath(path: string): Project | undefined {
-    let root = (Array.from(this.projects.keys()) || []).filter((root) => path!.indexOf(root) === 0).reduce((a, b) => (a.length > b.length ? a : b), '');
+    const root = (Array.from(this.projects.keys()) || []).filter((root) => path!.indexOf(root) === 0).reduce((a, b) => (a.length > b.length ? a : b), '');
+
     return this.projects.get(root);
   }
 }

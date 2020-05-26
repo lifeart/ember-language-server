@@ -15,7 +15,7 @@ const TEMPLATE_TOKENS: {
   };
 } = {
   component: {},
-  routePath: {}
+  routePath: {},
 };
 
 export type UsageType = 'component' | 'routePath';
@@ -29,15 +29,17 @@ export interface Usage {
 
 export function findRelatedFiles(token: string): Usage[] {
   const results: Usage[] = [];
+
   Object.keys(TEMPLATE_TOKENS).forEach((kindName) => {
     const components = TEMPLATE_TOKENS[kindName as UsageType];
+
     Object.keys(components).forEach((normalizedComponentName: string) => {
       if (components[normalizedComponentName].tokens.includes(token)) {
         results.push({
           name: normalizedComponentName,
           path: components[normalizedComponentName].source,
           type: kindName as UsageType,
-          usages: []
+          usages: [],
         });
       }
     });
@@ -49,13 +51,16 @@ export function findRelatedFiles(token: string): Usage[] {
 export function updateTemplateTokens(kind: UsageType, normalizedName: string, file: string | null) {
   if (file === null) {
     delete TEMPLATE_TOKENS[kind][normalizedName];
+
     return;
   }
+
   try {
     const tokens = extractTokensFromTemplate(fs.readFileSync(file, 'utf8'));
+
     TEMPLATE_TOKENS[kind][normalizedName] = {
       source: file,
-      tokens
+      tokens,
     };
   } catch (e) {
     //

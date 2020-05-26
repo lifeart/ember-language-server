@@ -1,4 +1,4 @@
-export default function uniqueBy<T extends object, K extends keyof T>(arr: T[], property: K): T[] {
+export default function uniqueBy<T extends Record<string, unknown>, K extends keyof T>(arr: T[], property: K): T[] {
   const flags = new Map<any, boolean>();
 
   return arr.filter((entry) => {
@@ -7,6 +7,7 @@ export default function uniqueBy<T extends object, K extends keyof T>(arr: T[], 
     }
 
     flags.set(entry[property], true);
+
     return true;
   });
 }

@@ -21,29 +21,32 @@ function localizeName(name: string) {
 }
 
 export function templateContextLookup(root: string, rawCurrentFilePath: string, templateContent: string) {
-  const currentFilePath = rawCurrentFilePath
-    .replace('file://', '')
-    .split('\\')
-    .join('/');
+  const currentFilePath = rawCurrentFilePath.replace('file://', '').split('\\').join('/');
   const nameParts = currentFilePath.split('/components/');
+
   if (nameParts.length !== 2) {
     return [];
   }
-  let componentName = pureComponentName(nameParts[1].split('.')[0]);
+
+  const componentName = pureComponentName(nameParts[1].split('.')[0]);
+
   return componentsContextData(root, componentName, templateContent);
 }
 
 function findComponentScripts(root: string, componentName: string) {
   const possibleLocations = [];
   const registry = getGlobalRegistry();
+
   if (registry.component.has(componentName)) {
     const els: string[] = Array.from((registry.component.get(componentName) as any).values());
+
     els.forEach((el) => {
       if (el.includes(root)) {
         possibleLocations.push([el]);
       }
     });
   }
+
   if (isModuleUnificationApp(root)) {
     possibleLocations.push([root, 'src', 'ui', 'components', componentName, 'component.js']);
     possibleLocations.push([root, 'src', 'ui', 'components', componentName, 'component.ts']);
@@ -55,11 +58,13 @@ function findComponentScripts(root: string, componentName: string) {
     possibleLocations.push([root, 'app', 'components', componentName + '.js']);
     possibleLocations.push([root, 'app', 'components', componentName + '.ts']);
     const prefix = podModulePrefixForRoot(root);
+
     if (prefix) {
       possibleLocations.push([root, 'app', prefix, 'components', componentName, 'component.js']);
       possibleLocations.push([root, 'app', prefix, 'components', componentName, 'component.ts']);
     }
   }
+
   return possibleLocations.map((locArr: string[]) => path.join.apply(null, locArr));
 }
 
@@ -74,6 +79,7 @@ function componentsContextData(root: string, componentName: string, templateCont
       const filePath = hasAddonScript ? hasAddonScript : existingScripts.pop();
       const fileContent = fs.readFileSync(filePath, { encoding: 'utf8' });
       const jsMeta = processJSFile(fileContent, filePath);
+
       log('jsMeta', jsMeta);
       infoItems.push(jsMeta);
     } catch (e) {
@@ -83,6 +89,7 @@ function componentsContextData(root: string, componentName: string, templateCont
 
   try {
     let templateInfo: any = null;
+
     templateInfo = processTemplate(templateContent);
     infoItems.push(templateInfo);
   } catch (e) {
@@ -102,49 +109,58 @@ function componentsContextData(root: string, componentName: string, templateCont
           result[name] = it[name].slice(0);
         }
       });
+
       return result;
     }, {});
   const items: CompletionItem[] = [];
+
   log('meta', meta);
   let contextInfo: any = {};
+
   try {
     contextInfo = extractComponentInformationFromMeta(meta);
   } catch (e) {
     log('contextInforError', e);
   }
+
   log('contextInfo', contextInfo);
   contextInfo.jsProps.forEach((propName: string) => {
     const [name]: any = propName.split(' ');
+
     items.push({
       kind: CompletionItemKind.Property,
       label: localizeName(name),
-      detail: propName
+      detail: propName,
     });
   });
   contextInfo.jsComputeds.forEach((propName: string) => {
     const [name]: any = propName.split(' ');
+
     items.push({
       kind: CompletionItemKind.Property,
       label: localizeName(name),
-      detail: 'ComputedProperty: ' + propName
+      detail: 'ComputedProperty: ' + propName,
     });
   });
   contextInfo.jsFunc.forEach((propName: string) => {
     const [name]: any = propName.split(' ');
+
     items.push({
       kind: CompletionItemKind.Function,
       label: localizeName(name),
-      detail: 'Function: ' + propName
+      detail: 'Function: ' + propName,
     });
   });
   contextInfo.hbsProps.forEach((propName: string) => {
     const [name]: any = propName.split(' ');
+
     items.push({
       kind: CompletionItemKind.Property,
       label: name,
-      detail: 'Template Property: ' + propName
+      detail: 'Template Property: ' + propName,
     });
   });
+
   // contextInfo.api.actions.forEach((propName: string) => {
   //   const [name]: any = propName.split(' ');
   //   items.push({
