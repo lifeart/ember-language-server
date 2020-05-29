@@ -2,6 +2,7 @@ import * as cp from 'child_process';
 import * as path from 'path';
 import * as fs from 'fs';
 import { createTempDir } from 'broccoli-test-helper';
+import { URI } from 'vscode-uri';
 
 import { createMessageConnection, MessageConnection, Logger, IPCMessageReader, IPCMessageWriter } from 'vscode-jsonrpc';
 import {
@@ -43,7 +44,7 @@ async function createProject(files, connection): Promise<{ normalizedPath: strin
   const dir = await createTempDir();
 
   dir.write(files);
-  const normalizedPath = path.normalize(dir.path()).split(':').pop();
+  const normalizedPath = path.normalize(dir.path());
   const result = (await connection.sendRequest(ExecuteCommandRequest.type, ['els:registerProjectPath', normalizedPath])) as {
     registry: Registry;
   };
@@ -60,7 +61,7 @@ async function createProject(files, connection): Promise<{ normalizedPath: strin
 function textDocument(modelPath, position = { line: 0, character: 0 }) {
   const params = {
     textDocument: {
-      uri: `file://${modelPath}`,
+      uri: URI.file(modelPath).toString(),
     },
     position,
   };
@@ -76,6 +77,7 @@ async function getResult(reqType, connection, files, fileToInspect, position) {
   openFile(connection, modelPath);
   const response = await connection.sendRequest(reqType, params);
 
+  console.log(JSON.stringify(response));
   await destroy();
 
   return normalizeUri(response, normalizedPath);
@@ -84,20 +86,10 @@ async function getResult(reqType, connection, files, fileToInspect, position) {
 function openFile(connection: MessageConnection, filePath: string) {
   connection.sendNotification(DidOpenTextDocumentNotification.type, {
     textDocument: {
-      uri: `file://${filePath}`,
+      uri: URI.file(filePath).toString(),
       text: fs.readFileSync(filePath, 'utf8'),
     },
   });
-}
-
-function replaceDynamicUriPart(uri: string) {
-  let dirname = __dirname;
-
-  if (dirname.indexOf(':') === 1) {
-    dirname = dirname.substr(2);
-  }
-
-  return uri.replace('/c%3A', '').replace(dirname.replace(/\\/g, '/'), '/path-to-tests').replace(dirname, '/path-to-tests').replace(/\\/g, '/');
 }
 
 function normalizePath(file: string) {
@@ -105,7 +97,10 @@ function normalizePath(file: string) {
 }
 
 function replaceTempUriPart(uri: string, base: string) {
-  return normalizePath(path.normalize(uri.replace('file://', '')).replace(base, ''));
+  const fsPath = normalizePath(URI.parse(uri).fsPath);
+  const basePath = normalizePath(URI.parse(base).fsPath);
+
+  return fsPath.split(basePath).pop();
 }
 
 function normalizeRegistry(root: string, registry: Registry) {
@@ -122,11 +117,17 @@ function normalizeRegistry(root: string, registry: Registry) {
 }
 
 function normalizeUri(objects: Definition, base?: string) {
-  if (!Array.isArray(objects)) {
-    objects.uri = replaceDynamicUriPart(objects.uri);
+  if (objects === null) {
+    return objects;
+  }
 
-    if (base) {
-      objects.uri = replaceTempUriPart(objects.uri, base);
+  if (!Array.isArray(objects)) {
+    if (objects.uri) {
+      // objects.uri = replaceDynamicUriPart(objects.uri);
+
+      if (base) {
+        objects.uri = replaceTempUriPart(objects.uri, base);
+      }
     }
 
     return objects;
@@ -137,17 +138,7 @@ function normalizeUri(objects: Definition, base?: string) {
       return object;
     }
 
-    if (object.uri) {
-      const { uri } = object;
-
-      object.uri = replaceDynamicUriPart(uri);
-
-      if (base) {
-        object.uri = replaceTempUriPart(object.uri, base);
-      }
-    }
-
-    return object;
+    return normalizeUri(object, base);
   });
 }
 
@@ -214,7 +205,7 @@ describe('integration', function () {
   describe('Initialize request', () => {
     it('returns an initialize request', async () => {
       const params = {
-        rootUri: `file://${path.join(__dirname, 'fixtures', 'full-project')}`,
+        rootUri: URI.file(path.join(__dirname, 'fixtures', 'full-project')).toString(),
         capabilities: {},
         initializationOptions: {
           isELSTesting: true,
@@ -232,7 +223,7 @@ describe('integration', function () {
       const applicationTemplatePath = path.join(__dirname, 'fixtures', 'full-project', 'app', 'templates', 'application.hbs');
       const params = {
         textDocument: {
-          uri: `file://${applicationTemplatePath}`,
+          uri: URI.file(applicationTemplatePath).toString(),
         },
         position: {
           line: 1,
@@ -251,7 +242,7 @@ describe('integration', function () {
       const applicationTemplatePath = path.join(__dirname, 'fixtures', 'full-project', 'app', 'templates', 'angle-completion.hbs');
       const params = {
         textDocument: {
-          uri: `file://${applicationTemplatePath}`,
+          uri: URI.file(applicationTemplatePath).toString(),
         },
         position: {
           line: 1,
@@ -270,7 +261,7 @@ describe('integration', function () {
       const templatePath = path.join(__dirname, 'fixtures', 'full-project', 'app', 'templates', 'definition.hbs');
       const params = {
         textDocument: {
-          uri: `file://${templatePath}`,
+          uri: URI.file(templatePath).toString(),
         },
         position: {
           line: 2,
@@ -289,7 +280,7 @@ describe('integration', function () {
       const templatePath = path.join(__dirname, 'fixtures', 'full-project', 'app', 'templates', 'definition.hbs');
       const params = {
         textDocument: {
-          uri: `file://${templatePath}`,
+          uri: URI.file(templatePath).toString(),
         },
         position: {
           line: 3,
@@ -307,10 +298,11 @@ describe('integration', function () {
 
   describe('Definition request', () => {
     it('returns the definition information for a component in a template', async () => {
-      const definitionTemplatePath = path.join(__dirname, 'fixtures', 'full-project', 'app', 'templates', 'definition.hbs');
+      const base = path.join(__dirname, 'fixtures', 'full-project');
+      const definitionTemplatePath = path.join(base, 'app', 'templates', 'definition.hbs');
       const params = {
         textDocument: {
-          uri: `file://${definitionTemplatePath}`,
+          uri: URI.file(definitionTemplatePath).toString(),
         },
         position: {
           line: 0,
@@ -322,15 +314,16 @@ describe('integration', function () {
 
       let response = await connection.sendRequest(DefinitionRequest.type, params);
 
-      response = normalizeUri(response);
+      response = normalizeUri(response, base);
       expect(response).toMatchSnapshot();
     });
 
     it('returns the definition information for a helper in a template', async () => {
-      const definitionTemplatePath = path.join(__dirname, 'fixtures', 'full-project', 'app', 'templates', 'definition.hbs');
+      const base = path.join(__dirname, 'fixtures', 'full-project');
+      const definitionTemplatePath = path.join(base, 'app', 'templates', 'definition.hbs');
       const params = {
         textDocument: {
-          uri: `file://${definitionTemplatePath}`,
+          uri: URI.file(definitionTemplatePath).toString(),
         },
         position: {
           line: 1,
@@ -342,15 +335,16 @@ describe('integration', function () {
 
       let response = await connection.sendRequest(DefinitionRequest.type, params);
 
-      response = normalizeUri(response);
+      response = normalizeUri(response, base);
       expect(response).toMatchSnapshot();
     });
 
     it('returns the definition information for a hasMany relationship', async () => {
-      const modelPath = path.join(__dirname, 'fixtures', 'full-project', 'app', 'models', 'model-a.js');
+      const base = path.join(__dirname, 'fixtures', 'full-project');
+      const modelPath = path.join(base, 'app', 'models', 'model-a.js');
       const params = {
         textDocument: {
-          uri: `file://${modelPath}`,
+          uri: URI.file(modelPath).toString(),
         },
         position: {
           line: 4,
@@ -362,15 +356,16 @@ describe('integration', function () {
 
       let response = await connection.sendRequest(DefinitionRequest.type, params);
 
-      response = normalizeUri(response);
+      response = normalizeUri(response, base);
       expect(response).toMatchSnapshot();
     });
 
     it('returns the definition information for a belongsTo relationship', async () => {
-      const modelPath = path.join(__dirname, 'fixtures', 'full-project', 'app', 'models', 'model-b.js');
+      const base = path.join(__dirname, 'fixtures', 'full-project');
+      const modelPath = path.join(base, 'app', 'models', 'model-b.js');
       const params = {
         textDocument: {
-          uri: `file://${modelPath}`,
+          uri: URI.file(modelPath).toString(),
         },
         position: {
           line: 4,
@@ -382,15 +377,16 @@ describe('integration', function () {
 
       let response = await connection.sendRequest(DefinitionRequest.type, params);
 
-      response = normalizeUri(response);
+      response = normalizeUri(response, base);
       expect(response).toMatchSnapshot();
     });
 
     it('returns the definition information for a transform', async () => {
-      const modelPath = path.join(__dirname, 'fixtures', 'full-project', 'app', 'models', 'model-a.js');
+      const base = path.join(__dirname, 'fixtures', 'full-project');
+      const modelPath = path.join(base, 'app', 'models', 'model-a.js');
       const params = {
         textDocument: {
-          uri: `file://${modelPath}`,
+          uri: URI.file(modelPath).toString(),
         },
         position: {
           line: 6,
@@ -402,7 +398,7 @@ describe('integration', function () {
 
       let response = await connection.sendRequest(DefinitionRequest.type, params);
 
-      response = normalizeUri(response);
+      response = normalizeUri(response, base);
       expect(response).toMatchSnapshot();
     });
   });
@@ -1122,7 +1118,8 @@ describe('integration', function () {
               lib: {
                 'langserver.js': `
                   module.exports.onDefinition = function(root) {
-                    let filePath = require("path").join(__dirname, "./../../../app/components/hello/index.hbs");
+                    let path = require("path");
+                    let filePath = path.resolve(path.normalize(path.join(__dirname, "./../../../app/components/hello/index.hbs")));
                     return [ {
                       "range": {
                         "end": {
@@ -1134,7 +1131,7 @@ describe('integration', function () {
                           "line": 0,
                         }
                       },
-                      "uri": "file://" + filePath.split(':').pop()
+                      "uri": filePath
                     } ];
                   }
                 `,
@@ -1192,7 +1189,7 @@ describe('integration', function () {
                           "line": 0,
                         }
                       },
-                      "uri": "file://" + filePath.split(':').pop()
+                      "uri": filePath
                     } ];
                   }
                 `,
@@ -1241,7 +1238,7 @@ describe('integration', function () {
                 'langserver.js': `
                   module.exports.onReference = function(root) {
                     let filePath = require("path").join(__dirname, "./../../../app/components/hello/index.hbs");
-                    return [ { uri: 'file://' + filePath.split(':').pop(), range: { start: { line: 0, character: 0 }, end: { line: 0, character: 0 } } } ];
+                    return [ { uri: filePath, range: { start: { line: 0, character: 0 }, end: { line: 0, character: 0 } } } ];
                   }
                 `,
               },
