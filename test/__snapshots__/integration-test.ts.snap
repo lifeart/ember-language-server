@@ -2405,6 +2405,24 @@ Array [
 `;
 
 exports[`integration Diffent commands handle "els.getRelatedFiles" command 1`] = `
+Object {
+  "component": Object {
+    "hello": Array [
+      "app/components/hello/component.js",
+      "app/components/hello/template.hbs",
+      "tests/integration/components/hello-test.js",
+    ],
+  },
+  "helper": Object {},
+  "model": Object {},
+  "modifier": Object {},
+  "routePath": Object {},
+  "service": Object {},
+  "transform": Object {},
+}
+`;
+
+exports[`integration Diffent commands handle "els.getRelatedFiles" command 2`] = `
 Array [
   "app/components/hello/component.js",
   "app/components/hello/template.hbs",
@@ -2413,6 +2431,24 @@ Array [
 `;
 
 exports[`integration Diffent commands handle "els.getRelatedFiles" command with meta flag 1`] = `
+Object {
+  "component": Object {
+    "hello": Array [
+      "app/components/hello/index.hbs",
+      "app/components/hello/index.js",
+      "tests/integration/components/hello-test.js",
+    ],
+  },
+  "helper": Object {},
+  "model": Object {},
+  "modifier": Object {},
+  "routePath": Object {},
+  "service": Object {},
+  "transform": Object {},
+}
+`;
+
+exports[`integration Diffent commands handle "els.getRelatedFiles" command with meta flag 2`] = `
 Array [
   Object {
     "meta": Object {

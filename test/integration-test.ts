@@ -16,6 +16,11 @@ import {
 } from 'vscode-languageserver-protocol';
 
 type UnknownResult = Record<string, unknown>;
+type Registry = {
+  [key: string]: {
+    [key: string]: string[];
+  };
+};
 
 function startServer() {
   const serverPath = './lib/start-server.js';
@@ -39,7 +44,9 @@ async function createProject(files, connection): Promise<{ normalizedPath: strin
 
   dir.write(files);
   const normalizedPath = path.normalize(dir.path()).split(':').pop();
-  const result = await connection.sendRequest(ExecuteCommandRequest.type, ['els:registerProjectPath', normalizedPath]);
+  const result = (await connection.sendRequest(ExecuteCommandRequest.type, ['els:registerProjectPath', normalizedPath])) as {
+    registry: Registry;
+  };
 
   return {
     normalizedPath,
@@ -99,6 +106,19 @@ function normalizePath(file: string) {
 
 function replaceTempUriPart(uri: string, base: string) {
   return normalizePath(path.normalize(uri.replace('file://', '')).replace(base, ''));
+}
+
+function normalizeRegistry(root: string, registry: Registry) {
+  const normalizedRegistry: Registry = {};
+
+  Object.keys(registry).forEach((key) => {
+    normalizedRegistry[key] = {};
+    Object.keys(registry[key]).forEach((name) => {
+      normalizedRegistry[key][name] = registry[key][name].map((el) => normalizePath(path.relative(root, el)));
+    });
+  });
+
+  return normalizedRegistry;
 }
 
 function normalizeUri(objects: Definition, base?: string) {
@@ -546,6 +566,8 @@ describe('integration', function () {
         arguments: [path.join(project.normalizedPath, 'app', 'components', 'hello', 'template.hbs')],
       });
 
+      expect(normalizeRegistry(project.normalizedPath, project.result.registry as Registry)).toMatchSnapshot();
+
       expect(result.map((el) => normalizePath(path.relative(project.normalizedPath, el)))).toMatchSnapshot();
 
       await project.destroy();
@@ -576,6 +598,8 @@ describe('integration', function () {
         command: 'els.getRelatedFiles',
         arguments: [path.join(project.normalizedPath, 'app', 'components', 'hello', 'index.hbs'), { includeMeta: true }],
       });
+
+      expect(normalizeRegistry(project.normalizedPath, project.result.registry as Registry)).toMatchSnapshot();
 
       expect(
         result.map((el) => {
