@@ -40,15 +40,6 @@ async function createProject(files, connection): Promise<{ normalizedPath: strin
   dir.write(files);
   const normalizedPath = path.normalize(dir.path()).split(':').pop();
   const result = await connection.sendRequest(ExecuteCommandRequest.type, ['els:registerProjectPath', normalizedPath]);
-  const params = {
-    rootUri: `file://${normalizedPath}`,
-    capabilities: {},
-    initializationOptions: {
-      isELSTesting: true,
-    },
-  };
-
-  await connection.sendRequest(InitializeRequest.type as any, params);
 
   return {
     normalizedPath,
@@ -205,9 +196,12 @@ describe('integration', function () {
       const params = {
         rootUri: `file://${path.join(__dirname, 'fixtures', 'full-project')}`,
         capabilities: {},
+        initializationOptions: {
+          isELSTesting: true,
+        },
       };
 
-      const response = await connection.sendRequest(InitializeRequest.type, params);
+      const response = await connection.sendRequest((InitializeRequest.type as unknown) as string, params);
 
       expect(response).toMatchSnapshot();
     });

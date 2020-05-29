@@ -136,7 +136,7 @@ export default class Server {
       }
     };
 
-    this.executors['els.getRelatedFiles'] = async (_, __, [filePath, flags]) => {
+    this.executors['els.getRelatedFiles'] = async (_, __, [filePath, flags]: [string, { includeMeta: boolean }?]) => {
       const fullPath = path.resolve(filePath);
       const project = this.projectRoots.projectForPath(filePath);
       const includeMeta = typeof flags === 'object' && flags.includeMeta === true;
