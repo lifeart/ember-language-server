@@ -2327,7 +2327,7 @@ Array [
         "line": 0,
       },
     },
-    "uri": "file:///path-to-tests/fixtures/full-project/app/models/model-a.js",
+    "uri": "/app/models/model-a.js",
   },
 ]
 `;
@@ -2345,7 +2345,7 @@ Array [
         "line": 0,
       },
     },
-    "uri": "file:///path-to-tests/fixtures/full-project/app/components/my-awesome-component.js",
+    "uri": "/app/components/my-awesome-component.js",
   },
 ]
 `;
@@ -2363,7 +2363,7 @@ Array [
         "line": 0,
       },
     },
-    "uri": "file:///path-to-tests/fixtures/full-project/app/models/model-b.js",
+    "uri": "/app/models/model-b.js",
   },
 ]
 `;
@@ -2381,7 +2381,7 @@ Array [
         "line": 0,
       },
     },
-    "uri": "file:///path-to-tests/fixtures/full-project/app/helpers/some-helper.js",
+    "uri": "/app/helpers/some-helper.js",
   },
 ]
 `;
@@ -2399,7 +2399,7 @@ Array [
         "line": 0,
       },
     },
-    "uri": "file:///path-to-tests/fixtures/full-project/app/transforms/custom-transform.js",
+    "uri": "/app/transforms/custom-transform.js",
   },
 ]
 `;
