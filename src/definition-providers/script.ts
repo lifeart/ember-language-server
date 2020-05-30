@@ -12,13 +12,15 @@ export default class ScriptDefinitionProvider {
     const uri = params.textDocument.uri;
     const { root } = project;
     const document = this.server.documents.get(uri);
+
     if (!document) {
       return null;
     }
+
     const content = document.getText();
 
     const ast = parse(content, {
-      sourceType: 'module'
+      sourceType: 'module',
     });
 
     const astPath = ASTPath.toPosition(ast, toPosition(params.position), content);
@@ -27,13 +29,13 @@ export default class ScriptDefinitionProvider {
       return null;
     }
 
-    let results: Location[] = await queryELSAddonsAPIChain(project.builtinProviders.definitionProviders, root, {
+    const results: Location[] = await queryELSAddonsAPIChain(project.builtinProviders.definitionProviders, root, {
       focusPath: astPath,
       type: 'script',
       textDocument: params.textDocument,
       position: params.position,
       results: [],
-      server: this.server
+      server: this.server,
     });
 
     const addonResults = await queryELSAddonsAPIChain(project.providers.definitionProviders, root, {
@@ -42,7 +44,7 @@ export default class ScriptDefinitionProvider {
       textDocument: params.textDocument,
       position: params.position,
       results,
-      server: this.server
+      server: this.server,
     });
 
     return addonResults;

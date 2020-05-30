@@ -20,29 +20,31 @@ export function hasEmberLanguageServerExtension(info: PackageInfo) {
 
 export const isModuleUnificationApp = memoize(isMuApp, {
   length: 1,
-  maxAge: 60000
+  maxAge: 60000,
 });
 export const podModulePrefixForRoot = memoize(getPodModulePrefix, {
   length: 1,
-  maxAge: 60000
+  maxAge: 60000,
 });
 export const mGetProjectAddonsInfo = memoize(getProjectAddonsInfo, {
   length: 1,
-  maxAge: 600000
+  maxAge: 600000,
 }); // 1 second
 
 export const isAddonRoot = memoize(isProjectAddonRoot, {
   length: 1,
-  maxAge: 600000
+  maxAge: 600000,
 });
+
+type UnknownConfig = Record<string, unknown>;
 
 export interface PackageInfo {
   keywords?: string[];
   name?: string;
-  'ember-language-server'?: {};
-  peerDependencies?: {};
-  devDependencies?: {};
-  dependencies?: {};
+  'ember-language-server'?: UnknownConfig;
+  peerDependencies?: UnknownConfig;
+  devDependencies?: UnknownConfig;
+  dependencies?: UnknownConfig;
   'ember-addon'?: {
     version?: number;
     before?: string | string[];
@@ -58,19 +60,25 @@ export function safeWalkSync(filePath: string | false, opts: any) {
   if (!filePath) {
     return [];
   }
+
   if (!fs.existsSync(filePath)) {
     return [];
   }
+
   return walkSync(filePath, opts);
 }
 
 export function getPodModulePrefix(root: string): string | null {
-  let podModulePrefix: string = '';
+  let podModulePrefix = '';
+
   // log('listPodsComponents');
   try {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
     const appConfig = require(path.join(root, 'config', 'environment.js'));
+
     // log('appConfig', appConfig);
     podModulePrefix = appConfig('development').podModulePrefix || '';
+
     if (podModulePrefix.includes('/')) {
       podModulePrefix = podModulePrefix.split('/').pop() as string;
     }
@@ -78,36 +86,44 @@ export function getPodModulePrefix(root: string): string | null {
     // log('catch', e);
     return null;
   }
+
   if (!podModulePrefix) {
     return null;
   }
+
   return podModulePrefix.trim().length > 0 ? podModulePrefix : null;
 }
 
 export function resolvePackageRoot(root: string, addonName: string, packagesFolder = 'node_modules') {
   const roots = root.split(path.sep);
+
   while (roots.length) {
     const prefix = roots.join(path.sep);
     const maybePath = path.join(prefix, packagesFolder, addonName);
     const linkedPath = path.join(prefix, addonName);
+
     if (fs.existsSync(path.join(maybePath, 'package.json'))) {
       return maybePath;
     } else if (fs.existsSync(path.join(linkedPath, 'package.json'))) {
       return linkedPath;
     }
+
     roots.pop();
   }
+
   return false;
 }
 
 export function isProjectAddonRoot(root: string) {
   const pack = getPackageJSON(root);
   const hasIndexJs = fs.existsSync(path.join(root, 'index.js'));
+
   return isEmberAddon(pack) && hasIndexJs;
 }
 
 export function isELSAddonRoot(root: string) {
   const pack = getPackageJSON(root);
+
   return hasEmberLanguageServerExtension(pack);
 }
 
@@ -115,9 +131,10 @@ export function getProjectInRepoAddonsRoots(root: string) {
   const prefix = isModuleUnificationApp(root) ? 'packages' : 'lib';
   const addons = safeWalkSync(path.join(root, prefix), {
     directories: true,
-    globs: ['**/package.json']
+    globs: ['**/package.json'],
   });
   const roots: string[] = [];
+
   addons
     .map((relativePath: string) => {
       return path.dirname(path.join(root, prefix, relativePath));
@@ -131,6 +148,7 @@ export function getProjectInRepoAddonsRoots(root: string) {
         }
       });
     });
+
   return roots;
 }
 
@@ -139,15 +157,17 @@ export function listGlimmerXComponents(root: string) {
     const jsPaths = safeWalkSync(root, {
       directories: false,
       globs: ['**/*.{js,ts,jsx,hbs}'],
-      ignore: ['dist', 'lib', 'node_modules', 'tmp', 'cache', '.*', '.cache', '.git', '.*.{js,ts,jsx,hbs,gbx}']
+      ignore: ['dist', 'lib', 'node_modules', 'tmp', 'cache', '.*', '.cache', '.git', '.*.{js,ts,jsx,hbs,gbx}'],
     });
 
     return jsPaths
       .map((p) => {
         const fileName = p.split('/').pop();
+
         if (fileName === undefined) {
           return '';
         }
+
         return fileName.slice(0, fileName.lastIndexOf('.'));
       })
       .filter((p) => {
@@ -157,7 +177,7 @@ export function listGlimmerXComponents(root: string) {
         return {
           kind: CompletionItemKind.Class,
           label: name,
-          detail: 'component'
+          detail: 'component',
         };
       });
   } catch (e) {
@@ -168,15 +188,18 @@ export function listGlimmerXComponents(root: string) {
 export function listGlimmerNativeComponents(root: string) {
   try {
     const possiblePath = resolvePackageRoot(root, 'glimmer-native', 'node_modules');
+
     if (!possiblePath) {
       return [];
     }
+
     const components = fs.readdirSync(path.join(possiblePath, 'dist', 'src', 'glimmer', 'native-components'));
+
     return components.map((name) => {
       return {
         kind: CompletionItemKind.Class,
         label: name,
-        detail: 'component'
+        detail: 'component',
       };
     });
   } catch (e) {
@@ -188,32 +211,39 @@ function hasDep(pack: any, depName: string) {
   if (pack.dependencies && pack.dependencies[depName]) {
     return true;
   }
+
   if (pack.devDependencies && pack.devDependencies[depName]) {
     return true;
   }
+
   if (pack.peerDependencies && pack.peerDependencies[depName]) {
     return true;
   }
+
   return false;
 }
 
 export function isGlimmerNativeProject(root: string) {
   const pack = getPackageJSON(root);
+
   return hasDep(pack, 'glimmer-native');
 }
 
 export function isGlimmerXProject(root: string) {
   const pack = getPackageJSON(root);
+
   return hasDep(pack, '@glimmerx/core') || hasDep(pack, 'glimmer-lite-core');
 }
 
 export function getProjectAddonsRoots(root: string, resolvedItems: string[] = [], packageFolderName = 'node_modules') {
   const pack = getPackageJSON(root);
+
   if (resolvedItems.length) {
     if (!isEmberAddon(pack)) {
       return [];
     }
   }
+
   // log('getPackageJSON', pack);
   const items = resolvedItems.length
     ? [...Object.keys(pack.dependencies || {}), ...Object.keys(pack.peerDependencies || {})]
@@ -228,12 +258,15 @@ export function getProjectAddonsRoots(root: string, resolvedItems: string[] = []
       return p !== false;
     });
   const recursiveRoots: string[] = resolvedItems.slice(0);
+
   roots.forEach((rootItem: string) => {
-    let packInfo = getPackageJSON(rootItem);
+    const packInfo = getPackageJSON(rootItem);
+
     // we don't need to go deeper if package itself not an ember-addon or els-extension
     if (!isEmberAddon(packInfo) && !hasEmberLanguageServerExtension(packInfo)) {
       return;
     }
+
     if (!recursiveRoots.includes(rootItem)) {
       recursiveRoots.push(rootItem);
       getProjectAddonsRoots(rootItem, recursiveRoots, packageFolderName).forEach((item: string) => {
@@ -243,12 +276,14 @@ export function getProjectAddonsRoots(root: string, resolvedItems: string[] = []
       });
     }
   });
+
   return recursiveRoots;
 }
 
 export function getPackageJSON(file: string): PackageInfo {
   try {
     const result = JSON.parse(fs.readFileSync(path.join(file, 'package.json'), 'utf8'));
+
     return result;
   } catch (e) {
     return {};
@@ -263,6 +298,7 @@ function addonVersion(info: PackageInfo) {
   if (!isEmberAddon(info)) {
     return null;
   }
+
   return isEmberAddonV2(info) ? 2 : 1;
 }
 
@@ -296,13 +332,16 @@ export function getProjectAddonsInfo(root: string) {
     .filter((pathItem: any) => typeof pathItem === 'string');
   // log('roots', roots);
   const meta: any = [];
+
   roots.forEach((packagePath: string) => {
     const info = getPackageJSON(packagePath);
     // log('info', info);
     const version = addonVersion(info);
+
     if (version === null) {
       return;
     }
+
     if (version === 1) {
       // log('isEmberAddon', packagePath);
       const extractedData = [
@@ -312,14 +351,16 @@ export function getProjectAddonsInfo(root: string) {
         ...listModels(packagePath),
         ...listTransforms(packagePath),
         ...listServices(packagePath),
-        ...listModifiers(packagePath)
+        ...listModifiers(packagePath),
       ];
+
       // log('extractedData', extractedData);
       if (extractedData.length) {
         meta.push(extractedData);
       }
     }
   });
+
   // log('meta', meta);
   if (isGlimmerNativeProject(root)) {
     meta.push(listGlimmerNativeComponents(root));
@@ -329,10 +370,11 @@ export function getProjectAddonsInfo(root: string) {
     meta.push(listGlimmerXComponents(root));
   }
 
-  let normalizedResult: any[] = meta.reduce((arrs: any[], item: any[]) => {
+  const normalizedResult: any[] = meta.reduce((arrs: any[], item: any[]) => {
     if (!item.length) {
       return arrs;
     }
+
     return arrs.concat(item);
   }, []);
 
@@ -341,9 +383,11 @@ export function getProjectAddonsInfo(root: string) {
 
 export function pureComponentName(relativePath: string) {
   const ext = path.extname(relativePath); // .hbs
+
   if (relativePath.startsWith('/')) {
     relativePath = relativePath.slice(1);
   }
+
   if (relativePath.endsWith(`/template${ext}`)) {
     return relativePath.replace(`/template${ext}`, '');
   } else if (relativePath.endsWith(`/component${ext}`)) {
@@ -360,22 +404,26 @@ export function pureComponentName(relativePath: string) {
 }
 
 export function listPodsComponents(root: string): CompletionItem[] {
-  let podModulePrefix = podModulePrefixForRoot(root);
+  const podModulePrefix = podModulePrefixForRoot(root);
+
   if (podModulePrefix === null) {
     return [];
   }
-  const entryPath = path.join(root, 'app', podModulePrefix, 'components');
+
+  const entryPath = path.resolve(path.join(root, 'app', podModulePrefix, 'components'));
+
   const jsPaths = safeWalkSync(entryPath, {
     directories: false,
-    globs: ['**/*.{js,ts,hbs,css,less,scss}']
+    globs: ['**/*.{js,ts,hbs,css,less,scss}'],
   });
 
   const items = jsPaths.map((filePath: string) => {
     addToRegistry(pureComponentName(filePath), 'component', [path.join(entryPath, filePath)]);
+
     return {
       kind: CompletionItemKind.Class,
       label: pureComponentName(filePath),
-      detail: 'component'
+      detail: 'component',
     };
   });
 
@@ -384,18 +432,19 @@ export function listPodsComponents(root: string): CompletionItem[] {
 }
 
 export function listMUComponents(root: string): CompletionItem[] {
-  const entryPath = path.join(root, 'src', 'ui', 'components');
+  const entryPath = path.resolve(path.join(root, 'src', 'ui', 'components'));
   const jsPaths = safeWalkSync(entryPath, {
     directories: false,
-    globs: ['**/*.{js,ts,hbs}']
+    globs: ['**/*.{js,ts,hbs}'],
   });
 
   const items = jsPaths.map((filePath: string) => {
     addToRegistry(pureComponentName(filePath), 'component', [path.join(entryPath, filePath)]);
+
     return {
       kind: CompletionItemKind.Class,
       label: pureComponentName(filePath),
-      detail: 'component'
+      detail: 'component',
     };
   });
 
@@ -407,24 +456,25 @@ export function builtinModifiers(): CompletionItem[] {
     {
       kind: CompletionItemKind.Method,
       label: 'action',
-      detail: 'modifier'
-    }
+      detail: 'modifier',
+    },
   ];
 }
 
-export function listComponents(root: string): CompletionItem[] {
+export function listComponents(_root: string): CompletionItem[] {
   // log('listComponents');
+  const root = path.resolve(_root);
   const scriptEntry = path.join(root, 'app', 'components');
   const templateEntry = path.join(root, 'app', 'templates', 'components');
   const addonComponents = path.join(root, 'addon', 'components');
   const addonTemplates = path.join(root, 'addon', 'templates', 'components');
   const addonComponentsPaths = safeWalkSync(addonComponents, {
     directories: false,
-    globs: ['**/*.{js,ts,hbs}']
+    globs: ['**/*.{js,ts,hbs}'],
   });
   const addonTemplatesPaths = safeWalkSync(addonTemplates, {
     directories: false,
-    globs: ['**/*.{js,ts,hbs}']
+    globs: ['**/*.{js,ts,hbs}'],
   });
 
   addonComponentsPaths.forEach((p) => {
@@ -436,7 +486,7 @@ export function listComponents(root: string): CompletionItem[] {
 
   const jsPaths = safeWalkSync(scriptEntry, {
     directories: false,
-    globs: ['**/*.{js,ts,hbs,css,less,scss}']
+    globs: ['**/*.{js,ts,hbs,css,less,scss}'],
   });
 
   jsPaths.forEach((p) => {
@@ -445,7 +495,7 @@ export function listComponents(root: string): CompletionItem[] {
 
   const hbsPaths = safeWalkSync(templateEntry, {
     directories: false,
-    globs: ['**/*.hbs']
+    globs: ['**/*.hbs'],
   });
 
   hbsPaths.forEach((p) => {
@@ -458,28 +508,42 @@ export function listComponents(root: string): CompletionItem[] {
     return {
       kind: CompletionItemKind.Class,
       label: pureComponentName(filePath),
-      detail: 'component'
+      detail: 'component',
     };
   });
 
   return items;
 }
 
-export function findTestsForProject(project: Project) {
-  const entry = path.resolve(path.join(project.root, 'tests'));
+function findRegistryItemsForProject(project: Project, prefix: string, globs: string[]): void {
+  const entry = path.resolve(path.join(project.root, prefix));
   const paths = safeWalkSync(entry, {
     directories: false,
-    globs: ['**/*.{js,ts}']
+    globs,
   });
 
   paths.forEach((filePath: string) => {
     const fullPath = path.join(entry, filePath);
     const item = project.matchPathToType(fullPath);
+
     if (item) {
       const normalizedItem = normalizeMatchNaming(item);
+
       addToRegistry(normalizedItem.name, normalizedItem.type, [fullPath]);
     }
   });
+}
+
+export function findTestsForProject(project: Project) {
+  findRegistryItemsForProject(project, 'tests', ['**/*.{js,ts}']);
+}
+
+export function findAppItemsForProject(project: Project) {
+  findRegistryItemsForProject(project, 'app', ['**/*.{js,ts,css,less,sass,hbs}']);
+}
+
+export function findAddonItemsForProject(project: Project) {
+  findRegistryItemsForProject(project, 'addon', ['**/*.{js,ts,css,less,sass,hbs}']);
 }
 
 function listCollection(
@@ -489,18 +553,19 @@ function listCollection(
   kindType: CompletionItemKind,
   detail: 'transform' | 'service' | 'model' | 'helper' | 'modifier'
 ) {
-  const entry = path.join(root, prefix, collectionName);
+  const entry = path.resolve(path.join(root, prefix, collectionName));
   const paths = safeWalkSync(entry, {
     directories: false,
-    globs: ['**/*.{js,ts}']
+    globs: ['**/*.{js,ts}'],
   });
 
   const items = paths.map((filePath: string) => {
     addToRegistry(pureComponentName(filePath), detail, [path.join(entry, filePath)]);
+
     return {
       kind: kindType,
       label: pureComponentName(filePath),
-      detail
+      detail,
     };
   });
 
@@ -527,38 +592,42 @@ export function listTransforms(root: string): CompletionItem[] {
   return listCollection(root, 'app', 'transforms', CompletionItemKind.Function, 'transform');
 }
 
-export function listRoutes(root: string): CompletionItem[] {
-  // log('listRoutes');
+export function listRoutes(_root: string): CompletionItem[] {
+  const root = path.resolve(_root);
   const scriptEntry = path.join(root, 'app', 'routes');
   const templateEntry = path.join(root, 'app', 'templates');
   const controllersEntry = path.join(root, 'app', 'controllers');
   const paths = safeWalkSync(scriptEntry, {
     directories: false,
-    globs: ['**/*.{js,ts}']
+    globs: ['**/*.{js,ts}'],
   });
 
   const templatePaths = safeWalkSync(templateEntry, {
     directories: false,
-    globs: ['**/*.hbs']
+    globs: ['**/*.hbs'],
   }).filter((name: string) => {
     const skipEndings = ['-loading', '-error', '/loading', '/error'];
+
     return !name.startsWith('components/') && skipEndings.filter((ending: string) => name.endsWith(ending + '.hbs')).length === 0;
   });
 
   const controllers = safeWalkSync(controllersEntry, {
     directories: false,
-    globs: ['**/*.{js,ts}']
+    globs: ['**/*.{js,ts}'],
   });
 
   let items: any[] = [];
+
   items = items.concat(
     templatePaths.map((filePath) => {
       const label = filePath.replace(path.extname(filePath), '').replace(/\//g, '.');
+
       addToRegistry(label, 'routePath', [path.join(templateEntry, filePath)]);
+
       return {
         kind: CompletionItemKind.File,
         label,
-        detail: 'route'
+        detail: 'route',
       };
     })
   );
@@ -566,17 +635,20 @@ export function listRoutes(root: string): CompletionItem[] {
   items = items.concat(
     paths.map((filePath) => {
       const label = filePath.replace(path.extname(filePath), '').replace(/\//g, '.');
+
       addToRegistry(label, 'routePath', [path.join(scriptEntry, filePath)]);
+
       return {
         kind: CompletionItemKind.File,
         label,
-        detail: 'route'
+        detail: 'route',
       };
     })
   );
 
   controllers.forEach((filePath) => {
     const label = filePath.replace(path.extname(filePath), '').replace(/\//g, '.');
+
     addToRegistry(label, 'routePath', [path.join(controllersEntry, filePath)]);
   });
 
@@ -584,15 +656,13 @@ export function listRoutes(root: string): CompletionItem[] {
 }
 
 export function getComponentNameFromURI(root: string, uri: string) {
-  let fileName = uri.replace('file://', '').replace(root, '');
-  let splitter = fileName.includes(path.sep + '-components' + path.sep) ? '/-components/' : '/components/';
-  let maybeComponentName = fileName
-    .split(path.sep)
-    .join('/')
-    .split(splitter)[1];
+  const fileName = uri.replace('file://', '').replace(root, '');
+  const splitter = fileName.includes(path.sep + '-components' + path.sep) ? '/-components/' : '/components/';
+  const maybeComponentName = fileName.split(path.sep).join('/').split(splitter)[1];
 
   if (!maybeComponentName) {
     return null;
   }
+
   return pureComponentName(maybeComponentName);
 }

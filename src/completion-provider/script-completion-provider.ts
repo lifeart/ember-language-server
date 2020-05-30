@@ -13,22 +13,29 @@ export default class ScriptCompletionProvider {
   constructor(private server: Server) {}
   async provideCompletions(params: TextDocumentPositionParams): Promise<CompletionItem[]> {
     log('provideCompletions');
+
     if (!['.js', '.ts'].includes(getExtension(params.textDocument) as string)) {
       return [];
     }
+
     const uri = params.textDocument.uri;
     const project = this.server.projectRoots.projectForUri(uri);
+
     if (!project) {
       return [];
     }
+
     const document = this.server.documents.get(uri);
+
     if (!document) {
       return [];
     }
+
     const { root } = project;
     const content = document.getText();
 
     let ast = null;
+
     try {
       ast = parse(content);
     } catch (e) {
@@ -42,6 +49,7 @@ export default class ScriptCompletionProvider {
     }
 
     let textPrefix = focusPath.node.value || '';
+
     if (typeof textPrefix !== 'string') {
       if (textPrefix.raw) {
         textPrefix = textPrefix.raw || '';
@@ -56,7 +64,7 @@ export default class ScriptCompletionProvider {
       position: params.position,
       server: this.server,
       results: [],
-      type: 'script'
+      type: 'script',
     });
 
     const addonResults: CompletionItem[] = await queryELSAddonsAPIChain(project.providers.completionProviders, root, {
@@ -65,12 +73,12 @@ export default class ScriptCompletionProvider {
       position: params.position,
       server: this.server,
       results: completions,
-      type: 'script'
+      type: 'script',
     });
 
     return filter(uniqBy(addonResults, 'label'), textPrefix, {
       key: 'label',
-      maxResults: 40
+      maxResults: 40,
     });
   }
 }

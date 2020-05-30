@@ -7,9 +7,20 @@ export class CodeActionProvider {
   async provideCodeActions({ textDocument, context, range }: CodeActionParams): Promise<(Command | CodeAction)[] | undefined | null> {
     const project = this.server.projectRoots.projectForUri(textDocument.uri);
     const document = this.server.documents.get(textDocument.uri);
+
     if (!project || !document) {
       return [];
     }
+
+    const internalResults = await queryELSAddonsAPIChain(project.builtinProviders.codeActionProviders, project.root, {
+      textDocument,
+      context,
+      range,
+      results: [],
+      project: project,
+      document: document,
+      server: this.server,
+    });
     const addonResults = await queryELSAddonsAPIChain(project.providers.codeActionProviders, project.root, {
       textDocument,
       context,
@@ -17,8 +28,9 @@ export class CodeActionProvider {
       results: [],
       project: project,
       document: document,
-      server: this.server
+      server: this.server,
     });
-    return addonResults;
+
+    return [...internalResults, ...addonResults].filter(Boolean);
   }
 }

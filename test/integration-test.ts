@@ -2,6 +2,7 @@ import * as cp from 'child_process';
 import * as path from 'path';
 import * as fs from 'fs';
 import { createTempDir } from 'broccoli-test-helper';
+import { URI } from 'vscode-uri';
 
 import { createMessageConnection, MessageConnection, Logger, IPCMessageReader, IPCMessageWriter } from 'vscode-jsonrpc';
 import {
@@ -12,105 +13,126 @@ import {
   DocumentSymbolRequest,
   ExecuteCommandRequest,
   Definition,
-  ReferencesRequest
+  ReferencesRequest,
 } from 'vscode-languageserver-protocol';
+
+type UnknownResult = Record<string, unknown>;
+type Registry = {
+  [key: string]: {
+    [key: string]: string[];
+  };
+};
 
 function startServer() {
   const serverPath = './lib/start-server.js';
 
   return cp.fork(serverPath, [], {
-    cwd: path.join(__dirname, '..')
+    cwd: path.join(__dirname, '..'),
   });
 }
 
 async function reloadProjects(connection, project = undefined) {
   const result = await connection.sendRequest(ExecuteCommandRequest.type, {
     command: 'els.reloadProject',
-    arguments: project ? [project] : []
+    arguments: project ? [project] : [],
   });
+
   return result;
 }
 
-async function createProject(files, connection) {
+async function createProject(files, connection): Promise<{ normalizedPath: string; result: UnknownResult; destroy(): void }> {
   const dir = await createTempDir();
+
   dir.write(files);
-  const normalizedPath = path
-    .normalize(dir.path())
-    .split(':')
-    .pop();
-  const result = await connection.sendRequest(ExecuteCommandRequest.type, ['els:registerProjectPath', normalizedPath]);
-  const params = {
-    rootUri: `file://${normalizedPath}`,
-    capabilities: {},
-    initializationOptions: {
-      isELSTesting: true
-    }
+  const normalizedPath = path.normalize(dir.path());
+  const result = (await connection.sendRequest(ExecuteCommandRequest.type, ['els:registerProjectPath', normalizedPath])) as {
+    registry: Registry;
   };
-  await connection.sendRequest(InitializeRequest.type as any, params);
+
   return {
     normalizedPath,
     result,
     destroy: async () => {
       await dir.dispose();
-    }
+    },
   };
 }
 
 function textDocument(modelPath, position = { line: 0, character: 0 }) {
   const params = {
     textDocument: {
-      uri: `file://${modelPath}`
+      uri: URI.file(modelPath).toString(),
     },
-    position
+    position,
   };
+
   return params;
 }
 
 async function getResult(reqType, connection, files, fileToInspect, position) {
-  const { normalizedPath, destroy } = await createProject(files, connection);
+  const { normalizedPath, destroy, result } = await createProject(files, connection);
   const modelPath = path.join(normalizedPath, fileToInspect);
   const params = textDocument(modelPath, position);
+
   openFile(connection, modelPath);
-  let response = await connection.sendRequest(reqType, params);
+  const response = await connection.sendRequest(reqType, params);
+
   await destroy();
-  return normalizeUri(response, normalizedPath);
+
+  return { response: normalizeUri(response, normalizedPath), registry: normalizeRegistry(normalizedPath, result.registry as Registry) };
 }
 
 function openFile(connection: MessageConnection, filePath: string) {
   connection.sendNotification(DidOpenTextDocumentNotification.type, {
     textDocument: {
-      uri: `file://${filePath}`,
-      text: fs.readFileSync(filePath, 'utf8')
-    }
+      uri: URI.file(filePath).toString(),
+      text: fs.readFileSync(filePath, 'utf8'),
+    },
   });
 }
 
-function replaceDynamicUriPart(uri: string) {
-  let dirname = __dirname;
-  if (dirname.indexOf(':') === 1) {
-    dirname = dirname.substr(2);
-  }
-
-  return uri
-    .replace(dirname.replace(/\\/g, '/'), '/path-to-tests')
-    .replace(dirname, '/path-to-tests')
-    .replace(/\\/g, '/');
+function normalizePath(file: string) {
+  return file.split('\\').join('/');
 }
 
 function replaceTempUriPart(uri: string, base: string) {
-  return path
-    .normalize(uri.replace('file://', ''))
-    .replace(base, '')
-    .split(path.sep)
-    .join('/');
+  const fsPath = normalizePath(URI.parse(uri).fsPath);
+  const basePath = normalizePath(URI.parse(base).fsPath);
+
+  return fsPath.split(basePath).pop();
+}
+
+function normalizeRegistry(root: string, registry: Registry) {
+  const normalizedRegistry: Registry = {};
+
+  Object.keys(registry).forEach((key) => {
+    normalizedRegistry[key] = {};
+    Object.keys(registry[key]).forEach((name) => {
+      normalizedRegistry[key][name] = registry[key][name].map((el) => normalizePath(path.relative(root, el)));
+    });
+
+    if (!Object.keys(normalizedRegistry[key]).length) {
+      delete normalizedRegistry[key];
+    }
+  });
+
+  return normalizedRegistry;
 }
 
 function normalizeUri(objects: Definition, base?: string) {
+  if (objects === null) {
+    return objects;
+  }
+
   if (!Array.isArray(objects)) {
-    objects.uri = replaceDynamicUriPart(objects.uri);
-    if (base) {
-      objects.uri = replaceTempUriPart(objects.uri, base);
+    if (objects.uri) {
+      // objects.uri = replaceDynamicUriPart(objects.uri);
+
+      if (base) {
+        objects.uri = replaceTempUriPart(objects.uri, base);
+      }
     }
+
     return objects;
   }
 
@@ -118,21 +140,15 @@ function normalizeUri(objects: Definition, base?: string) {
     if (object === null) {
       return object;
     }
-    if (object.uri) {
-      const { uri } = object;
-      object.uri = replaceDynamicUriPart(uri);
-      if (base) {
-        object.uri = replaceTempUriPart(object.uri, base);
-      }
-    }
 
-    return object;
+    return normalizeUri(object, base);
   });
 }
 
 function makeProject(appFiles = {}, addons = {}) {
   const dependencies = {};
   const node_modules = {};
+
   Object.keys(addons).forEach((name) => {
     dependencies[name] = '*';
     node_modules[name] = addons[name];
@@ -140,25 +156,27 @@ function makeProject(appFiles = {}, addons = {}) {
   const fileStructure = Object.assign({}, appFiles, {
     node_modules,
     'package.json': JSON.stringify({
-      dependencies
-    })
+      dependencies,
+    }),
   });
+
   return fileStructure;
 }
 
 function makeAddonPackage(name, config, addonConfig = undefined) {
-  let pack = {
+  const pack = {
     name,
-    'ember-language-server': config
+    'ember-language-server': config,
   };
 
   if (addonConfig) {
     pack['ember-addon'] = addonConfig;
   }
+
   return JSON.stringify(pack);
 }
 
-describe('integration', function() {
+describe('integration', function () {
   let connection: MessageConnection;
   let serverProcess: cp.ChildProcess;
 
@@ -176,7 +194,7 @@ describe('integration', function() {
       },
       warn(msg) {
         console.log('warn', msg);
-      }
+      },
     });
 
     connection.listen();
@@ -190,11 +208,14 @@ describe('integration', function() {
   describe('Initialize request', () => {
     it('returns an initialize request', async () => {
       const params = {
-        rootUri: `file://${path.join(__dirname, 'fixtures', 'full-project')}`,
-        capabilities: {}
+        rootUri: URI.file(path.join(__dirname, 'fixtures', 'full-project')).toString(),
+        capabilities: {},
+        initializationOptions: {
+          isELSTesting: true,
+        },
       };
 
-      const response = await connection.sendRequest(InitializeRequest.type, params);
+      const response = await connection.sendRequest((InitializeRequest.type as unknown) as string, params);
 
       expect(response).toMatchSnapshot();
     });
@@ -205,12 +226,12 @@ describe('integration', function() {
       const applicationTemplatePath = path.join(__dirname, 'fixtures', 'full-project', 'app', 'templates', 'application.hbs');
       const params = {
         textDocument: {
-          uri: `file://${applicationTemplatePath}`
+          uri: URI.file(applicationTemplatePath).toString(),
         },
         position: {
           line: 1,
-          character: 2
-        }
+          character: 2,
+        },
       };
 
       openFile(connection, applicationTemplatePath);
@@ -224,12 +245,12 @@ describe('integration', function() {
       const applicationTemplatePath = path.join(__dirname, 'fixtures', 'full-project', 'app', 'templates', 'angle-completion.hbs');
       const params = {
         textDocument: {
-          uri: `file://${applicationTemplatePath}`
+          uri: URI.file(applicationTemplatePath).toString(),
         },
         position: {
           line: 1,
-          character: 2
-        }
+          character: 2,
+        },
       };
 
       openFile(connection, applicationTemplatePath);
@@ -243,12 +264,12 @@ describe('integration', function() {
       const templatePath = path.join(__dirname, 'fixtures', 'full-project', 'app', 'templates', 'definition.hbs');
       const params = {
         textDocument: {
-          uri: `file://${templatePath}`
+          uri: URI.file(templatePath).toString(),
         },
         position: {
           line: 2,
-          character: 23
-        }
+          character: 23,
+        },
       };
 
       openFile(connection, templatePath);
@@ -262,12 +283,12 @@ describe('integration', function() {
       const templatePath = path.join(__dirname, 'fixtures', 'full-project', 'app', 'templates', 'definition.hbs');
       const params = {
         textDocument: {
-          uri: `file://${templatePath}`
+          uri: URI.file(templatePath).toString(),
         },
         position: {
           line: 3,
-          character: 12
-        }
+          character: 12,
+        },
       };
 
       openFile(connection, templatePath);
@@ -280,102 +301,107 @@ describe('integration', function() {
 
   describe('Definition request', () => {
     it('returns the definition information for a component in a template', async () => {
-      const definitionTemplatePath = path.join(__dirname, 'fixtures', 'full-project', 'app', 'templates', 'definition.hbs');
+      const base = path.join(__dirname, 'fixtures', 'full-project');
+      const definitionTemplatePath = path.join(base, 'app', 'templates', 'definition.hbs');
       const params = {
         textDocument: {
-          uri: `file://${definitionTemplatePath}`
+          uri: URI.file(definitionTemplatePath).toString(),
         },
         position: {
           line: 0,
-          character: 4
-        }
+          character: 4,
+        },
       };
 
       openFile(connection, definitionTemplatePath);
 
       let response = await connection.sendRequest(DefinitionRequest.type, params);
 
-      response = normalizeUri(response);
+      response = normalizeUri(response, base);
       expect(response).toMatchSnapshot();
     });
 
     it('returns the definition information for a helper in a template', async () => {
-      const definitionTemplatePath = path.join(__dirname, 'fixtures', 'full-project', 'app', 'templates', 'definition.hbs');
+      const base = path.join(__dirname, 'fixtures', 'full-project');
+      const definitionTemplatePath = path.join(base, 'app', 'templates', 'definition.hbs');
       const params = {
         textDocument: {
-          uri: `file://${definitionTemplatePath}`
+          uri: URI.file(definitionTemplatePath).toString(),
         },
         position: {
           line: 1,
-          character: 4
-        }
+          character: 4,
+        },
       };
 
       openFile(connection, definitionTemplatePath);
 
       let response = await connection.sendRequest(DefinitionRequest.type, params);
 
-      response = normalizeUri(response);
+      response = normalizeUri(response, base);
       expect(response).toMatchSnapshot();
     });
 
     it('returns the definition information for a hasMany relationship', async () => {
-      const modelPath = path.join(__dirname, 'fixtures', 'full-project', 'app', 'models', 'model-a.js');
+      const base = path.join(__dirname, 'fixtures', 'full-project');
+      const modelPath = path.join(base, 'app', 'models', 'model-a.js');
       const params = {
         textDocument: {
-          uri: `file://${modelPath}`
+          uri: URI.file(modelPath).toString(),
         },
         position: {
           line: 4,
-          character: 27
-        }
+          character: 27,
+        },
       };
 
       openFile(connection, modelPath);
 
       let response = await connection.sendRequest(DefinitionRequest.type, params);
 
-      response = normalizeUri(response);
+      response = normalizeUri(response, base);
       expect(response).toMatchSnapshot();
     });
 
     it('returns the definition information for a belongsTo relationship', async () => {
-      const modelPath = path.join(__dirname, 'fixtures', 'full-project', 'app', 'models', 'model-b.js');
+      const base = path.join(__dirname, 'fixtures', 'full-project');
+      const modelPath = path.join(base, 'app', 'models', 'model-b.js');
       const params = {
         textDocument: {
-          uri: `file://${modelPath}`
+          uri: URI.file(modelPath).toString(),
         },
         position: {
           line: 4,
-          character: 27
-        }
+          character: 27,
+        },
       };
 
       openFile(connection, modelPath);
 
       let response = await connection.sendRequest(DefinitionRequest.type, params);
 
-      response = normalizeUri(response);
+      response = normalizeUri(response, base);
       expect(response).toMatchSnapshot();
     });
 
     it('returns the definition information for a transform', async () => {
-      const modelPath = path.join(__dirname, 'fixtures', 'full-project', 'app', 'models', 'model-a.js');
+      const base = path.join(__dirname, 'fixtures', 'full-project');
+      const modelPath = path.join(base, 'app', 'models', 'model-a.js');
       const params = {
         textDocument: {
-          uri: `file://${modelPath}`
+          uri: URI.file(modelPath).toString(),
         },
         position: {
           line: 6,
-          character: 27
-        }
+          character: 27,
+        },
       };
 
       openFile(connection, modelPath);
 
       let response = await connection.sendRequest(DefinitionRequest.type, params);
 
-      response = normalizeUri(response);
+      response = normalizeUri(response, base);
       expect(response).toMatchSnapshot();
     });
   });
@@ -390,14 +416,14 @@ describe('integration', function() {
             templates: {
               foo: {
                 bar: {
-                  'baz.hbs': ''
-                }
-              }
+                  'baz.hbs': '',
+                },
+              },
             },
             components: {
-              'hello.hbs': '<LinkTo @route="foo.bar.baz" />'
-            }
-          }
+              'hello.hbs': '<LinkTo @route="foo.bar.baz" />',
+            },
+          },
         },
         'app/components/hello.hbs',
         { line: 0, character: 17 }
@@ -414,9 +440,9 @@ describe('integration', function() {
           app: {
             components: {
               'hello.hbs': '<Darling />',
-              'darling.hbs': ''
-            }
-          }
+              'darling.hbs': '',
+            },
+          },
         },
         'app/components/hello.hbs',
         { line: 0, character: 2 }
@@ -433,10 +459,10 @@ describe('integration', function() {
             components: {
               'hello.hbs': '<Darling />',
               darling: {
-                'index.hbs': ''
-              }
-            }
-          }
+                'index.hbs': '',
+              },
+            },
+          },
         },
         'app/components/hello.hbs',
         { line: 0, character: 2 }
@@ -453,10 +479,10 @@ describe('integration', function() {
             components: {
               'hello.hbs': '<Darling />',
               darling: {
-                'template.hbs': ''
-              }
-            }
-          }
+                'template.hbs': '',
+              },
+            },
+          },
         },
         'app/components/hello.hbs',
         { line: 0, character: 2 }
@@ -471,14 +497,14 @@ describe('integration', function() {
         {
           app: {
             components: {
-              'hello.hbs': '<Darling />'
+              'hello.hbs': '<Darling />',
             },
             templates: {
               components: {
-                'darling.hbs': ''
-              }
-            }
-          }
+                'darling.hbs': '',
+              },
+            },
+          },
         },
         'app/components/hello.hbs',
         { line: 0, character: 2 }
@@ -493,14 +519,14 @@ describe('integration', function() {
         {
           app: {
             components: {
-              'hello.ts': 'hbs`<Darling />`'
+              'hello.ts': 'hbs`<Darling />`',
             },
             templates: {
               components: {
-                'darling.hbs': ''
-              }
-            }
-          }
+                'darling.hbs': '',
+              },
+            },
+          },
         },
         'app/components/hello.ts',
         { line: 0, character: 6 }
@@ -538,6 +564,83 @@ describe('integration', function() {
     });
   });
 
+  describe('Diffent commands', () => {
+    it('handle "els.getRelatedFiles" command', async () => {
+      const project = await createProject(
+        {
+          app: {
+            components: {
+              hello: {
+                'template.hbs': '',
+                'component.js': '',
+              },
+            },
+          },
+          tests: {
+            integration: {
+              components: {
+                'hello-test.js': '',
+              },
+            },
+          },
+        },
+        connection
+      );
+
+      // wait for async registry initialization;
+      const result: string[] = await connection.sendRequest((ExecuteCommandRequest.type as unknown) as string, {
+        command: 'els.getRelatedFiles',
+        arguments: [path.join(project.normalizedPath, 'app', 'components', 'hello', 'template.hbs')],
+      });
+
+      expect(normalizeRegistry(project.normalizedPath, project.result.registry as Registry)).toMatchSnapshot();
+
+      expect(result.map((el) => normalizePath(path.relative(project.normalizedPath, el)))).toMatchSnapshot();
+
+      await project.destroy();
+    });
+    it('handle "els.getRelatedFiles" command with meta flag', async () => {
+      const project = await createProject(
+        {
+          app: {
+            components: {
+              hello: {
+                'index.hbs': '',
+                'index.js': '',
+              },
+            },
+          },
+          tests: {
+            integration: {
+              components: {
+                'hello-test.js': '',
+              },
+            },
+          },
+        },
+        connection
+      );
+
+      const result: { path: string; meta: UnknownResult }[] = await connection.sendRequest((ExecuteCommandRequest.type as unknown) as string, {
+        command: 'els.getRelatedFiles',
+        arguments: [path.join(project.normalizedPath, 'app', 'components', 'hello', 'index.hbs'), { includeMeta: true }],
+      });
+
+      expect(normalizeRegistry(project.normalizedPath, project.result.registry as Registry)).toMatchSnapshot();
+
+      expect(
+        result.map((el) => {
+          return {
+            path: normalizePath(path.relative(project.normalizedPath, el.path)),
+            meta: el.meta,
+          };
+        })
+      ).toMatchSnapshot();
+
+      await project.destroy();
+    });
+  });
+
   describe('GlimmerX', () => {
     it('able to provide list of locally defined components', async () => {
       const result = await getResult(
@@ -552,13 +655,14 @@ describe('integration', function() {
             'Border.ts': '',
             'Border.test.ts': '',
             'Ball.jsx': '',
-            'Bus.hbs': ''
+            'Bus.hbs': '',
           },
-          'package.json': JSON.stringify({ dependencies: { '@glimmerx/core': true } })
+          'package.json': JSON.stringify({ dependencies: { '@glimmerx/core': true } }),
         },
         'App.js',
         { line: 0, character: 20 }
       );
+
       expect(result).toMatchSnapshot();
     });
   });
@@ -571,9 +675,9 @@ describe('integration', function() {
         {
           app: {
             components: {
-              'hello.js': 'export default class Foo {}'
-            }
-          }
+              'hello.js': 'export default class Foo {}',
+            },
+          },
         },
         'app/components/hello.js',
         { line: 0, character: 1 }
@@ -588,9 +692,9 @@ describe('integration', function() {
         {
           app: {
             components: {
-              'hello.hbs': '{{this.foo}}'
-            }
-          }
+              'hello.hbs': '{{this.foo}}',
+            },
+          },
         },
         'app/components/hello.hbs',
         { line: 0, character: 1 }
@@ -605,9 +709,9 @@ describe('integration', function() {
         {
           app: {
             components: {
-              'hello.js': 'export default class Foo {'
-            }
-          }
+              'hello.js': 'export default class Foo {',
+            },
+          },
         },
         'app/components/hello.js',
         { line: 0, character: 1 }
@@ -622,9 +726,9 @@ describe('integration', function() {
         {
           app: {
             components: {
-              'hello.hbs': '{{'
-            }
-          }
+              'hello.hbs': '{{',
+            },
+          },
         },
         'app/components/hello.hbs',
         { line: 0, character: 1 }
@@ -642,8 +746,8 @@ describe('integration', function() {
         {
           app: {
             components: {
-              'hello.hbs': '<'
-            }
+              'hello.hbs': '<',
+            },
           },
           'package.json': JSON.stringify({ dependencies: { 'glimmer-native': true } }),
           node_modules: {
@@ -654,21 +758,21 @@ describe('integration', function() {
                   glimmer: {
                     'native-components': {
                       ListView: {
-                        'component.js': ''
+                        'component.js': '',
                       },
                       Button: {
-                        'template.js': ''
-                      }
-                    }
-                  }
-                }
+                        'template.js': '',
+                      },
+                    },
+                  },
+                },
               },
               'package.json': JSON.stringify({
                 name: 'glimmer-native',
-                main: 'dist/index.js'
-              })
-            }
-          }
+                main: 'dist/index.js',
+              }),
+            },
+          },
         },
         'app/components/hello.hbs',
         { line: 0, character: 1 }
@@ -687,13 +791,14 @@ describe('integration', function() {
           app: {
             components: {
               'foo.hbs': '<MyBar @doo="12" @ />',
-              'my-bar.hbs': '{{@name}} {{@name.boo}} {{@doo}} {{@picture}} {{#each @foo as |bar|}}{{/each}}'
-            }
-          }
+              'my-bar.hbs': '{{@name}} {{@name.boo}} {{@doo}} {{@picture}} {{#each @foo as |bar|}}{{/each}}',
+            },
+          },
         },
         'app/components/foo.hbs',
         { line: 0, character: 18 }
       );
+
       expect(result).toMatchSnapshot();
     });
   });
@@ -706,13 +811,14 @@ describe('integration', function() {
         {
           app: {
             components: {
-              'foo.hbs': ['<MyComponent as |bar|>', '{{b}}', '</MyComponent>'].join('\n')
-            }
-          }
+              'foo.hbs': ['<MyComponent as |bar|>', '{{b}}', '</MyComponent>'].join('\n'),
+            },
+          },
         },
         'app/components/foo.hbs',
         { line: 1, character: 3 }
       );
+
       expect(result).toMatchSnapshot();
     });
     it('support mustache blocks', async () => {
@@ -722,13 +828,14 @@ describe('integration', function() {
         {
           app: {
             components: {
-              'foo.hbs': ['{{#my-component as |bar|}}', '{{b}}', '{{/my-component}}'].join('\n')
-            }
-          }
+              'foo.hbs': ['{{#my-component as |bar|}}', '{{b}}', '{{/my-component}}'].join('\n'),
+            },
+          },
         },
         'app/components/foo.hbs',
         { line: 1, character: 3 }
       );
+
       expect(result).toMatchSnapshot();
     });
     it('support component name autocomplete from block params', async () => {
@@ -738,13 +845,14 @@ describe('integration', function() {
         {
           app: {
             components: {
-              'foo.hbs': ['{{#my-component as |bar|}}', '<MyComponent as |boo|>', '<b />', '</MyComponent>', '{{/my-component}}'].join('\n')
-            }
-          }
+              'foo.hbs': ['{{#my-component as |bar|}}', '<MyComponent as |boo|>', '<b />', '</MyComponent>', '{{/my-component}}'].join('\n'),
+            },
+          },
         },
         'app/components/foo.hbs',
         { line: 2, character: 1 }
       );
+
       expect(result).toMatchSnapshot();
     });
   });
@@ -759,24 +867,26 @@ describe('integration', function() {
             'ember-language-server': {
               entry: './lib/langserver',
               capabilities: {
-                completionProvider: true
-              }
-            }
+                completionProvider: true,
+              },
+            },
           }),
           lib: {
-            'langserver.js': 'module.exports.onComplete = function(root, { type }) { if (type !== "template") { return null }; return [{label: "this.name"}]; }'
+            'langserver.js':
+              'module.exports.onComplete = function(root, { type }) { if (type !== "template") { return null }; return [{label: "this.name"}]; }',
           },
           app: {
             components: {
               hello: {
-                'index.hbs': '{{this.n}}'
-              }
-            }
-          }
+                'index.hbs': '{{this.n}}',
+              },
+            },
+          },
         },
         'app/components/hello/index.hbs',
         { line: 0, character: 8 }
       );
+
       expect(result).toMatchSnapshot();
     });
   });
@@ -790,35 +900,36 @@ describe('integration', function() {
             provider: {
               lib: {
                 'langserver.js':
-                  'module.exports.onComplete = function(root, { type }) { if (type !== "template") { return null }; return [{label: "this.name"}]; }'
+                  'module.exports.onComplete = function(root, { type }) { if (type !== "template") { return null }; return [{label: "this.name"}]; }',
               },
               'package.json': JSON.stringify({
                 name: 'provider',
                 'ember-language-server': {
                   entry: './lib/langserver',
                   capabilities: {
-                    completionProvider: true
-                  }
-                }
-              })
-            }
+                    completionProvider: true,
+                  },
+                },
+              }),
+            },
           },
           'package.json': JSON.stringify({
             dependencies: {
-              provider: '*'
-            }
+              provider: '*',
+            },
           }),
           app: {
             components: {
               hello: {
-                'index.hbs': '{{this.n}}'
-              }
-            }
-          }
+                'index.hbs': '{{this.n}}',
+              },
+            },
+          },
         },
         'app/components/hello/index.hbs',
         { line: 0, character: 8 }
       );
+
       expect(result).toMatchSnapshot();
     });
     it('support dummy addon completion:script', async () => {
@@ -829,35 +940,36 @@ describe('integration', function() {
           node_modules: {
             provider: {
               lib: {
-                'langserver.js': 'module.exports.onComplete = function(root, { type }) { if (type !== "script") { return null }; return [{label: "name"}]; }'
+                'langserver.js': 'module.exports.onComplete = function(root, { type }) { if (type !== "script") { return null }; return [{label: "name"}]; }',
               },
               'package.json': JSON.stringify({
                 name: 'provider',
                 'ember-language-server': {
                   entry: './lib/langserver',
                   capabilities: {
-                    completionProvider: true
-                  }
-                }
-              })
-            }
+                    completionProvider: true,
+                  },
+                },
+              }),
+            },
           },
           'package.json': JSON.stringify({
             dependencies: {
-              provider: '*'
-            }
+              provider: '*',
+            },
           }),
           app: {
             components: {
               hello: {
-                'index.js': 'var a = "na"'
-              }
-            }
-          }
+                'index.js': 'var a = "na"',
+              },
+            },
+          },
         },
         'app/components/hello/index.js',
         { line: 0, character: 11 }
       );
+
       expect(result).toMatchSnapshot();
     });
   });
@@ -879,19 +991,19 @@ describe('integration', function() {
           }
         `,
         'package.json': makeAddonPackage(addonName, {
-          entry: './index'
-        })
+          entry: './index',
+        }),
       };
       const project = makeProject(
         {
           app: {
             components: {
-              'hello.hbs': ''
-            }
-          }
+              'hello.hbs': '',
+            },
+          },
         },
         {
-          [addonName]: addonFiles
+          [addonName]: addonFiles,
         }
       );
       const { destroy, normalizedPath } = await createProject(project, connection);
@@ -929,19 +1041,19 @@ describe('integration', function() {
           }
         `,
         'package.json': makeAddonPackage(addonName, {
-          entry: './index'
-        })
+          entry: './index',
+        }),
       };
       const project = makeProject(
         {
           app: {
             components: {
-              'hello.hbs': ''
-            }
-          }
+              'hello.hbs': '',
+            },
+          },
         },
         {
-          [addonName]: addonFiles
+          [addonName]: addonFiles,
         }
       );
       const { destroy, normalizedPath } = await createProject(project, connection);
@@ -954,6 +1066,7 @@ describe('integration', function() {
       expect(fs.existsSync(path.join(addonPath, 'tag1-removed'))).toBe(false);
 
       const reloadResult = await reloadProjects(connection, normalizedPath);
+
       expect(reloadResult.msg).toBe('Project reloaded');
       expect(reloadResult.path).toBe(normalizedPath);
       expect(fs.existsSync(path.join(addonPath, 'tag'))).toBe(true);
@@ -974,8 +1087,8 @@ describe('integration', function() {
       const config = {
         entry: './lib/langserver',
         capabilities: {
-          completionProvider: true
-        }
+          completionProvider: true,
+        },
       };
 
       function makeAddon(name, config, addonConfig = undefined) {
@@ -990,9 +1103,9 @@ describe('integration', function() {
               return results;
             };
             module.exports.onComplete = onComplete;
-            `
+            `,
           },
-          'package.json': makeAddonPackage(name, config, addonConfig)
+          'package.json': makeAddonPackage(name, config, addonConfig),
         };
       }
 
@@ -1006,20 +1119,21 @@ describe('integration', function() {
           app: {
             components: {
               dory: {
-                'index.hbs': '{{this.a}}'
-              }
-            }
-          }
+                'index.hbs': '{{this.a}}',
+              },
+            },
+          },
         },
         {
           [addon1Name]: addon1,
           [addon2Name]: addon2,
           [addon3Name]: addon3,
-          [addon4Name]: addon4
+          [addon4Name]: addon4,
         }
       );
 
       const result = await getResult(CompletionRequest.type, connection, project, 'app/components/dory/index.hbs', { line: 0, character: 8 });
+
       expect(result).toMatchSnapshot();
     });
   });
@@ -1035,7 +1149,8 @@ describe('integration', function() {
               lib: {
                 'langserver.js': `
                   module.exports.onDefinition = function(root) {
-                    let filePath = require("path").join(__dirname, "./../../../app/components/hello/index.hbs");
+                    let path = require("path");
+                    let filePath = path.resolve(path.normalize(path.join(__dirname, "./../../../app/components/hello/index.hbs")));
                     return [ {
                       "range": {
                         "end": {
@@ -1047,38 +1162,39 @@ describe('integration', function() {
                           "line": 0,
                         }
                       },
-                      "uri": "file://" + filePath.split(':').pop()
+                      "uri": filePath
                     } ];
                   }
-                `
+                `,
               },
               'package.json': JSON.stringify({
                 name: 'provider',
                 'ember-language-server': {
                   entry: './lib/langserver',
                   capabilities: {
-                    definitionProvider: true
-                  }
-                }
-              })
-            }
+                    definitionProvider: true,
+                  },
+                },
+              }),
+            },
           },
           'package.json': JSON.stringify({
             dependencies: {
-              provider: '*'
-            }
+              provider: '*',
+            },
           }),
           app: {
             components: {
               hello: {
-                'index.hbs': '{{this}}'
-              }
-            }
-          }
+                'index.hbs': '{{this}}',
+              },
+            },
+          },
         },
         'app/components/hello/index.hbs',
         { line: 0, character: 3 }
       );
+
       expect(result).toMatchSnapshot();
     });
 
@@ -1104,38 +1220,39 @@ describe('integration', function() {
                           "line": 0,
                         }
                       },
-                      "uri": "file://" + filePath.split(':').pop()
+                      "uri": filePath
                     } ];
                   }
-                `
+                `,
               },
               'package.json': JSON.stringify({
                 name: 'provider',
                 'ember-language-server': {
                   entry: './lib/langserver',
                   capabilities: {
-                    definitionProvider: true
-                  }
-                }
-              })
-            }
+                    definitionProvider: true,
+                  },
+                },
+              }),
+            },
           },
           'package.json': JSON.stringify({
             dependencies: {
-              provider: '*'
-            }
+              provider: '*',
+            },
           }),
           app: {
             components: {
               hello: {
-                'index.js': 'var n = "foo";'
-              }
-            }
-          }
+                'index.js': 'var n = "foo";',
+              },
+            },
+          },
         },
         'app/components/hello/index.js',
         { line: 0, character: 10 }
       );
+
       expect(result).toMatchSnapshot();
     });
   });
@@ -1152,37 +1269,38 @@ describe('integration', function() {
                 'langserver.js': `
                   module.exports.onReference = function(root) {
                     let filePath = require("path").join(__dirname, "./../../../app/components/hello/index.hbs");
-                    return [ { uri: 'file://' + filePath.split(':').pop(), range: { start: { line: 0, character: 0 }, end: { line: 0, character: 0 } } } ];
+                    return [ { uri: filePath, range: { start: { line: 0, character: 0 }, end: { line: 0, character: 0 } } } ];
                   }
-                `
+                `,
               },
               'package.json': JSON.stringify({
                 name: 'provider',
                 'ember-language-server': {
                   entry: './lib/langserver',
                   capabilities: {
-                    referencesProvider: true
-                  }
-                }
-              })
-            }
+                    referencesProvider: true,
+                  },
+                },
+              }),
+            },
           },
           'package.json': JSON.stringify({
             dependencies: {
-              provider: '*'
-            }
+              provider: '*',
+            },
           }),
           app: {
             components: {
               hello: {
-                'index.hbs': '{{this}}'
-              }
-            }
-          }
+                'index.hbs': '{{this}}',
+              },
+            },
+          },
         },
         'app/components/hello/index.hbs',
         { line: 0, character: 3 }
       );
+
       expect(result).toMatchSnapshot();
     });
   });
@@ -1197,14 +1315,15 @@ describe('integration', function() {
             components: {
               hello: {
                 'index.js': 'export default class Foo extends Bar { firstName = "a"; lastName = "b"; }',
-                'index.hbs': '{{this.}}'
-              }
-            }
-          }
+                'index.hbs': '{{this.}}',
+              },
+            },
+          },
         },
         'app/components/hello/index.hbs',
         { line: 0, character: 7 }
       );
+
       expect(result).toMatchSnapshot();
     });
 
@@ -1217,14 +1336,15 @@ describe('integration', function() {
             components: {
               hello: {
                 'index.js': 'export default class Foo extends Bar { firstName = "a"; lastName = "b"; }',
-                'index.hbs': '{{foo this.}}'
-              }
-            }
-          }
+                'index.hbs': '{{foo this.}}',
+              },
+            },
+          },
         },
         'app/components/hello/index.hbs',
         { line: 0, character: 11 }
       );
+
       expect(result).toMatchSnapshot();
     });
 
@@ -1237,14 +1357,15 @@ describe('integration', function() {
             components: {
               hello: {
                 'index.js': 'export default class Foo extends Bar { firstName = "a"; lastName = "b"; }',
-                'index.hbs': '<div prop={{this.}}>'
-              }
-            }
-          }
+                'index.hbs': '<div prop={{this.}}>',
+              },
+            },
+          },
         },
         'app/components/hello/index.hbs',
         { line: 0, character: 17 }
       );
+
       expect(result).toMatchSnapshot();
     });
   });
@@ -1259,18 +1380,19 @@ describe('integration', function() {
             templates: {
               foo: {
                 bar: {
-                  'baz.hbs': ''
-                }
-              }
+                  'baz.hbs': '',
+                },
+              },
             },
             components: {
-              'hello.hbs': '<LinkTo @route="" />'
-            }
-          }
+              'hello.hbs': '<LinkTo @route="" />',
+            },
+          },
         },
         'app/components/hello.hbs',
         { line: 0, character: 16 }
       );
+
       expect(result).toMatchSnapshot();
     });
   });
@@ -1284,15 +1406,16 @@ describe('integration', function() {
           app: {
             components: {
               'hello.hbs': '\n{{',
-              'darling.hbs': ''
-            }
-          }
+              'darling.hbs': '',
+            },
+          },
         },
         'app/components/hello.hbs',
         { line: 1, character: 2 }
       );
 
-      expect(result.filter(({ kind }) => kind === 7)).toMatchSnapshot();
+      expect(result.response.filter(({ kind }) => kind === 7)).toMatchSnapshot();
+      expect(result.registry).toMatchSnapshot();
     });
 
     it('autocomplete information for component #2 <', async () => {
@@ -1303,15 +1426,16 @@ describe('integration', function() {
           app: {
             components: {
               'hello.hbs': '\n<',
-              'darling.hbs': ''
-            }
-          }
+              'darling.hbs': '',
+            },
+          },
         },
         'app/components/hello.hbs',
         { line: 1, character: 1 }
       );
 
-      expect(result.filter(({ kind }) => kind === 7)).toMatchSnapshot();
+      expect(result.response.filter(({ kind }) => kind === 7)).toMatchSnapshot();
+      expect(result.registry).toMatchSnapshot();
     });
 
     it('autocomplete information for component #3 {{#', async () => {
@@ -1322,9 +1446,9 @@ describe('integration', function() {
           app: {
             components: {
               'hello.hbs': '\n{{#',
-              'darling.hbs': ''
-            }
-          }
+              'darling.hbs': '',
+            },
+          },
         },
         'app/components/hello.hbs',
         { line: 1, character: 3 }
@@ -1340,12 +1464,12 @@ describe('integration', function() {
         {
           app: {
             components: {
-              'hello.hbs': '<Foo {{'
+              'hello.hbs': '<Foo {{',
             },
             modifiers: {
-              'boo.js': ''
-            }
-          }
+              'boo.js': '',
+            },
+          },
         },
         'app/components/hello.hbs',
         { line: 0, character: 7 }
@@ -1361,18 +1485,19 @@ describe('integration', function() {
         {
           app: {
             components: {
-              'hello.hbs': '{{name ('
+              'hello.hbs': '{{name (',
             },
             helpers: {
-              'boo.js': ''
-            }
-          }
+              'boo.js': '',
+            },
+          },
         },
         'app/components/hello.hbs',
         { line: 0, character: 8 }
       );
 
-      expect(result.filter(({ kind }) => kind === 3)).toMatchSnapshot();
+      expect(result.response.filter(({ kind }) => kind === 3)).toMatchSnapshot();
+      expect(result.registry).toMatchSnapshot();
     });
 
     it('autocomplete information for helper #6 {{name (foo (', async () => {
@@ -1382,18 +1507,19 @@ describe('integration', function() {
         {
           app: {
             components: {
-              'hello.hbs': '{{name (foo ('
+              'hello.hbs': '{{name (foo (',
             },
             helpers: {
-              'boo.js': ''
-            }
-          }
+              'boo.js': '',
+            },
+          },
         },
         'app/components/hello.hbs',
         { line: 0, character: 13 }
       );
 
-      expect(result.filter(({ kind }) => kind === 3)).toMatchSnapshot();
+      expect(result.response.filter(({ kind }) => kind === 3)).toMatchSnapshot();
+      expect(result.registry).toMatchSnapshot();
     });
   });
 });

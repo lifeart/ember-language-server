@@ -22,6 +22,7 @@ export interface MatchResult {
 }
 
 export class ClassicPathMatcher {
+  constructor(private root: string = '') {}
   keys: {
     [key: string]: string[];
   } = {
@@ -35,46 +36,58 @@ export class ClassicPathMatcher {
     model: ['/models/'],
     transform: ['/transforms/'],
     adapter: ['/adapters/'],
-    serializer: ['/serializers/']
+    serializer: ['/serializers/'],
   };
   ignores = ['/tmp/', '/dist/', '/.git/'];
   matchKey(key: string, str: string) {
-    let isIgnored = this.ignores.find((el) => str.includes(el));
+    const isIgnored = this.ignores.find((el) => str.includes(el));
+
     if (isIgnored) {
       return false;
     }
+
     let matched = false;
     const keys = this.keys[key] as string[];
+
     for (let i = 0; i < keys.length; i++) {
-      let searchStr = keys[i];
+      const searchStr = keys[i];
+
       if (searchStr.charAt(0) === '!') {
         matched = str.includes(searchStr.replace('!', '')) === false;
       } else {
         matched = str.includes(searchStr);
       }
+
       if (!matched) {
         return false;
       }
     }
+
     return matched;
   }
   rightPartFromFirstMatch(type: string, fileName: string, extName: string, str: string, strToMatch: string) {
     let fullName = str.slice(str.indexOf(strToMatch) + strToMatch.length, str.length).slice(0, -extName.length);
+
     if (type === 'component') {
       if (['component', 'template', 'index', 'index-test', 'component-test', 'styles', 'module'].includes(fileName)) {
         fullName = fullName.replace(`/${fileName}`, '');
       }
+
       if (fileName.endsWith('.module')) {
         fullName = fullName.replace(`.module`, '');
       }
     }
+
     if (str.includes('/tests/') && fullName.endsWith('-test')) {
       fullName = fullName.replace('-test', '');
     }
+
     return fullName;
   }
-  metaFromPath(rawAbsPath: string): MatchResult | null {
-    let absPath = rawAbsPath.split(path.sep).join('/');
+  metaFromPath(rawAbsoluteAbsPath: string): MatchResult | null {
+    const rawAbsPath = path.relative(this.root, path.resolve(rawAbsoluteAbsPath));
+    const normalizedAbsPath = rawAbsPath.split(path.sep).join('/');
+    const absPath = '/' + normalizedAbsPath;
     const isTest = absPath.includes('/tests/');
     const isTemplate = absPath.endsWith('.hbs');
     const isStyle = absPath.endsWith('.css') || absPath.endsWith('.less') || absPath.endsWith('.scss');
@@ -87,26 +100,30 @@ export class ClassicPathMatcher {
     const extName = path.extname(absPath);
     const fileName = path.basename(absPath, extName);
     const results: [string, string][] = [];
+
     Object.keys(this.keys).forEach((propName: string) => {
       if (this.matchKey(propName, absPath)) {
         results.push([propName, this.rightPartFromFirstMatch(propName, fileName, extName, absPath, this.keys[propName][0])]);
       }
     });
+
     if (!results.length) {
       return null;
     }
+
     return {
       type: results[0][0] as MatchResultType,
       name: results[0][1],
       kind,
-      scope
+      scope,
     };
   }
 }
 
 export class PodMatcher extends ClassicPathMatcher {
-  constructor(podPrefix: string | false = false) {
-    super();
+  constructor(root: string, podPrefix: string | false = false) {
+    super(root);
+
     if (podPrefix) {
       this.podPrefix = podPrefix;
     }
@@ -123,10 +140,19 @@ export class PodMatcher extends ClassicPathMatcher {
     model: ['/model.'],
     transform: ['/transform.'],
     adapter: ['/adapter.'],
-    serializer: ['/serializer.']
+    serializer: ['/serializer.'],
   };
   rightPartFromFirstMatch(_: string, fileName: string, extName: string, str: string) {
-    const fullName = str.slice(str.indexOf(this.podPrefix) + this.podPrefix.length + 1, str.length).slice(0, -(1 + extName.length + fileName.length));
+    const indexAfterPodPrefix = str.indexOf(this.podPrefix) + this.podPrefix.length + 1;
+    const indexBeforeExtName = 1 + extName.length + fileName.length;
+    const componentFolderPath = 'components/';
+
+    let fullName = str.slice(indexAfterPodPrefix, str.length).slice(0, -indexBeforeExtName);
+
+    if (fullName.startsWith(componentFolderPath)) {
+      fullName = fullName.replace(componentFolderPath, '');
+    }
+
     return fullName;
   }
 }
