@@ -26,6 +26,7 @@ export function getPathsFromRegistry(type: 'helper' | 'modifier' | 'component', 
   const absRoot = path.normalize(root);
   const registry = getGlobalRegistry();
   const bucket: any = registry[type].get(name) || new Set();
+
   return Array.from(bucket).filter((el: string) => path.normalize(el).includes(absRoot) && !isTestFile(path.normalize(el)) && fs.existsSync(el)) as string[];
 }
 

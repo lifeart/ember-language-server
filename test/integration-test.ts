@@ -535,7 +535,7 @@ describe('integration', function () {
       expect(result).toMatchSnapshot();
     });
 
-    it('go to definition working if we have test for component', async () => {
+    it('go to definition from script template working if we have test for component', async () => {
       const result = await getResult(
         DefinitionRequest.type,
         connection,
@@ -543,21 +543,48 @@ describe('integration', function () {
           app: {
             components: {
               'hello.ts': 'hbs`<Darling />`',
-              'darling.ts': ''
-            }
+              'darling.ts': '',
+            },
           },
           tests: {
             integration: {
               components: {
                 darling: {
-                  'component-test.js': ''
-                }
-              }
-            }
-          }
+                  'component-test.js': '',
+                },
+              },
+            },
+          },
         },
         'app/components/hello.ts',
         { line: 0, character: 6 }
+      );
+
+      expect(result).toMatchSnapshot();
+    });
+    it('go to definition from handlebars template working if we have test for component', async () => {
+      const result = await getResult(
+        DefinitionRequest.type,
+        connection,
+        {
+          app: {
+            components: {
+              'hello.hbs': '<Darling />',
+              'darling.ts': '',
+            },
+          },
+          tests: {
+            integration: {
+              components: {
+                darling: {
+                  'component-test.js': '',
+                },
+              },
+            },
+          },
+        },
+        'app/components/hello.hbs',
+        { line: 0, character: 4 }
       );
 
       expect(result).toMatchSnapshot();
