@@ -1,6 +1,7 @@
 import { updateTemplateTokens, UsageType } from './usages-api';
 import { normalizeRoutePath } from './layout-helpers';
 import { MatchResult } from './path-matcher';
+import * as path from 'path';
 
 type GLOBAL_REGISTRY_ITEM = Map<string, Set<string>>;
 export type REGISTRY_KIND = 'transform' | 'helper' | 'component' | 'routePath' | 'model' | 'service' | 'modifier';
@@ -71,7 +72,9 @@ export function removeFromRegistry(normalizedName: string, kind: REGISTRY_KIND, 
   }
 }
 
-export function getRegistryForRoot(root: string) {
+export function getRegistryForRoot(rawRoot: string) {
+  const root = path.resolve(rawRoot);
+  const lowRoot = root.toLowerCase();
   const registryForRoot: any = {};
   const registry = getGlobalRegistry();
 
@@ -82,7 +85,7 @@ export function getRegistryForRoot(root: string) {
       const items: string[] = [];
 
       paths.forEach((normalizedPath) => {
-        if (normalizedPath.startsWith(root)) {
+        if (normalizedPath.toLowerCase().startsWith(lowRoot)) {
           items.push(normalizedPath);
         }
       });
@@ -109,7 +112,9 @@ export function addToRegistry(normalizedName: string, kind: REGISTRY_KIND, files
     const regItem = GLOBAL_REGISTRY[kind].get(normalizedName);
 
     if (regItem) {
-      files.forEach((file) => {
+      files.forEach((rawFile) => {
+        const file = path.resolve(rawFile);
+
         regItem.add(file);
 
         if ((kind === 'component' || kind === 'routePath') && file.endsWith('.hbs')) {
