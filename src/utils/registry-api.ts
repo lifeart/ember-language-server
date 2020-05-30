@@ -75,7 +75,19 @@ export function removeFromRegistry(normalizedName: string, kind: REGISTRY_KIND, 
 export function getRegistryForRoot(rawRoot: string) {
   const root = path.resolve(rawRoot);
   const lowRoot = root.toLowerCase();
-  const registryForRoot: any = {};
+  const registryForRoot: {
+    [key in REGISTRY_KIND]: {
+      [key: string]: string[];
+    };
+  } = {
+    transform: {},
+    helper: {},
+    component: {},
+    routePath: {},
+    model: {},
+    service: {},
+    modifier: {},
+  };
   const registry = getGlobalRegistry();
 
   Object.keys(registry).forEach((key: REGISTRY_KIND) => {

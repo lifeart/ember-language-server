@@ -107,8 +107,8 @@ export class Project {
       this.podModulePrefix = 'app';
     }
 
-    this.classicMatcher = new ClassicPathMatcher();
-    this.podMatcher = new PodMatcher(this.podModulePrefix);
+    this.classicMatcher = new ClassicPathMatcher(this.root);
+    this.podMatcher = new PodMatcher(this.root, this.podModulePrefix);
   }
   unload() {
     this.initIssues = [];
@@ -280,6 +280,7 @@ export default class ProjectRoots {
       we need to lowercase items (because of capital C);
     */
     const rootMap: { [key: string]: string } = {};
+
     const projectRoots = (Array.from(this.projects.keys()) || []).map((root) => {
       const lowerName = root.toLowerCase();
 
