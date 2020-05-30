@@ -63,6 +63,7 @@ interface PublicAddonAPI {
   onCodeAction?: CodeActionResolveFunction;
   onInit?: InitFunction;
 }
+
 interface HandlerObject {
   handler: PublicAddonAPI;
   updateHandler: () => void;
@@ -113,12 +114,47 @@ export function initBuiltinProviders(): ProjectProviders {
   };
 }
 
+export function isConstructor(obj: any) {
+  return !!obj.prototype && !!obj.prototype.constructor.name;
+}
+
+function create<T>(model: new () => T): T {
+  return new model();
+}
+
 function requireUncached(module: string) {
   delete require.cache[require.resolve(module)];
   let result = {};
 
   try {
     result = require(module);
+
+    if (isConstructor(result)) {
+      const instance: PublicAddonAPI = create(result as any);
+      const instanceResult: PublicAddonAPI = {};
+
+      if (typeof instance.onInit === 'function') {
+        instanceResult.onInit = instance.onInit.bind(instance);
+      }
+
+      if (typeof instance.onCodeAction === 'function') {
+        instanceResult.onCodeAction = instance.onCodeAction.bind(instance);
+      }
+
+      if (typeof instance.onComplete === 'function') {
+        instanceResult.onComplete = instance.onComplete.bind(instance);
+      }
+
+      if (typeof instance.onDefinition === 'function') {
+        instanceResult.onDefinition = instance.onDefinition.bind(instance);
+      }
+
+      if (typeof instance.onReference === 'function') {
+        instanceResult.onReference = instance.onReference.bind(instance);
+      }
+
+      return instance;
+    }
   } catch (e) {
     logError(e);
   }
