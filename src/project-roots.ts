@@ -279,13 +279,21 @@ export default class ProjectRoots {
       and c:\\Users\\lifeart\\AppData\\Local\\Temp\\tmp-30396kTX1RpAxCCyc\\app\\components\\hello.hbs
       we need to lowercase items (because of capital C);
     */
-    const projectRoots = (Array.from(this.projects.keys()) || []).map((root) => root.toLowerCase());
+    const rootMap: { [key: string]: string } = {};
+    const projectRoots = (Array.from(this.projects.keys()) || []).map((root) => {
+      const lowerName = root.toLowerCase();
 
-    const root = projectRoots
+      rootMap[lowerName] = root;
+
+      return lowerName;
+    });
+
+    const rawRoot = projectRoots
       .filter((root) => filePath.startsWith(root))
       .reduce((a, b) => {
         return a.length > b.length ? a : b;
       }, '');
+    const root = rootMap[rawRoot] || '';
 
     return this.projects.get(root);
   }

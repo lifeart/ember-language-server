@@ -70,17 +70,16 @@ function textDocument(modelPath, position = { line: 0, character: 0 }) {
 }
 
 async function getResult(reqType, connection, files, fileToInspect, position) {
-  const { normalizedPath, destroy } = await createProject(files, connection);
+  const { normalizedPath, destroy, result } = await createProject(files, connection);
   const modelPath = path.join(normalizedPath, fileToInspect);
   const params = textDocument(modelPath, position);
 
   openFile(connection, modelPath);
   const response = await connection.sendRequest(reqType, params);
 
-  console.log(JSON.stringify(response));
   await destroy();
 
-  return normalizeUri(response, normalizedPath);
+  return { response: normalizeUri(response, normalizedPath), registry: normalizeRegistry(normalizedPath, result.registry as Registry) };
 }
 
 function openFile(connection: MessageConnection, filePath: string) {
@@ -111,6 +110,10 @@ function normalizeRegistry(root: string, registry: Registry) {
     Object.keys(registry[key]).forEach((name) => {
       normalizedRegistry[key][name] = registry[key][name].map((el) => normalizePath(path.relative(root, el)));
     });
+
+    if (!Object.keys(normalizedRegistry[key]).length) {
+      delete normalizedRegistry[key];
+    }
   });
 
   return normalizedRegistry;
@@ -1383,7 +1386,8 @@ describe('integration', function () {
         { line: 1, character: 2 }
       );
 
-      expect(result.filter(({ kind }) => kind === 7)).toMatchSnapshot();
+      expect(result.response.filter(({ kind }) => kind === 7)).toMatchSnapshot();
+      expect(result.registry).toMatchSnapshot();
     });
 
     it('autocomplete information for component #2 <', async () => {
@@ -1402,7 +1406,8 @@ describe('integration', function () {
         { line: 1, character: 1 }
       );
 
-      expect(result.filter(({ kind }) => kind === 7)).toMatchSnapshot();
+      expect(result.response.filter(({ kind }) => kind === 7)).toMatchSnapshot();
+      expect(result.registry).toMatchSnapshot();
     });
 
     it('autocomplete information for component #3 {{#', async () => {
@@ -1463,7 +1468,8 @@ describe('integration', function () {
         { line: 0, character: 8 }
       );
 
-      expect(result.filter(({ kind }) => kind === 3)).toMatchSnapshot();
+      expect(result.response.filter(({ kind }) => kind === 3)).toMatchSnapshot();
+      expect(result.registry).toMatchSnapshot();
     });
 
     it('autocomplete information for helper #6 {{name (foo (', async () => {
@@ -1484,7 +1490,8 @@ describe('integration', function () {
         { line: 0, character: 13 }
       );
 
-      expect(result.filter(({ kind }) => kind === 3)).toMatchSnapshot();
+      expect(result.response.filter(({ kind }) => kind === 3)).toMatchSnapshot();
+      expect(result.registry).toMatchSnapshot();
     });
   });
 });
