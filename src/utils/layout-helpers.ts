@@ -5,7 +5,10 @@ import * as path from 'path';
 import { CompletionItem, CompletionItemKind } from 'vscode-languageserver';
 import { Project } from '../project-roots';
 import { addToRegistry, normalizeMatchNaming } from './registry-api';
-
+import { parseScriptFile as parse } from 'ember-meta-explorer';
+import { log, logError } from '../utils/logger';
+import { visit } from 'ast-types';
+import { isRouteDefinitionCall, isObjectExpression, isString } from './ast-helpers';
 // const GLOBAL_REGISTRY = ['primitive-name'][['relatedFiles']];
 
 export const ADDON_CONFIG_KEY = 'ember-language-server';
@@ -593,6 +596,19 @@ export function listTransforms(root: string): CompletionItem[] {
 }
 
 export function listRoutes(_root: string): CompletionItem[] {
+  const isMuApp = isModuleUnificationApp(_root);
+  const routerFile = path.join(_root, isMuApp ? 'src' : 'app', 'router.js');
+
+  const hasRouterDefinitions = fs.existsSync(routerFile);
+
+  if (hasRouterDefinitions) {
+    return extractRoutesFromDefintions(routerFile);
+  } else {
+    return listRoutesFromFs(_root);
+  }
+}
+
+function listRoutesFromFs(_root: string): CompletionItem[] {
   const root = path.resolve(_root);
   const scriptEntry = path.join(root, 'app', 'routes');
   const templateEntry = path.join(root, 'app', 'templates');
@@ -653,6 +669,64 @@ export function listRoutes(_root: string): CompletionItem[] {
   });
 
   return items;
+}
+
+function extractRoutesFromDefintions(routerFile: string): CompletionItem[] {
+  // Extracts the routes from the `{app|src}/router.js` file as spec'd at:
+  // https://api.emberjs.com/ember/3.19/classes/EmberRouter/methods/map?anchor=map
+
+  try {
+    const content = fs.readFileSync(routerFile, 'utf8');
+
+    interface RouteNode {
+      route: string;
+      shouldResetNamespace: boolean;
+    }
+
+    const routeStack: RouteNode[] = [];
+    const routesList: string[] = [];
+    const ast = parse(content);
+    visit(ast, {
+      visitCallExpression(path) {
+        const { callee } = path.node;
+        if (isRouteDefinitionCall(callee)) {
+          const routeCallArgs = path.node.arguments;
+          if (isString(routeCallArgs[0])) {
+            const currentRouteName = (routeCallArgs[0] as any).value;
+            let shouldResetNamespace = false;
+
+            if (routeCallArgs.length == 3 || (routeCallArgs.length == 2 && isObjectExpression(routeCallArgs[1]))) {
+              const resetNamespacePropertyNode = (routeCallArgs[1] as any).properties.find((p: any) => p.key.name == 'resetNamespace');
+              shouldResetNamespace = resetNamespacePropertyNode ? resetNamespacePropertyNode.value.value : false;
+            }
+
+            routeStack.push({ route: currentRouteName, shouldResetNamespace });
+
+            const fullyQualifiedName = routeStack.reduce((fqRoute, { route, shouldResetNamespace }) => {
+              return fqRoute === '' || shouldResetNamespace ? route : `${fqRoute}.${route}`;
+            }, '');
+
+            routesList.push(fullyQualifiedName);
+
+            this.traverse(path);
+            routeStack.pop();
+            return false;
+          }
+        }
+        this.traverse(path);
+      },
+    });
+    return routesList.map((label) => {
+      return {
+        kind: CompletionItemKind.File,
+        label,
+        detail: 'route',
+      };
+    });
+  } catch (e) {
+    logError('Unable to get routes from router defintion file' + routerFile);
+    return [];
+  }
 }
 
 export function getComponentNameFromURI(root: string, uri: string) {

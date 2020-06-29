@@ -7,11 +7,14 @@ const Router = EmberRouter.extend({
 });
 
 Router.map(function() {
-  this.route('angle-completion');
-  this.route('definition');
-  this.route('test-route');
-  this.route('nested', function() {
+  this.route('test-route', function() {
     this.route('nested-route');
+  });
+  this.route('post', { path: '/post/:post_id' }, function() {
+    this.route('edit');
+    this.route('comments', { resetNamespace: true }, function() {
+      this.route('new');
+    });
   });
 });
 

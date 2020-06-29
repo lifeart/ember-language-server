@@ -394,11 +394,11 @@ function isBlock(node: any): boolean {
   return hasNodeType(node, 'BlockStatement');
 }
 
-function isString(node: any): boolean {
+export function isString(node: any): boolean {
   return hasNodeType(node, 'StringLiteral');
 }
 
-function isCallExpression(node: any): boolean {
+export function isCallExpression(node: any): boolean {
   return hasNodeType(node, 'CallExpression');
 }
 
@@ -408,6 +408,10 @@ export function isLocalPathExpression(path: any): boolean {
 
 export function isArgumentPathExpression(path: any): boolean {
   return isPathExpression(path.node) && path.node.data === true;
+}
+
+export function isObjectExpression(node: any): boolean {
+  return hasNodeType(node, 'ObjectExpression');
 }
 
 export function isScopedPathExpression(path: any): boolean {
@@ -424,6 +428,15 @@ export function isLinkComponentRouteTarget(path: any): boolean {
 
 export function isPathExpression(node: any): boolean {
   return hasNodeType(node, 'PathExpression');
+}
+
+export function isRouteDefinitionCall(node: any): boolean {
+  if (!hasNodeType(node, 'MemberExpression')) {
+    return false;
+  }
+  const calleeObject = node.object;
+  const calleeProperty = node.property;
+  return hasNodeType(calleeObject, 'ThisExpression') && hasNodeType(calleeProperty, 'Identifier') && calleeProperty.name == 'route';
 }
 
 function expressionHasIdentifierName(exp: any, name: string | string[]) {

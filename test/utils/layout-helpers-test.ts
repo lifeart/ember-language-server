@@ -104,17 +104,19 @@ describe('definition-helpers', function () {
   });
 
   describe('listRoutes()', function () {
+    const expectedRoutes = ['test-route', 'test-route.nested-route', 'post', 'post.edit', 'comments', 'comments.new'];
     it('return expected list of routes for classic project', function () {
-      const components = listRoutes(path.join(__dirname, './../fixtures/full-project'));
+      const routes = listRoutes(path.join(__dirname, './../fixtures/full-project'));
 
-      expect(components.map(({ label }: { label: string }) => label)).toEqual([
-        'angle-completion',
-        'application',
-        'definition',
-        'test-route',
-        'nested.nested-route',
-        'test-route',
-      ]);
+      expect(routes.map(({ label }: { label: string }) => label)).toEqual(['angle-completion', 'definition', 'test-route', 'nested', 'nested.nested-route']);
+    });
+    it('return expected list of routes for pod project', function () {
+      const routes = listRoutes(path.join(__dirname, './../fixtures/pod-project'));
+      expect(routes.map(({ label }: { label: string }) => label)).toEqual(expectedRoutes);
+    });
+    it('return expected list of routes for module unification project', function () {
+      const routes = listRoutes(path.join(__dirname, './../fixtures/mu-project'));
+      expect(routes.map(({ label }: { label: string }) => label)).toEqual(expectedRoutes);
     });
   });
 

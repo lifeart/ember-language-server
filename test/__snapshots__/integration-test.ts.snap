@@ -2429,24 +2429,6 @@ Array [
   Object {
     "detail": "route",
     "kind": 17,
-    "label": "application",
-    "textEdit": Object {
-      "newText": "application",
-      "range": Object {
-        "end": Object {
-          "character": 12,
-          "line": 3,
-        },
-        "start": Object {
-          "character": 12,
-          "line": 3,
-        },
-      },
-    },
-  },
-  Object {
-    "detail": "route",
-    "kind": 17,
     "label": "definition",
     "textEdit": Object {
       "newText": "definition",
@@ -2468,6 +2450,24 @@ Array [
     "label": "test-route",
     "textEdit": Object {
       "newText": "test-route",
+      "range": Object {
+        "end": Object {
+          "character": 12,
+          "line": 3,
+        },
+        "start": Object {
+          "character": 12,
+          "line": 3,
+        },
+      },
+    },
+  },
+  Object {
+    "detail": "route",
+    "kind": 17,
+    "label": "nested",
+    "textEdit": Object {
+      "newText": "nested",
       "range": Object {
         "end": Object {
           "character": 12,
@@ -2524,24 +2524,6 @@ Array [
   Object {
     "detail": "route",
     "kind": 17,
-    "label": "application",
-    "textEdit": Object {
-      "newText": "application",
-      "range": Object {
-        "end": Object {
-          "character": 23,
-          "line": 2,
-        },
-        "start": Object {
-          "character": 23,
-          "line": 2,
-        },
-      },
-    },
-  },
-  Object {
-    "detail": "route",
-    "kind": 17,
     "label": "definition",
     "textEdit": Object {
       "newText": "definition",
@@ -2563,6 +2545,24 @@ Array [
     "label": "test-route",
     "textEdit": Object {
       "newText": "test-route",
+      "range": Object {
+        "end": Object {
+          "character": 23,
+          "line": 2,
+        },
+        "start": Object {
+          "character": 23,
+          "line": 2,
+        },
+      },
+    },
+  },
+  Object {
+    "detail": "route",
+    "kind": 17,
+    "label": "nested",
+    "textEdit": Object {
+      "newText": "nested",
       "range": Object {
         "end": Object {
           "character": 23,
