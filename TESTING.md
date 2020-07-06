@@ -28,7 +28,13 @@
 
 So because of the above shortcomings, we choose to run the server in stdio
 mode. See `package.json` :: `test:coverage` task for the command to run the
-tests with coverage (single coverage for all unit and integration tests)
+tests with coverage (single coverage for all unit and integration tests).
+
+#### Caveat
+  Since we use the stdio for communication, we cannot use the same for logging.
+  This prevents use of 'RemoteConsole' in the server code while testing is
+  enabled. Hence, the remote console is set to `null` by using the flag
+  `isELSTesting`.
 
 ### Instrumentation
 
