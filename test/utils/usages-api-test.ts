@@ -44,15 +44,15 @@ describe('Usages API', () => {
     expect(findRelatedFiles('foo-bar').length).toBe(0);
   });
   it('should return usages for closest routes (upper)', () => {
-    expect(findRelatedFiles('foo.bar.baz', 'template').length).toBe(0);
-    updateTemplateTokens('routePath', 'foo.bar', createFile('bar.hbs', ''));
-    expect(findRelatedFiles('foo.bar.baz', 'template').length).toBe(1);
-    updateTemplateTokens('routePath', 'foo.bar', null);
+    expect(findRelatedFiles('foo/bar/baz', 'template').length).toBe(0);
+    updateTemplateTokens('routePath', 'foo/bar', createFile('bar.hbs', ''));
+    expect(findRelatedFiles('foo/bar/baz', 'template').length).toBe(1);
+    updateTemplateTokens('routePath', 'foo/bar', null);
   });
   it('should return usages for closest available routes (upper)', () => {
-    expect(findRelatedFiles('foo.bar.baz', 'template').length).toBe(0);
+    expect(findRelatedFiles('foo/bar/baz', 'template').length).toBe(0);
     updateTemplateTokens('routePath', 'foo', createFile('bar.hbs', ''));
-    expect(findRelatedFiles('foo.bar.baz', 'template').length).toBe(1);
+    expect(findRelatedFiles('foo/bar/baz', 'template').length).toBe(1);
     updateTemplateTokens('routePath', 'foo', null);
   });
   it('should return usages for closest available routes, in index case', () => {
