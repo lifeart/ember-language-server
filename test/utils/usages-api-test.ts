@@ -61,4 +61,16 @@ describe('Usages API', () => {
     expect(findRelatedFiles('index').length).toBe(1);
     updateTemplateTokens('routePath', 'application', null);
   });
+  it('should return usages for closest available routes, in loading case', () => {
+    expect(findRelatedFiles('index-loading').length).toBe(0);
+    updateTemplateTokens('routePath', 'index', createFile('bar.hbs', ''));
+    expect(findRelatedFiles('index-loading').length).toBe(1);
+    updateTemplateTokens('routePath', 'index', null);
+  });
+  it('should return usages for closest available routes, in error case', () => {
+    expect(findRelatedFiles('index-error').length).toBe(0);
+    updateTemplateTokens('routePath', 'index', createFile('bar.hbs', ''));
+    expect(findRelatedFiles('index-error').length).toBe(1);
+    updateTemplateTokens('routePath', 'index', null);
+  });
 });
