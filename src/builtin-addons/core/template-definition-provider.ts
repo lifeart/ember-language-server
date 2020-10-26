@@ -96,7 +96,6 @@ export default class TemplateDefinitionProvider {
     }
 
     if (isOutlet(focusPath)) {
-      console.log('isOutlet!');
       definitions = this.provideChildRouteDefinitions(root, uri);
     } else if (this.maybeClassicComponentName(focusPath)) {
       // <FooBar @some-component-name="my-component" /> || {{some-component some-name="my-component/name"}}
@@ -201,46 +200,44 @@ export default class TemplateDefinitionProvider {
 
   provideChildRouteDefinitions(root: string, uri: string): Location[] {
     const rawPath = URI.parse(uri).fsPath;
-
-    console.log('rawPath', rawPath);
     const absRoot = path.normalize(root);
-
-    console.log('absRoot', absRoot);
-
-    const absRaw = path.resolve(rawPath);
-
-    console.log('absRaw', absRaw);
-
     const registry = getGlobalRegistry();
     const allPaths = registry.routePath.entries();
     let pathName: string | null = null;
     const paths = [];
 
     for (const [name, files] of allPaths) {
-      console.log([name]);
-
-      if (files.has(absRaw)) {
+      if (files.has(rawPath)) {
         pathName = name;
       } else {
         paths.push(name);
       }
     }
 
-    if (pathName === null) {
+    if (pathName === null || paths.length === 0) {
       return [];
     }
 
     const files: string[] = [];
+    const distance = 2;
 
-    console.log('pathName', pathName);
+    const interestingPaths = paths
+      .filter((p) => {
+        if (pathName === 'application') {
+          return p.split('.').length < distance;
+        }
 
-    const interestingPaths = paths.filter((p) => p.startsWith(pathName as string)).sort();
+        if (!p.startsWith(pathName as string)) {
+          return false;
+        }
+
+        return p.replace(pathName as string, '').split('.').length < distance;
+      })
+      .sort();
 
     interestingPaths.forEach((p) => {
       const registryItem = registry.routePath.get(p) || new Set();
       const items = Array.from(registryItem).filter((el: string) => {
-        console.log('el', el);
-
         return path.normalize(el).includes(absRoot) && !isTestFile(path.normalize(el)) && isTemplatePath(el) && fs.existsSync(el);
       });
 
