@@ -27,6 +27,16 @@ export interface Usage {
   usages: Usage[];
 }
 
+function closestParentRoutePath(name: string): string | null {
+  const lastIndexOfDot = name.lastIndexOf('.');
+
+  if (lastIndexOfDot === undefined || lastIndexOfDot < 0) {
+    return null;
+  }
+
+  return name.slice(0, lastIndexOfDot);
+}
+
 export function findRelatedFiles(token: string): Usage[] {
   const results: Usage[] = [];
 
@@ -41,6 +51,35 @@ export function findRelatedFiles(token: string): Usage[] {
           type: kindName as UsageType,
           usages: [],
         });
+      } else if (token.includes('.') && kindName === 'routePath') {
+        let parent: string | null = token;
+
+        do {
+          parent = closestParentRoutePath(parent);
+
+          if (parent !== null) {
+            if (components[parent]) {
+              results.push({
+                name: parent,
+                path: components[parent].source,
+                type: kindName as UsageType,
+                usages: [],
+              });
+              break;
+            }
+          } else {
+            break;
+          }
+        } while (parent);
+      } else if (token === 'index' && kindName === 'routePath') {
+        if (components['application']) {
+          results.push({
+            name: 'application',
+            path: components['application'].source,
+            type: kindName as UsageType,
+            usages: [],
+          });
+        }
       }
     });
   });

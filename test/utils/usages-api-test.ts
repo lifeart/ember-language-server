@@ -43,4 +43,22 @@ describe('Usages API', () => {
 
     expect(findRelatedFiles('foo-bar').length).toBe(0);
   });
+  it('should return usages for closest routes (upper)', () => {
+    expect(findRelatedFiles('foo.bar.baz').length).toBe(0);
+    updateTemplateTokens('routePath', 'foo.bar', createFile('bar.hbs', ''));
+    expect(findRelatedFiles('foo.bar.baz').length).toBe(1);
+    updateTemplateTokens('routePath', 'foo.bar', null);
+  });
+  it('should return usages for closest available routes (upper)', () => {
+    expect(findRelatedFiles('foo.bar.baz').length).toBe(0);
+    updateTemplateTokens('routePath', 'foo', createFile('bar.hbs', ''));
+    expect(findRelatedFiles('foo.bar.baz').length).toBe(1);
+    updateTemplateTokens('routePath', 'foo', null);
+  });
+  it('should return usages for closest available routes, in index case', () => {
+    expect(findRelatedFiles('index').length).toBe(0);
+    updateTemplateTokens('routePath', 'application', createFile('bar.hbs', ''));
+    expect(findRelatedFiles('index').length).toBe(1);
+    updateTemplateTokens('routePath', 'application', null);
+  });
 });
