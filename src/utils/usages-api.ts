@@ -29,7 +29,7 @@ export interface Usage {
 }
 
 function closestParentRoutePath(name: string): string | null {
-  const lastIndexOfDot = name.lastIndexOf('.');
+  const lastIndexOfDot = name.lastIndexOf('/');
 
   if (name.endsWith('-loading') || name.endsWith('-error')) {
     return name.slice(0, name.lastIndexOf('-'));
