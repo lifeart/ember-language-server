@@ -3,7 +3,7 @@ import * as fs from 'fs';
 
 import { Definition, Location } from 'vscode-languageserver';
 import { DefinitionFunctionParams } from './../../utils/addon-api';
-import { isLinkToTarget, isLinkComponentRouteTarget } from './../../utils/ast-helpers';
+import { isLinkToTarget, isLinkComponentRouteTarget, isOutlet } from './../../utils/ast-helpers';
 import ASTPath from './../../glimmer-utils';
 import { getGlobalRegistry } from './../../utils/registry-api';
 import { normalizeToClassicComponent } from '../../utils/normalizers';
@@ -19,6 +19,7 @@ import {
 } from './../../utils/definition-helpers';
 
 import * as memoize from 'memoizee';
+import { URI } from 'vscode-uri';
 
 const mAddonPathsForComponentTemplates = memoize(getAddonPathsForComponentTemplates, { length: 2, maxAge: 600000 });
 
@@ -120,6 +121,8 @@ export default class TemplateDefinitionProvider {
       definitions = this.provideHashPropertyUsage(root, focusPath);
     } else if (isLinkToTarget(focusPath)) {
       definitions = this.provideRouteDefinition(root, focusPath.node.original);
+    } else if (isOutlet(focusPath)) {
+      definitions = this.provideChildRouteDefinitions(root, uri);
     }
 
     return definitions;
@@ -193,6 +196,45 @@ export default class TemplateDefinitionProvider {
 
     // mAddonPathsForComponentTemplates
     return pathsToLocationsWithPosition(paths, '{{yield');
+  }
+
+  provideChildRouteDefinitions(root: string, uri: string): Location[] {
+    const rawPath = URI.parse(uri).fsPath;
+    const absRoot = path.normalize(root);
+    const absRaw = path.resolve(rawPath);
+    const registry = getGlobalRegistry();
+    const allPaths = registry.routePath.entries();
+    let pathName: string | null = null;
+    const paths = [];
+
+    for (const [name, files] of allPaths) {
+      if (files.has(absRaw)) {
+        pathName = name;
+      } else {
+        paths.push(name);
+      }
+    }
+
+    if (pathName === null) {
+      return [];
+    }
+
+    const files: string[] = [];
+
+    const interestingPaths = paths.filter((p) => p.startsWith(pathName as string)).sort();
+
+    interestingPaths.forEach((p) => {
+      const registryItem = registry.routePath.get(p) || new Set();
+      const items = Array.from(registryItem).filter(
+        (el: string) => path.normalize(el).includes(absRoot) && !isTestFile(path.normalize(el)) && isTemplatePath(el) && fs.existsSync(el)
+      );
+
+      if (items.length) {
+        files.push(items[0]);
+      }
+    });
+
+    return pathsToLocations(...files);
   }
 
   providePropertyDefinition(root: string, focusPath: ASTPath, uri: string): Location[] {
