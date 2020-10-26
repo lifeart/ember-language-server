@@ -95,8 +95,11 @@ export default class TemplateDefinitionProvider {
       return params.results;
     }
 
-    // <FooBar @some-component-name="my-component" /> || {{some-component some-name="my-component/name"}}
-    if (this.maybeClassicComponentName(focusPath)) {
+    if (isOutlet(focusPath)) {
+      console.log('isOutlet!');
+      definitions = this.provideChildRouteDefinitions(root, uri);
+    } else if (this.maybeClassicComponentName(focusPath)) {
+      // <FooBar @some-component-name="my-component" /> || {{some-component some-name="my-component/name"}}
       definitions = this.provideComponentDefinition(root, this.extractValueForMaybeClassicComponentName(focusPath));
     } else if (this.isAngleComponent(focusPath)) {
       // <FooBar />
@@ -121,8 +124,6 @@ export default class TemplateDefinitionProvider {
       definitions = this.provideHashPropertyUsage(root, focusPath);
     } else if (isLinkToTarget(focusPath)) {
       definitions = this.provideRouteDefinition(root, focusPath.node.original);
-    } else if (isOutlet(focusPath)) {
-      definitions = this.provideChildRouteDefinitions(root, uri);
     }
 
     return definitions;
@@ -200,14 +201,24 @@ export default class TemplateDefinitionProvider {
 
   provideChildRouteDefinitions(root: string, uri: string): Location[] {
     const rawPath = URI.parse(uri).fsPath;
+
+    console.log('rawPath', rawPath);
     const absRoot = path.normalize(root);
+
+    console.log('absRoot', absRoot);
+
     const absRaw = path.resolve(rawPath);
+
+    console.log('absRaw', absRaw);
+
     const registry = getGlobalRegistry();
     const allPaths = registry.routePath.entries();
     let pathName: string | null = null;
     const paths = [];
 
     for (const [name, files] of allPaths) {
+      console.log([name]);
+
       if (files.has(absRaw)) {
         pathName = name;
       } else {
@@ -221,13 +232,17 @@ export default class TemplateDefinitionProvider {
 
     const files: string[] = [];
 
+    console.log('pathName', pathName);
+
     const interestingPaths = paths.filter((p) => p.startsWith(pathName as string)).sort();
 
     interestingPaths.forEach((p) => {
       const registryItem = registry.routePath.get(p) || new Set();
-      const items = Array.from(registryItem).filter(
-        (el: string) => path.normalize(el).includes(absRoot) && !isTestFile(path.normalize(el)) && isTemplatePath(el) && fs.existsSync(el)
-      );
+      const items = Array.from(registryItem).filter((el: string) => {
+        console.log('el', el);
+
+        return path.normalize(el).includes(absRoot) && !isTestFile(path.normalize(el)) && isTemplatePath(el) && fs.existsSync(el);
+      });
 
       if (items.length) {
         files.push(items[0]);
