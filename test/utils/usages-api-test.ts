@@ -44,33 +44,39 @@ describe('Usages API', () => {
     expect(findRelatedFiles('foo-bar').length).toBe(0);
   });
   it('should return usages for closest routes (upper)', () => {
-    expect(findRelatedFiles('foo.bar.baz').length).toBe(0);
+    expect(findRelatedFiles('foo.bar.baz', 'template').length).toBe(0);
     updateTemplateTokens('routePath', 'foo.bar', createFile('bar.hbs', ''));
-    expect(findRelatedFiles('foo.bar.baz').length).toBe(1);
+    expect(findRelatedFiles('foo.bar.baz', 'template').length).toBe(1);
     updateTemplateTokens('routePath', 'foo.bar', null);
   });
   it('should return usages for closest available routes (upper)', () => {
-    expect(findRelatedFiles('foo.bar.baz').length).toBe(0);
+    expect(findRelatedFiles('foo.bar.baz', 'template').length).toBe(0);
     updateTemplateTokens('routePath', 'foo', createFile('bar.hbs', ''));
-    expect(findRelatedFiles('foo.bar.baz').length).toBe(1);
+    expect(findRelatedFiles('foo.bar.baz', 'template').length).toBe(1);
     updateTemplateTokens('routePath', 'foo', null);
   });
   it('should return usages for closest available routes, in index case', () => {
-    expect(findRelatedFiles('index').length).toBe(0);
+    expect(findRelatedFiles('index', 'template').length).toBe(0);
     updateTemplateTokens('routePath', 'application', createFile('bar.hbs', ''));
-    expect(findRelatedFiles('index').length).toBe(1);
+    expect(findRelatedFiles('index', 'template').length).toBe(1);
     updateTemplateTokens('routePath', 'application', null);
   });
   it('should return usages for closest available routes, in loading case', () => {
-    expect(findRelatedFiles('index-loading').length).toBe(0);
+    expect(findRelatedFiles('index-loading', 'template').length).toBe(0);
     updateTemplateTokens('routePath', 'index', createFile('bar.hbs', ''));
-    expect(findRelatedFiles('index-loading').length).toBe(1);
+    expect(findRelatedFiles('index-loading', 'template').length).toBe(1);
     updateTemplateTokens('routePath', 'index', null);
   });
   it('should return usages for closest available routes, in error case', () => {
-    expect(findRelatedFiles('index-error').length).toBe(0);
+    expect(findRelatedFiles('index-error', 'template').length).toBe(0);
     updateTemplateTokens('routePath', 'index', createFile('bar.hbs', ''));
-    expect(findRelatedFiles('index-error').length).toBe(1);
+    expect(findRelatedFiles('index-error', 'template').length).toBe(1);
     updateTemplateTokens('routePath', 'index', null);
+  });
+  it('should return root template for case if no parents by path', () => {
+    expect(findRelatedFiles('groups-loading', 'template').length).toBe(0);
+    updateTemplateTokens('routePath', 'application', createFile('bar.hbs', ''));
+    expect(findRelatedFiles('groups-loading', 'template').length).toBe(1);
+    updateTemplateTokens('routePath', 'application', null);
   });
 });

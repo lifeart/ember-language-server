@@ -1,5 +1,6 @@
 import { extractTokensFromTemplate } from './template-tokens-collector';
 import * as fs from 'fs';
+import { MatchResultType } from './path-matcher';
 
 export interface TemplateTokenMeta {
   source: string;
@@ -41,23 +42,7 @@ function closestParentRoutePath(name: string): string | null {
   return name.slice(0, lastIndexOfDot);
 }
 
-function looksLikeRoutePath(token: string) {
-  if (token.includes('.')) {
-    return true;
-  }
-
-  if (token.endsWith('-loading')) {
-    return true;
-  }
-
-  if (token.endsWith('-error')) {
-    return true;
-  }
-
-  return false;
-}
-
-export function findRelatedFiles(token: string): Usage[] {
+export function findRelatedFiles(token: string, tokenType: MatchResultType = 'component'): Usage[] {
   const results: Usage[] = [];
 
   Object.keys(TEMPLATE_TOKENS).forEach((kindName) => {
@@ -73,38 +58,41 @@ export function findRelatedFiles(token: string): Usage[] {
         });
       }
     });
+  });
 
-    if (looksLikeRoutePath(token) && kindName === 'routePath') {
-      let parent: string | null = token;
+  if (tokenType === 'template') {
+    const routeTemplates = TEMPLATE_TOKENS.routePath;
+    let parent: string | null = token;
 
-      do {
-        parent = closestParentRoutePath(parent);
+    do {
+      parent = closestParentRoutePath(parent);
 
-        if (parent !== null) {
-          if (components[parent]) {
-            results.push({
-              name: parent,
-              path: components[parent].source,
-              type: kindName as UsageType,
-              usages: [],
-            });
-            break;
-          }
-        } else {
+      if (parent !== null) {
+        if (routeTemplates[parent]) {
+          results.push({
+            name: parent,
+            path: routeTemplates[parent].source,
+            type: 'routePath',
+            usages: [],
+          });
           break;
         }
-      } while (parent);
-    } else if (token === 'index' && kindName === 'routePath') {
-      if (components['application']) {
+      } else {
+        break;
+      }
+    } while (parent);
+
+    if (results.length === 0 && token !== 'application') {
+      if (routeTemplates['application']) {
         results.push({
           name: 'application',
-          path: components['application'].source,
-          type: kindName as UsageType,
+          path: routeTemplates['application'].source,
+          type: 'routePath',
           usages: [],
         });
       }
     }
-  });
+  }
 
   return results;
 }
