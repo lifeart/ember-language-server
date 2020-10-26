@@ -68,10 +68,12 @@ export function findRelatedFiles(token: string, tokenType: MatchResultType = 'co
       parent = closestParentRoutePath(parent);
 
       if (parent !== null) {
-        if (routeTemplates[parent]) {
+        const normalizedParentName = parent.split('/').join('.');
+
+        if (routeTemplates[normalizedParentName]) {
           results.push({
-            name: parent,
-            path: routeTemplates[parent].source,
+            name: normalizedParentName,
+            path: routeTemplates[normalizedParentName].source,
             type: 'routePath',
             usages: [],
           });
