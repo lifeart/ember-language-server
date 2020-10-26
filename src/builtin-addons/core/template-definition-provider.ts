@@ -227,7 +227,10 @@ export default class TemplateDefinitionProvider {
           return p.split('.').length < distance;
         }
 
-        if (!p.startsWith(pathName as string)) {
+        const loadingTpl = `${pathName}-loading`;
+        const errorTpl = `${pathName}-error`;
+
+        if (!p.startsWith(`${pathName as string}.`) && !p.startsWith(loadingTpl) && !p.startsWith(errorTpl)) {
           return false;
         }
 
