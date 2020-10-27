@@ -238,7 +238,7 @@ export default class TemplateDefinitionProvider {
     interestingPaths.forEach((p) => {
       const registryItem = registry.routePath.get(p) || new Set();
       const items = Array.from(registryItem).filter((el: string) => {
-        return path.normalize(el).includes(absRoot) && !isTestFile(path.normalize(el)) && isTemplatePath(el) && fs.existsSync(el);
+        return path.normalize(el).includes(absRoot) && !isTestFile(path.normalize(el)) && isTemplatePath(el);
       });
 
       if (items.length) {
