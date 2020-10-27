@@ -224,7 +224,7 @@ export default class TemplateDefinitionProvider {
     const interestingPaths = paths
       .filter((p) => {
         if (pathName === 'application') {
-          return p.split('.').length < distance;
+          return p.split('.').length <= distance;
         }
 
         const loadingTpl = `${pathName}-loading`;
@@ -236,7 +236,7 @@ export default class TemplateDefinitionProvider {
           }
         }
 
-        return p.replace(pathName as string, '').split('.').length < distance;
+        return p.replace(pathName as string, '').split('.').length <= distance;
       })
       .sort();
 
