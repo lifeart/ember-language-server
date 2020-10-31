@@ -199,8 +199,11 @@ export default class TemplateCompletionProvider {
     const uri = params.textDocument.uri;
     const originalText = params.originalText || '';
 
+    log(JSON.stringify(focusPath));
+
     try {
       if (isNamedBlockName(focusPath)) {
+        log('isNamedBlockName');
         const yields = this.getParentComponentYields(root, focusPath.parent);
 
         completions.push(...yields);
