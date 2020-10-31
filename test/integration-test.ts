@@ -1229,6 +1229,25 @@ describe('integration', function () {
     expect(result.response).toMatchSnapshot();
   });
 
+  it('autocomplete works for multiple angle component slots', async () => {
+    const result = await getResult(
+      CompletionRequest.type,
+      connection,
+      {
+        app: {
+          components: {
+            'hello.hbs': '<Darling><:</Darling>',
+            'darling.hbs': '{{yield to="main"}}{{yield to="footer"}}<div>{{yield to="body"}}</div>',
+          },
+        },
+      },
+      'app/components/hello.hbs',
+      { line: 0, character: 11 }
+    );
+
+    expect(result.response).toMatchSnapshot();
+  });
+
   describe('Autocomplete works for broken templates', () => {
     it('autocomplete information for component #1 {{', async () => {
       const result = await getResult(
