@@ -183,7 +183,7 @@ export default class TemplateCompletionProvider {
     return getTemplateBlocks(content).map((blockName: string) => {
       return {
         label: `:${blockName}`,
-        kind: CompletionItemKind.Keyword,
+        kind: CompletionItemKind.Variable,
         detail: `Named block (Slot) for <${focusPath.tag}>`,
       };
     });
