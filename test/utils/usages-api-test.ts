@@ -1,4 +1,4 @@
-import { updateTemplateTokens, findRelatedFiles } from '../../src/utils/usages-api';
+import { updateTemplateTokens, closestParentRoutePath, findRelatedFiles } from '../../src/utils/usages-api';
 import { createTempDir } from 'broccoli-test-helper';
 import * as path from 'path';
 let dir = null;
@@ -19,6 +19,12 @@ function createFile(name: string, content: string): string {
 }
 
 describe('Usages API', () => {
+  it('should return closest upper path', () => {
+    expect(closestParentRoutePath('foo/bar')).toBe('foo');
+    expect(closestParentRoutePath('foo-loading')).toBe('foo');
+    expect(closestParentRoutePath('foo-error')).toBe('foo');
+    expect(closestParentRoutePath('foo/bar/baz')).toBe('foo/bar');
+  });
   it('should extract component template tokens by giving path', () => {
     expect(findRelatedFiles('foo-bar').length).toBe(0);
 
@@ -45,9 +51,9 @@ describe('Usages API', () => {
   });
   it('should return usages for closest routes (upper)', () => {
     expect(findRelatedFiles('foo/bar/baz', 'template').length).toBe(0);
-    updateTemplateTokens('routePath', 'foo/bar', createFile('bar.hbs', ''));
+    updateTemplateTokens('routePath', 'foo.bar', createFile('bar.hbs', ''));
     expect(findRelatedFiles('foo/bar/baz', 'template').length).toBe(1);
-    updateTemplateTokens('routePath', 'foo/bar', null);
+    updateTemplateTokens('routePath', 'foo.bar', null);
   });
   it('should return usages for closest available routes (upper)', () => {
     expect(findRelatedFiles('foo/bar/baz', 'template').length).toBe(0);
