@@ -103,6 +103,31 @@ describe('integration', function () {
       expect(result).toMatchSnapshot();
     });
 
+    it('to children route from meaningful outlet', async () => {
+      const result = await getResult(
+        DefinitionRequest.method,
+        connection,
+        {
+          app: {
+            templates: {
+              'foo.hbs': '{{outlet}}',
+              foo: {
+                'bar.hbs': '',
+                'baz.hbs': '',
+                boo: {
+                  'bax.hbs': '',
+                },
+              },
+            },
+          },
+        },
+        'app/templates/foo.hbs',
+        { line: 0, character: 3 }
+      );
+
+      expect(result).toMatchSnapshot();
+    });
+
     it('go to local template-only component', async () => {
       const result = await getResult(
         DefinitionRequest.method,
