@@ -61,7 +61,7 @@ describe('integration', function () {
   describe('Go to definition works for all supported cases', () => {
     it('to to route defintion from LinkTo component', async () => {
       const result = await getResult(
-        DefinitionRequest.type,
+        DefinitionRequest.method,
         connection,
         {
           app: {
@@ -84,9 +84,28 @@ describe('integration', function () {
       expect(result).toMatchSnapshot();
     });
 
+    it('to children route from application outlet', async () => {
+      const result = await getResult(
+        DefinitionRequest.method,
+        connection,
+        {
+          app: {
+            templates: {
+              'foo.hbs': '',
+              'application.hbs': '{{outlet}}',
+            },
+          },
+        },
+        'app/templates/application.hbs',
+        { line: 0, character: 3 }
+      );
+
+      expect(result).toMatchSnapshot();
+    });
+
     it('go to local template-only component', async () => {
       const result = await getResult(
-        DefinitionRequest.type,
+        DefinitionRequest.method,
         connection,
         {
           app: {
@@ -104,7 +123,7 @@ describe('integration', function () {
     });
     it('go to local template-only component in module', async () => {
       const result = await getResult(
-        DefinitionRequest.type,
+        DefinitionRequest.method,
         connection,
         {
           app: {
@@ -124,7 +143,7 @@ describe('integration', function () {
     });
     it('go to local template-only component in pod-like', async () => {
       const result = await getResult(
-        DefinitionRequest.type,
+        DefinitionRequest.method,
         connection,
         {
           app: {
@@ -144,7 +163,7 @@ describe('integration', function () {
     });
     it('go to local template-only component in templates dir', async () => {
       const result = await getResult(
-        DefinitionRequest.type,
+        DefinitionRequest.method,
         connection,
         {
           app: {
@@ -166,7 +185,7 @@ describe('integration', function () {
     });
     it('go to component from typescripted inline template', async () => {
       const result = await getResult(
-        DefinitionRequest.type,
+        DefinitionRequest.method,
         connection,
         {
           app: {
@@ -189,7 +208,7 @@ describe('integration', function () {
 
     it('go to definition from script template working if we have test for component', async () => {
       const result = await getResult(
-        DefinitionRequest.type,
+        DefinitionRequest.method,
         connection,
         {
           app: {
@@ -216,7 +235,7 @@ describe('integration', function () {
     });
     it('go to definition from handlebars template working if we have test for component', async () => {
       const result = await getResult(
-        DefinitionRequest.type,
+        DefinitionRequest.method,
         connection,
         {
           app: {
@@ -323,7 +342,7 @@ describe('integration', function () {
   describe('GlimmerX', () => {
     it('able to provide list of locally defined components', async () => {
       const result = await getResult(
-        CompletionRequest.type,
+        CompletionRequest.method,
         connection,
         {
           'Button.ts': '',
@@ -420,7 +439,7 @@ describe('integration', function () {
   describe('GlimmerNative', () => {
     it('able to provide glimmer-native component', async () => {
       const result = await getResult(
-        CompletionRequest.type,
+        CompletionRequest.method,
         connection,
         {
           app: {
@@ -464,7 +483,7 @@ describe('integration', function () {
   describe('Able to provide autocomplete information for angle component arguments names', () => {
     it('support template-only collocated components arguments extraction', async () => {
       const result = await getResult(
-        CompletionRequest.type,
+        CompletionRequest.method,
         connection,
         {
           app: {
@@ -485,7 +504,7 @@ describe('integration', function () {
   describe('Able to provide autocomplete information for local scoped params', () => {
     it('support tag blocks', async () => {
       const result = await getResult(
-        CompletionRequest.type,
+        CompletionRequest.method,
         connection,
         {
           app: {
@@ -502,7 +521,7 @@ describe('integration', function () {
     });
     it('support mustache blocks', async () => {
       const result = await getResult(
-        CompletionRequest.type,
+        CompletionRequest.method,
         connection,
         {
           app: {
@@ -519,7 +538,7 @@ describe('integration', function () {
     });
     it('support component name autocomplete from block params', async () => {
       const result = await getResult(
-        CompletionRequest.type,
+        CompletionRequest.method,
         connection,
         {
           app: {
@@ -539,7 +558,7 @@ describe('integration', function () {
   describe('Able to load API from project itself', () => {
     it('project custom completion:template', async () => {
       const result = await getResult(
-        CompletionRequest.type,
+        CompletionRequest.method,
         connection,
         {
           'package.json': JSON.stringify({
@@ -572,7 +591,7 @@ describe('integration', function () {
   describe('Able to provide API:Completion', () => {
     it('support dummy addon completion:template', async () => {
       const result = await getResult(
-        CompletionRequest.type,
+        CompletionRequest.method,
         connection,
         {
           node_modules: {
@@ -613,7 +632,7 @@ describe('integration', function () {
     });
     it('support dummy addon completion:script', async () => {
       const result = await getResult(
-        CompletionRequest.type,
+        CompletionRequest.method,
         connection,
         {
           node_modules: {
@@ -811,7 +830,7 @@ describe('integration', function () {
         }
       );
 
-      const result = await getResult(CompletionRequest.type, connection, project, 'app/components/dory/index.hbs', { line: 0, character: 8 });
+      const result = await getResult(CompletionRequest.method, connection, project, 'app/components/dory/index.hbs', { line: 0, character: 8 });
 
       expect(result).toMatchSnapshot();
     });
@@ -820,7 +839,7 @@ describe('integration', function () {
   describe('Able to use classes for API', () => {
     it('support dummy class-based addon definition:template', async () => {
       const result = await getResult(
-        DefinitionRequest.type,
+        DefinitionRequest.method,
         connection,
         {
           node_modules: {
@@ -879,7 +898,7 @@ describe('integration', function () {
 
     it('support dummy class-based addon definition:template with correctly binded context', async () => {
       const result = await getResult(
-        DefinitionRequest.type,
+        DefinitionRequest.method,
         connection,
         {
           node_modules: {
@@ -954,7 +973,7 @@ describe('integration', function () {
   describe('Able to provide API:Definition', () => {
     it('support dummy addon definition:template', async () => {
       const result = await getResult(
-        DefinitionRequest.type,
+        DefinitionRequest.method,
         connection,
         {
           node_modules: {
@@ -1013,7 +1032,7 @@ describe('integration', function () {
 
     it('support dummy addon definition:script', async () => {
       const result = await getResult(
-        DefinitionRequest.type,
+        DefinitionRequest.method,
         connection,
         {
           node_modules: {
@@ -1121,7 +1140,7 @@ describe('integration', function () {
   describe('Able to provide autocomplete information for local context access', () => {
     it('support collocated components', async () => {
       const result = await getResult(
-        CompletionRequest.type,
+        CompletionRequest.method,
         connection,
         {
           app: {
@@ -1142,7 +1161,7 @@ describe('integration', function () {
 
     it('support collocated components in mustache arguments', async () => {
       const result = await getResult(
-        CompletionRequest.type,
+        CompletionRequest.method,
         connection,
         {
           app: {
@@ -1163,7 +1182,7 @@ describe('integration', function () {
 
     it('support collocated components in node attributes', async () => {
       const result = await getResult(
-        CompletionRequest.type,
+        CompletionRequest.method,
         connection,
         {
           app: {
@@ -1186,7 +1205,7 @@ describe('integration', function () {
   describe('Autocomplete works in LinkTo components for @route argument', () => {
     it('able to autocomplete basic routes', async () => {
       const result = await getResult(
-        CompletionRequest.type,
+        CompletionRequest.method,
         connection,
         {
           app: {
@@ -1212,7 +1231,7 @@ describe('integration', function () {
 
   it('autocomplete works for angle component slots', async () => {
     const result = await getResult(
-      CompletionRequest.type,
+      CompletionRequest.method,
       connection,
       {
         app: {
@@ -1231,7 +1250,7 @@ describe('integration', function () {
 
   it('autocomplete works for multiple angle component slots', async () => {
     const result = await getResult(
-      CompletionRequest.type,
+      CompletionRequest.method,
       connection,
       {
         app: {
@@ -1251,7 +1270,7 @@ describe('integration', function () {
   describe('Autocomplete works for broken templates', () => {
     it('autocomplete information for component #1 {{', async () => {
       const result = await getResult(
-        CompletionRequest.type,
+        CompletionRequest.method,
         connection,
         {
           app: {
@@ -1271,7 +1290,7 @@ describe('integration', function () {
 
     it('autocomplete information for component #2 <', async () => {
       const result = await getResult(
-        CompletionRequest.type,
+        CompletionRequest.method,
         connection,
         {
           app: {
@@ -1291,7 +1310,7 @@ describe('integration', function () {
 
     it('autocomplete information for component #3 {{#', async () => {
       const result = await getResult(
-        CompletionRequest.type,
+        CompletionRequest.method,
         connection,
         {
           app: {
@@ -1310,7 +1329,7 @@ describe('integration', function () {
 
     it('autocomplete information for modifier #4 <Foo {{', async () => {
       const result = await getResult(
-        CompletionRequest.type,
+        CompletionRequest.method,
         connection,
         {
           app: {
@@ -1331,7 +1350,7 @@ describe('integration', function () {
 
     it('autocomplete information for helper #5 {{name (', async () => {
       const result = await getResult(
-        CompletionRequest.type,
+        CompletionRequest.method,
         connection,
         {
           app: {
@@ -1353,7 +1372,7 @@ describe('integration', function () {
 
     it('autocomplete information for helper #6 {{name (foo (', async () => {
       const result = await getResult(
-        CompletionRequest.type,
+        CompletionRequest.method,
         connection,
         {
           app: {
