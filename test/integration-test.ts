@@ -1213,6 +1213,25 @@ describe('integration', function () {
     });
   });
 
+  it('autocomplete works for angle component slots', async () => {
+    const result = await getResult(
+      CompletionRequest.type,
+      connection,
+      {
+        app: {
+          components: {
+            'hello.hbs': '<Darling><:</Darling>',
+            'darling.hbs': '{{yield to="main"}}',
+          },
+        },
+      },
+      'app/components/hello.hbs',
+      { line: 0, character: 11 }
+    );
+
+    expect(result.response).toMatchSnapshot();
+  });
+
   describe('Autocomplete works for broken templates', () => {
     it('autocomplete information for component #1 {{', async () => {
       const result = await getResult(
