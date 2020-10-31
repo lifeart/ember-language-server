@@ -12,16 +12,12 @@ import {
   createProject,
   normalizeRegistry,
   normalizePath,
+  Registry,
+  UnknownResult,
 } from './test_helpers/integration-helpers';
 import { createMessageConnection, MessageConnection, Logger, StreamMessageReader, StreamMessageWriter } from 'vscode-jsonrpc';
 
 import { CompletionRequest, DefinitionRequest, DocumentSymbolRequest, ExecuteCommandRequest, ReferencesRequest } from 'vscode-languageserver-protocol';
-type UnknownResult = Record<string, unknown>;
-type Registry = {
-  [key: string]: {
-    [key: string]: string[];
-  };
-};
 
 describe('integration', function () {
   let connection: MessageConnection;

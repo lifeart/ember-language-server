@@ -58,7 +58,7 @@ describe('With `full-project` initialized on server', () => {
 
       openFile(connection, applicationTemplatePath);
 
-      const response = await connection.sendRequest(CompletionRequest.type, params);
+      const response = await connection.sendRequest(CompletionRequest.method, params);
 
       expect(response).toMatchSnapshot();
     });
@@ -77,7 +77,7 @@ describe('With `full-project` initialized on server', () => {
 
       openFile(connection, applicationTemplatePath);
 
-      const response = await connection.sendRequest(CompletionRequest.type, params);
+      const response = await connection.sendRequest(CompletionRequest.method, params);
 
       expect(response).toMatchSnapshot();
     });
@@ -96,7 +96,7 @@ describe('With `full-project` initialized on server', () => {
 
       openFile(connection, templatePath);
 
-      const response = await connection.sendRequest(CompletionRequest.type, params);
+      const response = await connection.sendRequest(CompletionRequest.method, params);
 
       expect(response).toMatchSnapshot();
     });
@@ -115,7 +115,7 @@ describe('With `full-project` initialized on server', () => {
 
       openFile(connection, templatePath);
 
-      const response = await connection.sendRequest(CompletionRequest.type, params);
+      const response = await connection.sendRequest(CompletionRequest.method, params);
 
       expect(response).toMatchSnapshot();
     });
@@ -137,7 +137,7 @@ describe('With `full-project` initialized on server', () => {
 
       openFile(connection, definitionTemplatePath);
 
-      let response = await connection.sendRequest(DefinitionRequest.type, params);
+      let response = await connection.sendRequest(DefinitionRequest.method, params);
 
       response = normalizeUri(response, base);
       expect(response).toMatchSnapshot();
@@ -158,7 +158,7 @@ describe('With `full-project` initialized on server', () => {
 
       openFile(connection, definitionTemplatePath);
 
-      let response = await connection.sendRequest(DefinitionRequest.type, params);
+      let response = await connection.sendRequest(DefinitionRequest.method, params);
 
       response = normalizeUri(response, base);
       expect(response).toMatchSnapshot();
@@ -179,7 +179,7 @@ describe('With `full-project` initialized on server', () => {
 
       openFile(connection, modelPath);
 
-      let response = await connection.sendRequest(DefinitionRequest.type, params);
+      let response = await connection.sendRequest(DefinitionRequest.method, params);
 
       response = normalizeUri(response, base);
       expect(response).toMatchSnapshot();
@@ -200,7 +200,7 @@ describe('With `full-project` initialized on server', () => {
 
       openFile(connection, modelPath);
 
-      let response = await connection.sendRequest(DefinitionRequest.type, params);
+      let response = await connection.sendRequest(DefinitionRequest.method, params);
 
       response = normalizeUri(response, base);
       expect(response).toMatchSnapshot();
@@ -221,7 +221,7 @@ describe('With `full-project` initialized on server', () => {
 
       openFile(connection, modelPath);
 
-      let response = await connection.sendRequest(DefinitionRequest.type, params);
+      let response = await connection.sendRequest(DefinitionRequest.method, params);
 
       response = normalizeUri(response, base);
       expect(response).toMatchSnapshot();
