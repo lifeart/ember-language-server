@@ -419,7 +419,7 @@ export function isComponentArgumentName(path: any): boolean {
 }
 
 export function isLinkComponentRouteTarget(path: any): boolean {
-  return hasNodeType(path.node, 'TextNode') && hasNodeType(path.parent, 'AttrNode') && path.parent.name === '@route';
+  return hasNodeType(path.node, 'TextNode') && hasNodeType(path.parent.node, 'AttrNode') && path.parent.node.name === '@route';
 }
 
 export function isPathExpression(node: any): boolean {
