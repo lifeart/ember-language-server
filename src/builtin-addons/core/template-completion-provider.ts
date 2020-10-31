@@ -25,6 +25,7 @@ import {
   isSubExpressionPath,
   isAngleComponentPath,
   isModifierPath,
+  isNamedBlockName,
 } from '../../utils/ast-helpers';
 import {
   listComponents,
@@ -199,7 +200,7 @@ export default class TemplateCompletionProvider {
     const originalText = params.originalText || '';
 
     try {
-      if (isAngleComponentPath(focusPath) && focusPath.parent && focusPath.node.tag.startsWith(':')) {
+      if (isNamedBlockName(focusPath)) {
         const yields = this.getParentComponentYields(root, focusPath.parent);
 
         completions.push(...yields);
