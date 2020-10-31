@@ -355,7 +355,7 @@ export default class Server {
         },
         completionProvider: {
           resolveProvider: true,
-          triggerCharacters: ['.', '::', '=', '/', '{{', '(', '<', '@', 'this.'],
+          triggerCharacters: ['.', '::', '=', '/', '{{', '(', '<', '@', 'this.', '<:'],
         },
       },
     };
