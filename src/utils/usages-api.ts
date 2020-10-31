@@ -28,7 +28,7 @@ export interface Usage {
   usages: Usage[];
 }
 
-function closestParentRoutePath(name: string): string | null {
+export function closestParentRoutePath(name: string): string | null {
   const lastIndexOfDot = name.lastIndexOf('/');
 
   if (name.endsWith('-loading') || name.endsWith('-error')) {
