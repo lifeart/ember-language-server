@@ -38,6 +38,7 @@ import {
 } from '../../utils/layout-helpers';
 
 import { normalizeToAngleBracketComponent } from '../../utils/normalizers';
+import { getTemplateBlocks } from '../../utils/template-tokens-collector';
 
 const mTemplateContextLookup = memoize(templateContextLookup, {
   length: 3,
@@ -162,6 +163,29 @@ export default class TemplateCompletionProvider {
 
     return scopedValues;
   }
+  getParentComponentYields(root: string, focusPath: ASTPath) {
+    if (focusPath.node.type !== 'ElementNode') {
+      return [];
+    }
+
+    const paths = provideComponentTemplatePaths(root, focusPath.node.tag).filter((p) => fs.existsSync(p));
+
+    if (!paths.length) {
+      return [];
+    }
+
+    const tpl = paths[0];
+
+    const content = fs.readFileSync(tpl, 'utf8');
+
+    return getTemplateBlocks(content).map((blockName: string) => {
+      return {
+        label: `:${blockName}`,
+        kind: CompletionItemKind.Keyword,
+        detail: `Named block (Slot)`,
+      };
+    });
+  }
   async onComplete(root: string, params: CompletionFunctionParams): Promise<CompletionItem[]> {
     log('provideCompletions');
 
@@ -175,7 +199,11 @@ export default class TemplateCompletionProvider {
     const originalText = params.originalText || '';
 
     try {
-      if (isAngleComponentPath(focusPath)) {
+      if (isAngleComponentPath(focusPath) && focusPath.parent && focusPath.node.tag.startsWith(':')) {
+        const yields = this.getParentComponentYields(root, focusPath.parent);
+
+        completions.push(...yields);
+      } else if (isAngleComponentPath(focusPath)) {
         log('isAngleComponentPath');
         // <Foo>
         const candidates = this.getAllAngleBracketComponents(root, uri);
