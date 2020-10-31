@@ -23,7 +23,7 @@ describe('integration', function () {
   let connection: MessageConnection;
   let serverProcess: cp.ChildProcess;
 
-  beforeAll(() => {
+  beforeAll(async () => {
     serverProcess = startServer();
     connection = createMessageConnection(new StreamMessageReader(serverProcess.stdout), new StreamMessageWriter(serverProcess.stdin), <Logger>{
       error(msg) {
@@ -41,6 +41,7 @@ describe('integration', function () {
     });
     // connection.trace(2, {log: console.log}, false);
     connection.listen();
+    await new Promise((resolve) => setTimeout(resolve, 1000));
   });
 
   afterAll(() => {

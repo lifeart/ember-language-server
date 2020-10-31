@@ -28,6 +28,7 @@ describe('With `full-project` initialized on server', () => {
     });
     // connection.trace(2, {log: console.log}, false);
     connection.listen();
+    await new Promise((resolve) => setTimeout(resolve, 1000));
   });
 
   afterAll(() => {
@@ -35,12 +36,12 @@ describe('With `full-project` initialized on server', () => {
     serverProcess.kill();
   });
 
-  beforeEach(() => {
-    return initServer(connection);
+  beforeEach(async () => {
+    await initServer(connection);
   });
 
-  afterEach(() => {
-    return reloadProjects(connection, null);
+  afterEach(async () => {
+    await reloadProjects(connection, null);
   });
 
   describe('Completion request', () => {
