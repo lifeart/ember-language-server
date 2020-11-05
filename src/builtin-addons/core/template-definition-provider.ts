@@ -5,7 +5,7 @@ import { Definition, Location } from 'vscode-languageserver';
 import { DefinitionFunctionParams } from './../../utils/addon-api';
 import { isLinkToTarget, isLinkComponentRouteTarget, isOutlet } from './../../utils/ast-helpers';
 import ASTPath from './../../glimmer-utils';
-import { getGlobalRegistry } from './../../utils/registry-api';
+import { getGlobalRegistry, getRegistryForRoot } from './../../utils/registry-api';
 import { normalizeToClassicComponent } from '../../utils/normalizers';
 import { isTemplatePath, isTestFile, getComponentNameFromURI, isModuleUnificationApp, getPodModulePrefix } from './../../utils/layout-helpers';
 
@@ -199,20 +199,22 @@ export default class TemplateDefinitionProvider {
   }
 
   provideChildRouteDefinitions(root: string, uri: string): Location[] {
-    const rawPath = URI.parse(uri).fsPath;
+    const rawPath = URI.parse(uri).fsPath.toLowerCase();
     const absRoot = path.normalize(root);
-    const registry = getGlobalRegistry();
-    const allPaths = registry.routePath.entries();
+    const registry = getRegistryForRoot(absRoot);
+    const allPaths = registry.routePath;
     let pathName: string | null = null;
-    const paths = [];
+    const paths: string[] = [];
 
-    for (const [name, files] of allPaths) {
-      if (files.has(rawPath)) {
+    Object.keys(allPaths).forEach((name) => {
+      const files = allPaths[name].map((item) => item.toLowerCase());
+
+      if (files.includes(rawPath)) {
         pathName = name;
       } else {
         paths.push(name);
       }
-    }
+    });
 
     if (pathName === null || paths.length === 0) {
       return [];
@@ -236,8 +238,8 @@ export default class TemplateDefinitionProvider {
       .sort();
 
     interestingPaths.forEach((p) => {
-      const registryItem = registry.routePath.get(p) || new Set();
-      const items = Array.from(registryItem).filter((el: string) => {
+      const registryItem = registry.routePath[p] || [];
+      const items = registryItem.filter((el: string) => {
         return path.normalize(el).includes(absRoot) && !isTestFile(path.normalize(el)) && isTemplatePath(el);
       });
 
