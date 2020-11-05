@@ -74,7 +74,7 @@ jobs:
         run: yarn compile
 
       - name: test
-        run: yarn test:jest
+        run: yarn yarn test:coverage
 
   floating-dependencies:
     name: Floating Dependencies
@@ -98,4 +98,4 @@ jobs:
         run: yarn compile
 
       - name: test
-        run: yarn test:jest
+        run: yarn yarn test:coverage
