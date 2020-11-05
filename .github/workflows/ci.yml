@@ -1,0 +1,26 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - component-context-info-origin
+  pull_request: {}
+
+jobs:
+  test:
+    name: Node 12.x - ubuntu
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: volta-cli/action@v1
+
+      - name: install dependencies
+        run: yarn install --frozen-lockfile
+
+      - run: yarn compile
+      - run: yarn lint
+      - run: yarn test:coverage
+
+      - uses: codecov/codecov-action@v1
