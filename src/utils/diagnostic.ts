@@ -9,7 +9,12 @@ export function toDiagnostic(source: string, error: TemplateLinterError): Diagno
     severity: DiagnosticSeverity.Error,
     range: toRange(source, error),
     message: toMessage(error),
-    code: error.rule,
+    code: error.rule
+      ? {
+          value: error.rule,
+          target: `https://github.com/ember-template-lint/ember-template-lint/blob/master/docs/rule/${error.rule}.md`,
+        }
+      : 'syntax',
     source: error.rule ? 'ember-template-lint' : 'glimmer-engine',
   };
 }
