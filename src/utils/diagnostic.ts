@@ -1,5 +1,6 @@
 import { Diagnostic, DiagnosticSeverity, Range } from 'vscode-languageserver';
 import { TemplateLinterError } from '../template-linter';
+import { URI } from 'vscode-uri';
 
 const ParseErrorExp = /^Parse error on line (\d+)/;
 const OnLineErrorExp = / \(on line (\d+)\)\.$/;
@@ -12,11 +13,11 @@ export function toDiagnostic(source: string, error: TemplateLinterError): Diagno
     code: error.rule
       ? {
           value: error.rule,
-          target: `https://github.com/ember-template-lint/ember-template-lint/blob/master/docs/rule/${error.rule}.md`,
+          target: URI.parse(`https://github.com/ember-template-lint/ember-template-lint/blob/master/docs/rule/${error.rule}.md`),
         }
       : 'syntax',
     source: error.rule ? 'ember-template-lint' : 'glimmer-engine',
-  };
+  } as Diagnostic;
 }
 
 function toLineRange(source: string, idx: number): [number, number] {
