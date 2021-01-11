@@ -53,7 +53,7 @@ export default class ProjectTemplateLinter implements AddonAPI {
           }
 
           seen.add(node);
-          const children = el.parent && el.parent.node && el.parent.node.children;
+          const children = el.parent && el.parent.node && (el.parent.node.children || el.parent.node.body);
 
           if (children) {
             const startColumn = node.loc.start.column;
@@ -153,6 +153,10 @@ export default class ProjectTemplateLinter implements AddonAPI {
 
           try {
             const result = this.commentCodeAction(meta.selection, issue.code as string);
+
+            if (result === meta.selection) {
+              return null;
+            }
 
             const edit: WorkspaceEdit = {
               changes: {
