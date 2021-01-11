@@ -15,7 +15,7 @@ function findValidNodeSelection(
   selection: string | undefined;
   location: SourceLocation;
 } {
-  const validNodes = ['ElementNode', 'ElementModifierStatement', 'BlockStatement', 'MustacheStatement', 'Template'];
+  const validNodes = ['ElementNode', 'BlockStatement', 'MustacheStatement', 'Template'];
   let cursor: ASTPath | undefined = focusPath;
 
   while (cursor && cursor.node) {
