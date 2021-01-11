@@ -48,6 +48,11 @@ export default class TemplateCompletionProvider {
   } {
     const documentContent = document.getText();
     const ext = getExtension(document);
+
+    if (!extensionsToProvideTemplateCompletions.includes(ext as string)) {
+      return null;
+    }
+
     const originalText = ext === '.hbs' ? documentContent : searchAndExtractHbs(documentContent);
 
     log('originalText', originalText);
