@@ -20,10 +20,8 @@ function findValidNodeSelection(
 
   while (cursor && cursor.node) {
     if (validNodes.includes(cursor.node.type)) {
-      const offset = new Array(cursor.node.loc.start.column).fill(' ').join('');
-
       return {
-        selection: offset + cursor.sourceForNode(),
+        selection: cursor.sourceForNode(),
         location: cursor.node.loc,
       };
     }
@@ -41,9 +39,11 @@ export default class ProjectTemplateLinter implements AddonAPI {
     this.server = server;
     this.project = project;
   }
-  commentCodeAction(template: string, errorCode: string) {
+  commentCodeAction(meta: { selection: string | undefined; location: SourceLocation }, errorCode: string) {
     const transform = recast.transform;
     const seen = new Set();
+    const offset = new Array(meta.location.start.column).fill(' ').join('');
+    const template = `${offset}${meta.selection}`;
     const { code } = transform({
       template,
       plugin(env) {
@@ -80,7 +80,7 @@ export default class ProjectTemplateLinter implements AddonAPI {
       },
     });
 
-    return code;
+    return code.trimLeft();
   }
   async onCodeAction(_: string, params: CodeActionFunctionParams): Promise<(Command | CodeAction)[] | undefined | null> {
     if (!params.textDocument.uri.endsWith('.hbs')) {
@@ -154,7 +154,7 @@ export default class ProjectTemplateLinter implements AddonAPI {
           }
 
           try {
-            const result = this.commentCodeAction(meta.selection, issue.code as string);
+            const result = this.commentCodeAction(meta, issue.code as string);
 
             if (result === meta.selection) {
               return null;
