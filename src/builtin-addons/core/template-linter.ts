@@ -39,7 +39,7 @@ export default class ProjectTemplateLinter implements AddonAPI {
     this.server = server;
     this.project = project;
   }
-  commentCodeAction(meta: { selection: string | undefined; location: SourceLocation }, errorCode: string) {
+  commentCodeAction(meta: { selection: string | undefined; location: SourceLocation }, comment: string) {
     const transform = recast.transform;
     const seen = new Set();
     const offset = new Array(meta.location.start.column).fill(' ').join('');
@@ -65,7 +65,7 @@ export default class ProjectTemplateLinter implements AddonAPI {
           if (children) {
             items++;
             const startColumn = node.loc.start.column;
-            const text = ` template-lint-disable ${errorCode} `;
+            const text = ` ${comment} `;
 
             children.splice(children.indexOf(node), 0, b.mustacheComment(text));
             children.splice(children.indexOf(node), 0, b.text('\n' + new Array(startColumn).fill(' ').join('')));
@@ -96,8 +96,9 @@ export default class ProjectTemplateLinter implements AddonAPI {
     const diagnostics = params.context.diagnostics;
     const fixableIssues = diagnostics.filter((el) => el.source === 'ember-template-lint' && el.message.endsWith('(fixable)'));
     const commentableIssues = diagnostics.filter((el) => el.source === 'ember-template-lint' && !el.message.endsWith('(fixable)') && el.code);
+    const typedTemplateIssue = diagnostics.filter((el) => el.source === 'typed-templates');
 
-    if (!fixableIssues.length && !commentableIssues.length) {
+    if (!fixableIssues.length && !commentableIssues.length && !typedTemplateIssue.length) {
       return null;
     }
 
@@ -154,13 +155,38 @@ export default class ProjectTemplateLinter implements AddonAPI {
 
           return CodeAction.create(`fix: ${issue.code}`, edit, CodeActionKind.QuickFix);
         }),
+        ...typedTemplateIssue.map(() => {
+          if (!meta.selection) {
+            return null;
+          }
+
+          try {
+            const result = this.commentCodeAction(meta, `@ts-ignore`);
+
+            if (result === meta.selection) {
+              return null;
+            }
+
+            const edit: WorkspaceEdit = {
+              changes: {
+                [params.textDocument.uri]: [TextEdit.replace(toLSRange(meta.location), result)],
+              },
+            };
+
+            return CodeAction.create(`disable: typed-templates`, edit, CodeActionKind.QuickFix);
+          } catch (e) {
+            logError(e);
+
+            return null;
+          }
+        }),
         ...commentableIssues.map((issue) => {
           if (!meta.selection) {
             return null;
           }
 
           try {
-            const result = this.commentCodeAction(meta, issue.code as string);
+            const result = this.commentCodeAction(meta, `template-lint-disable ${issue.code}`);
 
             if (result === meta.selection) {
               return null;
