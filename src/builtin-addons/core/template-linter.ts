@@ -20,8 +20,10 @@ function findValidNodeSelection(
 
   while (cursor && cursor.node) {
     if (validNodes.includes(cursor.node.type)) {
+      const offset = new Array(cursor.node.loc.start.column).fill(' ').join('');
+
       return {
-        selection: cursor.sourceForNode(),
+        selection: offset + cursor.sourceForNode(),
         location: cursor.node.loc,
       };
     }
