@@ -48,9 +48,14 @@ export default class ProjectTemplateLinter implements AddonAPI {
       template,
       plugin(env) {
         const { builders: b } = env.syntax;
+        let items = 0;
 
         function addComment(node: any, el: any) {
           if (seen.has(node)) {
+            return;
+          }
+
+          if (items > 0) {
             return;
           }
 
@@ -58,6 +63,7 @@ export default class ProjectTemplateLinter implements AddonAPI {
           const children = el.parent && el.parent.node && (el.parent.node.children || el.parent.node.body);
 
           if (children) {
+            items++;
             const startColumn = node.loc.start.column;
             const text = ` template-lint-disable ${errorCode} `;
 
