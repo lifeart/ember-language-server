@@ -22,7 +22,7 @@
     "ast-types": "^0.13.3",
     "cross-spawn": "^7.0.3",
     "dag-map": "^2.0.2",
-    "ember-meta-explorer": "^0.1.1",
+    "ember-meta-explorer": "^0.2.1",
     "ember-template-recast": "^5.0.1",
     "extract-tagged-template-literals": "^1.0.3",
     "find-up": "^4.1.0",
