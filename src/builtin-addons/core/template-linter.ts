@@ -4,10 +4,13 @@ import { URI } from 'vscode-uri';
 import Server from '../../server';
 import { Project } from '../../project-roots';
 import { logError } from '../../utils/logger';
+import { searchAndExtractHbs } from '@lifeart/ember-extract-inline-templates';
+import { parseScriptFile } from 'ember-meta-explorer';
 import { SourceLocation } from 'estree';
 import { toPosition, toLSRange } from '../../estree-utils';
 import ASTPath from '../../glimmer-utils';
 import * as recast from 'ember-template-recast';
+import { getExtension } from '../../utils/file-extension';
 
 function findValidNodeSelection(
   focusPath: ASTPath
@@ -31,6 +34,8 @@ function findValidNodeSelection(
 
   return null;
 }
+
+const extensionsToLint: string[] = ['.hbs', '.js', '.ts'];
 
 export default class ProjectTemplateLinter implements AddonAPI {
   private server!: Server;
@@ -105,7 +110,25 @@ export default class ProjectTemplateLinter implements AddonAPI {
     }
 
     const documentContent = params.document.getText();
-    const ast = this.server.templateCompletionProvider.getAST(documentContent);
+    const extension = getExtension(params.document);
+    let ast;
+
+    if (!extensionsToLint.includes(extension as string)) {
+      return null;
+    }
+
+    if (extension === '.hbs') {
+      ast = this.server.templateCompletionProvider.getAST(documentContent);
+    } else {
+      const templateData = searchAndExtractHbs(documentContent, {
+        parse(source: string) {
+          return parseScriptFile(source);
+        },
+      });
+
+      ast = this.server.templateCompletionProvider.getAST(templateData);
+    }
+
     let focusPath = this.server.templateCompletionProvider.createFocusPath(ast, toPosition(params.range.start), documentContent);
 
     if (!focusPath) {
