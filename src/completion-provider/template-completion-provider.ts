@@ -7,9 +7,10 @@ import { queryELSAddonsAPIChain } from './../utils/addon-api';
 import { preprocess } from '@glimmer/syntax';
 import { getExtension } from '../utils/file-extension';
 import { log, logInfo } from '../utils/logger';
-import { searchAndExtractHbs } from 'extract-tagged-template-literals';
+import { searchAndExtractHbs } from '@lifeart/ember-extract-inline-templates';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { Position as EsTreePosition } from 'estree';
+import { parseScriptFile } from 'ember-meta-explorer';
 
 const extensionsToProvideTemplateCompletions = ['.hbs', '.js', '.ts'];
 const PLACEHOLDER = 'ELSCompletionDummy';
@@ -53,7 +54,14 @@ export default class TemplateCompletionProvider {
       return null;
     }
 
-    const originalText = ext === '.hbs' ? documentContent : searchAndExtractHbs(documentContent);
+    const originalText =
+      ext === '.hbs'
+        ? documentContent
+        : searchAndExtractHbs(documentContent, {
+            parse(source: string) {
+              return parseScriptFile(source);
+            },
+          });
 
     log('originalText', originalText);
 

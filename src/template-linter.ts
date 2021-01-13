@@ -1,7 +1,8 @@
 import { Diagnostic, Files, TextDocument } from 'vscode-languageserver';
 import { getExtension } from './utils/file-extension';
 import { toDiagnostic } from './utils/diagnostic';
-import { searchAndExtractHbs } from 'extract-tagged-template-literals';
+import { searchAndExtractHbs } from '@lifeart/ember-extract-inline-templates';
+import { parseScriptFile } from 'ember-meta-explorer';
 import { URI } from 'vscode-uri';
 import { log, logError } from './utils/logger';
 import * as findUp from 'find-up';
@@ -56,7 +57,14 @@ export default class TemplateLinter {
     }
 
     const documentContent = textDocument.getText();
-    const source = ext === '.hbs' ? documentContent : searchAndExtractHbs(documentContent);
+    const source =
+      ext === '.hbs'
+        ? documentContent
+        : searchAndExtractHbs(documentContent, {
+            parse(source: string) {
+              return parseScriptFile(source);
+            },
+          });
 
     if (!source.trim().length) {
       return;
