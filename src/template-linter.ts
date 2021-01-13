@@ -95,7 +95,7 @@ export default class TemplateLinter {
 
     const TemplateLinter = await this.getLinter(project);
 
-    let linter = null;
+    let linter: any = null;
 
     try {
       setCwd(project.root);

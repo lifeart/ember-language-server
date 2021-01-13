@@ -110,7 +110,7 @@ export default class ProjectTemplateLinter implements AddonAPI {
     }
 
     const documentContent = params.document.getText();
-    const extension = getExtension(params.document);
+    const extension = getExtension(params.textDocument);
     let ast;
 
     if (!extensionsToLint.includes(extension as string)) {
