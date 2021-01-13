@@ -89,10 +89,6 @@ export default class ProjectTemplateLinter implements AddonAPI {
     return code.trimLeft();
   }
   async onCodeAction(_: string, params: CodeActionFunctionParams): Promise<(Command | CodeAction)[] | undefined | null> {
-    if (!params.textDocument.uri.endsWith('.hbs')) {
-      return null;
-    }
-
     const diagnostics = params.context.diagnostics;
     const fixableIssues = diagnostics.filter((el) => el.source === 'ember-template-lint' && el.message.endsWith('(fixable)'));
     const commentableIssues = diagnostics.filter((el) => el.source === 'ember-template-lint' && !el.message.endsWith('(fixable)') && el.code);
