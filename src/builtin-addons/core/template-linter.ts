@@ -1,5 +1,5 @@
 import { AddonAPI, CodeActionFunctionParams } from '../../utils/addon-api';
-import { Command, CodeAction, WorkspaceEdit, CodeActionKind, TextEdit } from 'vscode-languageserver';
+import { Command, CodeAction, WorkspaceEdit, CodeActionKind, TextEdit, Diagnostic } from 'vscode-languageserver';
 import { URI } from 'vscode-uri';
 import Server from '../../server';
 import { Project } from '../../project-roots';
@@ -12,12 +12,12 @@ import ASTPath from '../../glimmer-utils';
 import * as recast from 'ember-template-recast';
 import { getExtension } from '../../utils/file-extension';
 
-function findValidNodeSelection(
-  focusPath: ASTPath
-): null | {
+interface INodeSelectionInfo {
   selection: string | undefined;
   location: SourceLocation;
-} {
+}
+
+function findValidNodeSelection(focusPath: ASTPath): null | INodeSelectionInfo {
   const validNodes = ['ElementNode', 'BlockStatement', 'MustacheStatement', 'Template'];
   let cursor: ASTPath | undefined = focusPath;
 
@@ -93,6 +93,107 @@ export default class ProjectTemplateLinter implements AddonAPI {
 
     return code.trimLeft();
   }
+  fixTypedTemplatesIssues(typedTemplateIssue: Diagnostic[], params: CodeActionFunctionParams, meta: INodeSelectionInfo): Array<CodeAction | null> {
+    const fixes = typedTemplateIssue.map((): null | CodeAction => {
+      if (!meta.selection) {
+        return null;
+      }
+
+      try {
+        const result = this.commentCodeAction(meta, `@ts-ignore`);
+
+        if (result === meta.selection) {
+          return null;
+        }
+
+        const edit: WorkspaceEdit = {
+          changes: {
+            [params.textDocument.uri]: [TextEdit.replace(toLSRange(meta.location), result)],
+          },
+        };
+
+        return CodeAction.create(`disable: typed-templates`, edit, CodeActionKind.QuickFix);
+      } catch (e) {
+        logError(e);
+
+        return null;
+      }
+    });
+
+    return fixes;
+  }
+  fixTemplateLintIssuesWithComment(commentableIssues: Diagnostic[], params: CodeActionFunctionParams, meta: INodeSelectionInfo): Array<CodeAction | null> {
+    return commentableIssues.map((issue) => {
+      if (!meta.selection) {
+        return null;
+      }
+
+      try {
+        const result = this.commentCodeAction(meta, `template-lint-disable ${issue.code}`);
+
+        if (result === meta.selection) {
+          return null;
+        }
+
+        const edit: WorkspaceEdit = {
+          changes: {
+            [params.textDocument.uri]: [TextEdit.replace(toLSRange(meta.location), result)],
+          },
+        };
+
+        return CodeAction.create(`disable: ${issue.code}`, edit, CodeActionKind.QuickFix);
+      } catch (e) {
+        logError(e);
+
+        return null;
+      }
+    });
+  }
+  async fixTemplateLintIssues(issues: Diagnostic[], params: CodeActionFunctionParams, meta: INodeSelectionInfo): Promise<Array<CodeAction | null>> {
+    const linterKlass = await this.server.templateLinter.linterForProject(this.project);
+
+    if (!linterKlass) {
+      return [null];
+    }
+
+    const cwd = process.cwd();
+
+    try {
+      process.chdir(this.project.root);
+      const linter = new linterKlass();
+
+      const fixes = issues.map(
+        async (issue): Promise<null | CodeAction> => {
+          const { output, isFixed } = await Promise.resolve(
+            linter.verifyAndFix({
+              source: meta.selection,
+              moduleId: URI.parse(params.textDocument.uri).fsPath,
+              filePath: URI.parse(params.textDocument.uri).fsPath,
+            })
+          );
+
+          if (!isFixed) {
+            return null;
+          }
+
+          const edit: WorkspaceEdit = {
+            changes: {
+              [params.textDocument.uri]: [TextEdit.replace(toLSRange(meta.location), output)],
+            },
+          };
+
+          return CodeAction.create(`fix: ${issue.code}`, edit, CodeActionKind.QuickFix);
+        }
+      );
+      const resolvedFixes = await Promise.all(fixes);
+
+      return resolvedFixes;
+    } catch (e) {
+      return [];
+    } finally {
+      process.chdir(cwd);
+    }
+  }
   async onCodeAction(_: string, params: CodeActionFunctionParams): Promise<(Command | CodeAction)[] | undefined | null> {
     const diagnostics = params.context.diagnostics;
     const fixableIssues = diagnostics.filter((el) => el.source === 'ember-template-lint' && el.message.endsWith('(fixable)'));
@@ -100,12 +201,6 @@ export default class ProjectTemplateLinter implements AddonAPI {
     const typedTemplateIssue = diagnostics.filter((el) => el.source === 'typed-templates');
 
     if (!fixableIssues.length && !commentableIssues.length && !typedTemplateIssue.length) {
-      return null;
-    }
-
-    const linterKlass = await this.server.templateLinter.linterForProject(this.project);
-
-    if (!linterKlass) {
       return null;
     }
 
@@ -147,89 +242,17 @@ export default class ProjectTemplateLinter implements AddonAPI {
       return null;
     }
 
-    const cwd = process.cwd();
-
-    process.chdir(this.project.root);
-    const linter = new linterKlass();
     let codeActions: CodeAction[] = [];
 
     try {
-      codeActions = [
-        ...fixableIssues.map((issue) => {
-          const { output, isFixed } = linter.verifyAndFix({
-            source: meta.selection,
-            moduleId: URI.parse(params.textDocument.uri).fsPath,
-            filePath: URI.parse(params.textDocument.uri).fsPath,
-          });
+      const fixedIssues = await this.fixTemplateLintIssues(fixableIssues, params, meta);
+      const fixedTypedTemplatesIssues = this.fixTypedTemplatesIssues(typedTemplateIssue, params, meta);
+      const fixedComments = this.fixTemplateLintIssuesWithComment(commentableIssues, params, meta);
 
-          if (!isFixed) {
-            return null;
-          }
-
-          const edit: WorkspaceEdit = {
-            changes: {
-              [params.textDocument.uri]: [TextEdit.replace(toLSRange(meta.location), output)],
-            },
-          };
-
-          return CodeAction.create(`fix: ${issue.code}`, edit, CodeActionKind.QuickFix);
-        }),
-        ...typedTemplateIssue.map(() => {
-          if (!meta.selection) {
-            return null;
-          }
-
-          try {
-            const result = this.commentCodeAction(meta, `@ts-ignore`);
-
-            if (result === meta.selection) {
-              return null;
-            }
-
-            const edit: WorkspaceEdit = {
-              changes: {
-                [params.textDocument.uri]: [TextEdit.replace(toLSRange(meta.location), result)],
-              },
-            };
-
-            return CodeAction.create(`disable: typed-templates`, edit, CodeActionKind.QuickFix);
-          } catch (e) {
-            logError(e);
-
-            return null;
-          }
-        }),
-        ...commentableIssues.map((issue) => {
-          if (!meta.selection) {
-            return null;
-          }
-
-          try {
-            const result = this.commentCodeAction(meta, `template-lint-disable ${issue.code}`);
-
-            if (result === meta.selection) {
-              return null;
-            }
-
-            const edit: WorkspaceEdit = {
-              changes: {
-                [params.textDocument.uri]: [TextEdit.replace(toLSRange(meta.location), result)],
-              },
-            };
-
-            return CodeAction.create(`disable: ${issue.code}`, edit, CodeActionKind.QuickFix);
-          } catch (e) {
-            logError(e);
-
-            return null;
-          }
-        }),
-      ].filter((el) => el !== null) as CodeAction[];
+      codeActions = [...fixedIssues, ...fixedTypedTemplatesIssues, ...fixedComments].filter((el) => el !== null) as CodeAction[];
     } catch (e) {
       logError(e);
     }
-
-    process.chdir(cwd);
 
     return codeActions as CodeAction[];
   }

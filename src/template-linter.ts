@@ -109,14 +109,22 @@ export default class TemplateLinter {
     let diagnostics: Diagnostic[] = [];
 
     try {
-      sources.forEach((source) => {
-        const errors = linter.verify({
-          source,
-          moduleId: URI.parse(textDocument.uri).fsPath,
-          filePath: URI.parse(textDocument.uri).fsPath,
-        });
+      const results = await Promise.all(
+        sources.map(async (source) => {
+          const errors = await Promise.resolve(
+            linter.verify({
+              source,
+              moduleId: URI.parse(textDocument.uri).fsPath,
+              filePath: URI.parse(textDocument.uri).fsPath,
+            })
+          );
 
-        diagnostics = [...diagnostics, ...errors.map((error: TemplateLinterError) => toDiagnostic(source, error))];
+          return errors.map((error: TemplateLinterError) => toDiagnostic(source, error));
+        })
+      );
+
+      results.forEach((result) => {
+        diagnostics = [...diagnostics, ...result];
       });
     } catch (e) {
       logError(e);
