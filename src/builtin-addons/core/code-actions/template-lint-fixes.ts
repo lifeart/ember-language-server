@@ -1,5 +1,5 @@
 import { CodeActionFunctionParams } from '../../../utils/addon-api';
-import { Command, CodeAction, WorkspaceEdit, CodeActionKind, TextEdit, Diagnostic } from 'vscode-languageserver';
+import { Command, CodeAction, WorkspaceEdit, CodeActionKind, TextEdit, Diagnostic } from 'vscode-languageserver/node';
 import { URI } from 'vscode-uri';
 import { toLSRange } from '../../../estree-utils';
 import BaseCodeActionProvider, { INodeSelectionInfo } from './base';

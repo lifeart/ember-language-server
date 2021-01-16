@@ -1,5 +1,5 @@
 import { CodeActionFunctionParams } from '../../../utils/addon-api';
-import { Command, CodeAction, WorkspaceEdit, CodeActionKind, TextEdit, Diagnostic } from 'vscode-languageserver';
+import { Command, CodeAction, WorkspaceEdit, CodeActionKind, TextEdit, Diagnostic } from 'vscode-languageserver/node';
 import { logError } from '../../../utils/logger';
 
 import { SourceLocation } from 'estree';
@@ -7,7 +7,7 @@ import { toLSRange } from '../../../estree-utils';
 import { nodeLoc } from '../../../glimmer-utils';
 import * as recast from 'ember-template-recast';
 import { ASTv1, WalkerPath } from '@glimmer/syntax';
-import BaseCodeActionProvider from './base';
+import BaseCodeActionProvider, { INodeSelectionInfo } from './base';
 
 export default class TemplateLintCommentsCodeAction extends BaseCodeActionProvider {
   fixTemplateLintIssuesWithComment(commentableIssues: Diagnostic[], params: CodeActionFunctionParams, meta: INodeSelectionInfo): Array<CodeAction | null> {

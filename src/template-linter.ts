@@ -1,4 +1,4 @@
-import { Diagnostic, Files } from 'vscode-languageserver';
+import { Diagnostic, Files } from 'vscode-languageserver/node';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { getExtension } from './utils/file-extension';
 import { toDiagnostic, toHbsSource } from './utils/diagnostic';

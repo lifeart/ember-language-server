@@ -1,5 +1,5 @@
 import { AddonAPI, CodeActionFunctionParams } from '../../../utils/addon-api';
-import { Command, CodeAction } from 'vscode-languageserver';
+import { Command, CodeAction } from 'vscode-languageserver/node';
 import Server from '../../../server';
 import { Project } from '../../../project-roots';
 import { SourceLocation } from 'estree';

@@ -1,4 +1,4 @@
-import { Location, TextDocumentIdentifier, Command, CodeActionParams, CodeAction, Position, CompletionItem } from 'vscode-languageserver';
+import { Location, TextDocumentIdentifier, Command, CodeActionParams, CodeAction, Position, CompletionItem } from 'vscode-languageserver/node';
 import {
   getProjectAddonsRoots,
   getPackageJSON,

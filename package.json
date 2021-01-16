@@ -33,10 +33,10 @@
     "memoizee": "^0.4.15",
     "rimraf": "^3.0.2",
     "util": "^0.12.3",
-    "vscode-languageserver": "^6.1.1",
+    "vscode-languageserver": "^7.0.0",
     "vscode-languageserver-textdocument": "^1.0.1",
     "vscode-languageserver-protocol": "^3.16.0",
-    "vscode-jsonrpc": "^4.0.0",
+    "vscode-jsonrpc": "6.0.0",
     "vscode-uri": "^3.0.2",
     "walk-sync": "^2.2.0"
   },
