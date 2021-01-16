@@ -93,7 +93,7 @@
     "clean": "rimraf lib/",
     "build": "webpack --mode production",
     "compile": "tsc --skipLibCheck -p .",
-    "lint": "eslint . --ext js,ts",
+    "lint": "eslint ./{src,test}/**/*.{js,ts}",
     "prepublish": "yarn clean && yarn compile",
     "test": "jest",
     "test:coverage": "rimraf inst/ && nyc instrument lib inst && nyc --no-clean --reporter=clover --reporter=json --reporter=lcov yarn run jest --no-coverage",
