@@ -6,11 +6,8 @@ import { SourceLocation } from 'estree';
 import { getExtension } from '../../../utils/file-extension';
 import { searchAndExtractHbs } from '@lifeart/ember-extract-inline-templates';
 import { parseScriptFile } from 'ember-meta-explorer';
-import { toPosition, toLSRange } from '../../estree-utils';
-import ASTPath, { nodeLoc } from '../../glimmer-utils';
-import * as recast from 'ember-template-recast';
-import { ASTv1, WalkerPath } from '@glimmer/syntax';
-
+import { toPosition } from '../../../estree-utils';
+import ASTPath from '../../../glimmer-utils';
 export interface INodeSelectionInfo {
   selection: string | undefined;
   location: SourceLocation;
