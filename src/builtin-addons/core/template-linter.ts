@@ -8,9 +8,10 @@ import { searchAndExtractHbs } from '@lifeart/ember-extract-inline-templates';
 import { parseScriptFile } from 'ember-meta-explorer';
 import { SourceLocation } from 'estree';
 import { toPosition, toLSRange } from '../../estree-utils';
-import ASTPath from '../../glimmer-utils';
+import ASTPath, { nodeLoc } from '../../glimmer-utils';
 import * as recast from 'ember-template-recast';
 import { getExtension } from '../../utils/file-extension';
+import { ASTv1, WalkerPath } from '@glimmer/syntax';
 
 interface INodeSelectionInfo {
   selection: string | undefined;
@@ -55,37 +56,41 @@ export default class ProjectTemplateLinter implements AddonAPI {
         const { builders: b } = env.syntax;
         let items = 0;
 
-        function addComment(node: any, el: any) {
-          if (seen.has(node)) {
-            return;
-          }
-
-          if (items > 0) {
+        function addComment(
+          node: ASTv1.ElementNode | ASTv1.BlockStatement | ASTv1.MustacheStatement,
+          el: WalkerPath<ASTv1.ElementNode | ASTv1.BlockStatement | ASTv1.MustacheStatement>
+        ) {
+          if (seen.has(node) || items > 0 || !el.parent || !el.parent.node) {
             return;
           }
 
           seen.add(node);
-          const children = el.parent && el.parent.node && (el.parent.node.children || el.parent.node.body);
 
-          if (children) {
+          const parentNode = el.parent.node as { children?: ASTv1.Node[]; body?: ASTv1.Node[] };
+
+          const children = parentNode.children || parentNode.body;
+
+          if (children && node.loc) {
             items++;
-            const startColumn = node.loc.toJSON().start.column;
+            const loc = nodeLoc(node);
+            const startColumn = loc.start.column;
             const text = ` ${comment} `;
+            const textComment = '\n' + new Array(startColumn).fill(' ').join('');
 
-            children.splice(children.indexOf(node), 0, b.mustacheComment(text));
-            children.splice(children.indexOf(node), 0, b.text('\n' + new Array(startColumn).fill(' ').join('')));
+            children.splice(children.indexOf(node), 0, (b.mustacheComment(text) as unknown) as ASTv1.CommentStatement);
+            children.splice(children.indexOf(node), 0, (b.text(textComment) as unknown) as ASTv1.TextNode);
           }
         }
 
         return {
-          ElementNode(node, el) {
-            addComment(node, el);
+          ElementNode(node, nodePath: WalkerPath<ASTv1.ElementNode>) {
+            addComment(node as ASTv1.ElementNode, nodePath);
           },
-          BlockStatement(node, el) {
-            addComment(node, el);
+          BlockStatement(node, nodePath: WalkerPath<ASTv1.BlockStatement>) {
+            addComment(node as ASTv1.BlockStatement, nodePath);
           },
-          MustacheStatement(node, el) {
-            addComment(node, el);
+          MustacheStatement(node, nodePath: WalkerPath<ASTv1.MustacheStatement>) {
+            addComment(node as ASTv1.MustacheStatement, nodePath);
           },
         };
       },
