@@ -15,7 +15,7 @@
   "engines": {
     "node": ">= 10.17.0"
   },
-  "main": "dist/server.js",
+  "main": "lib/server.js",
   "typings": "lib/server.d.ts",
   "dependencies": {
     "@glimmer/syntax": "^0.73.1",
