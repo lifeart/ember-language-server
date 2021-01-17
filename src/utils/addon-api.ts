@@ -135,6 +135,7 @@ function create<T>(model: new () => T): T {
   return new model();
 }
 
+// @ts-expect-error @todo - fix webpack imports
 const requireFunc = typeof __webpack_require__ === 'function' ? __non_webpack_require__ : require;
 
 function requireUncached(module: string) {

@@ -73,6 +73,7 @@ export function getPodModulePrefix(root: string): string | null {
 
   // log('listPodsComponents');
   try {
+    // @ts-expect-error @todo - fix webpack imports
     const requireFunc = typeof __webpack_require__ === 'function' ? __non_webpack_require__ : require;
 
     // eslint-disable-next-line @typescript-eslint/no-var-requires
