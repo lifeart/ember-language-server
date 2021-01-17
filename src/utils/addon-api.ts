@@ -315,7 +315,7 @@ export interface ProjectProviders {
   info: string[];
 }
 
-interface ExtensionCapabilities {
+export interface ExtensionCapabilities {
   definitionProvider: undefined | true | false;
   codeActionProvider: undefined | true | false;
   referencesProvider:

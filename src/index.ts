@@ -5,6 +5,6 @@ export {
   DefinitionFunctionParams,
   ReferenceFunctionParams,
   ExtensionCapabilities,
-} from '../lib/utils/addon-api';
+} from './utils/addon-api';
 export { Project, Executor, Destructor, Linter, Watcher } from './project-roots';
 export { default as Server } from './server';
