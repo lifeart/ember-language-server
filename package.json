@@ -15,8 +15,8 @@
   "engines": {
     "node": ">= 10.17.0"
   },
-  "main": "lib/server.js",
-  "typings": "lib/server.d.ts",
+  "main": "lib/index.js",
+  "typings": "lib/index.d.ts",
   "dependencies": {
     "@glimmer/syntax": "^0.73.1",
     "@lifeart/ember-extract-inline-templates": "^2.0.0",
