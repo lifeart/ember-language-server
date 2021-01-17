@@ -2,10 +2,9 @@
 /.github
 /src
 /inst
-/lib/*.js
+/dist
 /lib/*.js.map
 /test
-/dist/*.map
 /coverage
 /.editorconfig
 /.eslintrc.js
