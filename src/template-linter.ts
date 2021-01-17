@@ -174,8 +174,10 @@ export default class TemplateLinter {
         return;
       }
 
+      const requireFunc = typeof __webpack_require__ === 'function' ? __non_webpack_require__ : require;
+
       // eslint-disable-next-line @typescript-eslint/no-var-requires
-      const linter = require(linterPath);
+      const linter = requireFunc(linterPath);
 
       this._linterCache.set(project, linter);
 
