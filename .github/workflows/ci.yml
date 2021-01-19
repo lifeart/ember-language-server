@@ -2,7 +2,6 @@ name: CI
 
 on:
   push:
-  pull_request:
 
 jobs:
   test:
@@ -60,7 +59,7 @@ jobs:
       matrix:
         os: [ubuntu]
         # os: [ubuntu, windows] @to-to finally fix CI for windows
-        node-version: [10.x, 12.x, 13.x, 14.x]
+        node-version: [10.x, 12.x, 14.x]
 
         # excluded because it is the `test` job above
         exclude:
