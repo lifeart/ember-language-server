@@ -241,7 +241,13 @@ export default class ProjectRoots {
     const projectPath = path.resolve(URI.parse(rawPath).fsPath);
 
     if (this.projects.has(projectPath)) {
-      return false;
+      const project = this.projects.get(projectPath) as Project;
+
+      return {
+        initIssues: project.initIssues,
+        providers: project.providers,
+        registry: this.server.getRegistry(project.root),
+      };
     }
 
     try {
