@@ -336,7 +336,7 @@ export default class Server {
     }
     // this.setStatusText('Initialized');
 
-    const info = JSON.parse(fs.readFileSync('./../package.json', 'utf8'));
+    const info = JSON.parse(fs.readFileSync(path.join(__dirname, './../package.json'), 'utf8'));
 
     return {
       serverInfo: {
