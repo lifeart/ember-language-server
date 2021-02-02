@@ -1,4 +1,4 @@
-import { CompletionItem, CompletionItemKind } from 'vscode-languageserver';
+import { CompletionItem, CompletionItemKind } from 'vscode-languageserver/node';
 import { CompletionFunctionParams } from './../../utils/addon-api';
 import { uniqBy } from 'lodash';
 
@@ -41,6 +41,7 @@ import {
 import { normalizeToAngleBracketComponent } from '../../utils/normalizers';
 import { getTemplateBlocks } from '../../utils/template-tokens-collector';
 import { ASTNode } from 'ast-types';
+import { ASTv1 } from '@glimmer/syntax';
 
 const mTemplateContextLookup = memoize(templateContextLookup, {
   length: 3,
@@ -154,7 +155,10 @@ export default class TemplateCompletionProvider {
   }
   getScopedValues(focusPath: ASTPath) {
     const scopedValues = getLocalScope(focusPath).map(({ name, node, path }) => {
-      const blockSource = node.type === 'ElementNode' ? `<${node.tag} as |...|>` : `{{#${path.parentPath && path.parentPath.node.path.original} as |...|}}`;
+      const blockSource =
+        node.type === 'ElementNode'
+          ? `<${(node as ASTv1.ElementNode).tag} as |...|>`
+          : `{{#${path.parentPath && ((path.parentPath.node as ASTv1.BlockStatement).path as ASTv1.PathExpression).original} as |...|}}`;
 
       return {
         label: name,
@@ -226,7 +230,7 @@ export default class TemplateCompletionProvider {
           !maybeComponentName.includes('.');
 
         if (isValidComponent) {
-          const tpls: any[] = provideComponentTemplatePaths(root, maybeComponentName);
+          const tpls: string[] = provideComponentTemplatePaths(root, maybeComponentName);
           const existingTpls = tpls.filter(fs.existsSync);
 
           if (existingTpls.length) {

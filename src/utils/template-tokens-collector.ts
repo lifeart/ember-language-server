@@ -1,20 +1,77 @@
-import { preprocess, traverse } from '@glimmer/syntax';
+import { preprocess, traverse, ASTv1 } from '@glimmer/syntax';
 import { normalizeToClassicComponent, normalizeToNamedBlockName } from './normalizers';
 
-function tokensFromType(node: any, scopedTokens: any) {
+function tokensFromType(node: ASTv1.BaseNode, scopedTokens: string[]) {
   const tokensMap = {
-    PathExpression: (node: any) => {
-      if (node.data === true || node.this === true) {
+    BlockStatement: (node: ASTv1.BlockStatement) => {
+      if (node.path.type === 'PathExpression') {
+        if (node.path.head.type === 'AtHead' || node.path.head.type === 'ThisHead') {
+          return;
+        }
+
+        if (node.path.head.name === 'component') {
+          if (node.params.length && node.params[0].type === 'StringLiteral') {
+            const possibleToken = node.params[0].value;
+
+            if (!scopedTokens.includes(possibleToken)) {
+              return possibleToken;
+            }
+          }
+        }
+      }
+
+      return;
+    },
+    MustacheStatement: (node: ASTv1.MustacheStatement) => {
+      if (node.path.type === 'PathExpression') {
+        if (node.path.head.type === 'AtHead' || node.path.head.type === 'ThisHead') {
+          return;
+        }
+
+        if (node.path.head.name === 'component') {
+          if (node.params.length && node.params[0].type === 'StringLiteral') {
+            const possibleToken = node.params[0].value;
+
+            if (!scopedTokens.includes(possibleToken)) {
+              return possibleToken;
+            }
+          }
+        }
+      }
+
+      return;
+    },
+    SubExpression: (node: ASTv1.SubExpression) => {
+      if (node.path.type === 'PathExpression') {
+        if (node.path.head.type === 'AtHead' || node.path.head.type === 'ThisHead') {
+          return;
+        }
+
+        if (node.path.head.name === 'component') {
+          if (node.params.length && node.params[0].type === 'StringLiteral') {
+            const possibleToken = node.params[0].value;
+
+            if (!scopedTokens.includes(possibleToken)) {
+              return possibleToken;
+            }
+          }
+        }
+      }
+
+      return;
+    },
+    PathExpression: (node: ASTv1.PathExpression) => {
+      if (node.head.type === 'AtHead' || node.head.type === 'ThisHead') {
         return;
       }
 
-      const [possbleToken] = node.parts;
+      const possibleToken = node.head.name;
 
-      if (!scopedTokens.includes(possbleToken)) {
-        return possbleToken;
+      if (!scopedTokens.includes(possibleToken)) {
+        return possibleToken;
       }
     },
-    ElementNode: ({ tag }: any) => {
+    ElementNode: ({ tag }: ASTv1.ElementNode) => {
       const char = tag.charAt(0);
 
       if (char !== char.toUpperCase() || char === ':') {
@@ -51,10 +108,10 @@ export function getTemplateBlocks(html: string): string[] {
 
   traverse(ast, {
     MustacheStatement: {
-      enter(node) {
+      enter(node: ASTv1.MustacheStatement) {
         const p = node.path;
 
-        if (p && p.type === 'PathExpression' && p.original === 'yield' && p.data === false && p.this === false) {
+        if (p && p.type === 'PathExpression' && p.original === 'yield' && p.head.type !== 'AtHead' && p.head.type !== 'ThisHead') {
           const to = node.hash.pairs.find((p) => {
             return p.key === 'to';
           });
@@ -72,32 +129,32 @@ export function getTemplateBlocks(html: string): string[] {
   return Array.from(tokensSet).map((el) => normalizeToNamedBlockName(el));
 }
 
-function getTemplateTokens(html: string, nativeTokens: any) {
+function getTemplateTokens(html: string, nativeTokens: string[]) {
   const ast = preprocess(html);
   const tokensSet: Set<string> = new Set();
   const scopedTokens: string[] = [];
 
   traverse(ast, {
     Block: {
-      enter({ blockParams }) {
+      enter({ blockParams }: ASTv1.Block) {
         blockParams.forEach((param) => {
           scopedTokens.push(param);
         });
       },
-      exit({ blockParams }) {
+      exit({ blockParams }: ASTv1.Block) {
         blockParams.forEach(() => {
           scopedTokens.pop();
         });
       },
     },
     ElementNode: {
-      enter(node) {
+      enter(node: ASTv1.ElementNode) {
         node.blockParams.forEach((param) => {
           scopedTokens.push(param);
         });
         addTokens(tokensSet, node, scopedTokens);
       },
-      exit({ blockParams }) {
+      exit({ blockParams }: ASTv1.ElementNode) {
         blockParams.forEach(() => {
           scopedTokens.pop();
         });
@@ -116,7 +173,28 @@ export function extractTokensFromTemplate(template: string): string[] {
     return [];
   }
 
-  const ignored = ['if', 'yield', 'outlet', 'component', 'else', 'unless', 'let', 'each', 'each-in', 'in-element', 'on', 'fn', 'debugger', 'console'];
+  const ignored = [
+    'if',
+    'hash',
+    'array',
+    'yield',
+    'outlet',
+    'component',
+    'else',
+    'unless',
+    'let',
+    'each',
+    'each-in',
+    'in-element',
+    'has-block',
+    'has-block-params',
+    'unbound',
+    'input',
+    'on',
+    'fn',
+    'debugger',
+    'console',
+  ];
 
   return getTemplateTokens(template, ignored);
 }

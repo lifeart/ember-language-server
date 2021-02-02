@@ -17,11 +17,12 @@ import {
 import { addToRegistry, removeFromRegistry, normalizeMatchNaming, NormalizedRegistryItem } from './utils/registry-api';
 import { ProjectProviders, collectProjectProviders, initBuiltinProviders } from './utils/addon-api';
 import Server from './server';
-import { TextDocument, Diagnostic, FileChangeType } from 'vscode-languageserver';
+import { Diagnostic, FileChangeType } from 'vscode-languageserver/node';
+import { TextDocument } from 'vscode-languageserver-textdocument';
 import { PodMatcher, ClassicPathMatcher } from './utils/path-matcher';
-export type Executor = (server: Server, command: string, args: any[]) => any;
+export type Executor = (server: Server, command: string, args: any[]) => Promise<any>;
 export type Destructor = (project: Project) => void;
-export type Linter = (document: TextDocument) => Diagnostic[];
+export type Linter = (document: TextDocument) => Promise<Diagnostic[] | null>;
 export type Watcher = (uri: string, change: FileChangeType) => void;
 export interface Executors {
   [key: string]: Executor;
@@ -240,7 +241,13 @@ export default class ProjectRoots {
     const projectPath = path.resolve(URI.parse(rawPath).fsPath);
 
     if (this.projects.has(projectPath)) {
-      return false;
+      const project = this.projects.get(projectPath) as Project;
+
+      return {
+        initIssues: project.initIssues,
+        providers: project.providers,
+        registry: this.server.getRegistry(project.root),
+      };
     }
 
     try {

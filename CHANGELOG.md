@@ -1,3 +1,24 @@
+## [1.0.5](https://github.com/lifeart/ember-language-server/compare/v1.0.4...v1.0.5) (2021-01-31)
+
+
+### Bug Fixes
+
+* improve typings ([3942add](https://github.com/lifeart/ember-language-server/commit/3942add6ecde57c83dc5401d05ad49821f4f2650))
+
+## [1.0.4](https://github.com/lifeart/ember-language-server/compare/v1.0.3...v1.0.4) (2021-01-27)
+
+
+### Bug Fixes
+
+* json serializtion ([ee7e99e](https://github.com/lifeart/ember-language-server/commit/ee7e99e808ed9cc4e4099d7a4b38ada5e2963ccd))
+
+## [1.0.3](https://github.com/lifeart/ember-language-server/compare/v1.0.2...v1.0.3) (2021-01-19)
+
+
+### Bug Fixes
+
+* **pencil:** improve component names token collector ([f485ad5](https://github.com/lifeart/ember-language-server/commit/f485ad58066fbf1ea041c4e70f3400f47d6c07e5))
+
 # Changelog
 
 ## v0.2.1 (2018-12-10)

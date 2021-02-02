@@ -15,9 +15,9 @@ import {
   Registry,
   UnknownResult,
 } from './test_helpers/integration-helpers';
-import { createMessageConnection, MessageConnection, Logger, StreamMessageReader, StreamMessageWriter } from 'vscode-jsonrpc';
+import { createMessageConnection, MessageConnection, Logger, StreamMessageReader, StreamMessageWriter } from 'vscode-jsonrpc/node';
 
-import { CompletionRequest, DefinitionRequest, DocumentSymbolRequest, ExecuteCommandRequest, ReferencesRequest } from 'vscode-languageserver-protocol';
+import { CompletionRequest, DefinitionRequest, DocumentSymbolRequest, ExecuteCommandRequest, ReferencesRequest } from 'vscode-languageserver-protocol/node';
 
 describe('integration', function () {
   let connection: MessageConnection;
@@ -215,7 +215,7 @@ describe('integration', function () {
         {
           app: {
             components: {
-              'hello.ts': 'hbs`<Darling />`',
+              'hello.ts': 'import hbs from "htmlbars-inline-precompile";\nhbs`<Darling />`',
             },
             templates: {
               components: {
@@ -225,7 +225,7 @@ describe('integration', function () {
           },
         },
         'app/components/hello.ts',
-        { line: 0, character: 6 }
+        { line: 1, character: 6 }
       );
 
       expect(result).toMatchSnapshot();
@@ -238,7 +238,7 @@ describe('integration', function () {
         {
           app: {
             components: {
-              'hello.ts': 'hbs`<Darling />`',
+              'hello.ts': 'import hbs from "htmlbars-inline-precompile";\nhbs`<Darling />`',
               'darling.ts': '',
             },
           },
@@ -253,7 +253,7 @@ describe('integration', function () {
           },
         },
         'app/components/hello.ts',
-        { line: 0, character: 6 }
+        { line: 1, character: 6 }
       );
 
       expect(result).toMatchSnapshot();
@@ -372,7 +372,7 @@ describe('integration', function () {
         {
           'Button.ts': '',
           'Button-test.ts': '',
-          'App.js': 'export default hbs`<`',
+          'App.js': 'import hbs from "htmlbars-inline-precompile";\nexport default hbs`<`',
           Components: {
             'Table.js': '',
             'Border.ts': '',
@@ -383,7 +383,7 @@ describe('integration', function () {
           'package.json': JSON.stringify({ dependencies: { '@glimmerx/core': true } }),
         },
         'App.js',
-        { line: 0, character: 20 }
+        { line: 1, character: 20 }
       );
 
       expect(result).toMatchSnapshot();

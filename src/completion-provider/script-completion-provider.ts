@@ -1,4 +1,4 @@
-import { CompletionItem, TextDocumentPositionParams } from 'vscode-languageserver';
+import { CompletionItem, TextDocumentPositionParams } from 'vscode-languageserver/node';
 import { queryELSAddonsAPIChain } from './../utils/addon-api';
 import Server from '../server';
 import ASTPath from '../glimmer-utils';
@@ -42,7 +42,7 @@ export default class ScriptCompletionProvider {
       return [];
     }
 
-    const focusPath = ASTPath.toPosition(ast, toPosition(params.position), content);
+    const focusPath = ASTPath.toPosition(ast, toPosition(params.position), content) as any;
 
     if (!focusPath || !project || !document) {
       return [];

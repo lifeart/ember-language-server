@@ -1,15 +1,16 @@
-import { CompletionItem, TextDocumentPositionParams, Position, TextDocumentIdentifier } from 'vscode-languageserver';
+import { CompletionItem, TextDocumentPositionParams, Position, TextDocumentIdentifier } from 'vscode-languageserver/node';
 import Server from '../server';
 import ASTPath from '../glimmer-utils';
 import { toPosition } from '../estree-utils';
 import { filter } from 'fuzzaldrin';
 import { queryELSAddonsAPIChain } from './../utils/addon-api';
-import { preprocess } from '@glimmer/syntax';
+import { preprocess, ASTv1 } from '@glimmer/syntax';
 import { getExtension } from '../utils/file-extension';
 import { log, logInfo } from '../utils/logger';
-import { searchAndExtractHbs } from 'extract-tagged-template-literals';
+import { searchAndExtractHbs } from '@lifeart/ember-extract-inline-templates';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { Position as EsTreePosition } from 'estree';
+import { parseScriptFile } from 'ember-meta-explorer';
 
 const extensionsToProvideTemplateCompletions = ['.hbs', '.js', '.ts'];
 const PLACEHOLDER = 'ELSCompletionDummy';
@@ -30,7 +31,7 @@ export default class TemplateCompletionProvider {
       document,
     };
   }
-  getAST(textContent: string) {
+  getAST(textContent: string): ASTv1.Template {
     return preprocess(textContent);
   }
   createFocusPath(ast: any, position: EsTreePosition, validText: string) {
@@ -48,7 +49,19 @@ export default class TemplateCompletionProvider {
   } {
     const documentContent = document.getText();
     const ext = getExtension(document);
-    const originalText = ext === '.hbs' ? documentContent : searchAndExtractHbs(documentContent);
+
+    if (!extensionsToProvideTemplateCompletions.includes(ext as string)) {
+      return null;
+    }
+
+    const originalText =
+      ext === '.hbs'
+        ? documentContent
+        : searchAndExtractHbs(documentContent, {
+            parse(source: string) {
+              return parseScriptFile(source);
+            },
+          });
 
     log('originalText', originalText);
 
@@ -201,7 +214,7 @@ export default class TemplateCompletionProvider {
 }
 
 function getTextPrefix(astPath: ASTPath, normalPlaceholder: string): string {
-  let node = astPath.node;
+  let node = astPath.node as any;
 
   if (node === undefined) {
     return normalPlaceholder;

@@ -2,7 +2,7 @@ import * as memoize from 'memoizee';
 import * as walkSync from 'walk-sync';
 import * as fs from 'fs';
 import * as path from 'path';
-import { CompletionItem, CompletionItemKind } from 'vscode-languageserver';
+import { CompletionItem, CompletionItemKind } from 'vscode-languageserver/node';
 import { Project } from '../project-roots';
 import { addToRegistry, normalizeMatchNaming } from './registry-api';
 
@@ -73,8 +73,11 @@ export function getPodModulePrefix(root: string): string | null {
 
   // log('listPodsComponents');
   try {
+    // @ts-expect-error @todo - fix webpack imports
+    const requireFunc = typeof __webpack_require__ === 'function' ? __non_webpack_require__ : require;
+
     // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const appConfig = require(path.join(root, 'config', 'environment.js'));
+    const appConfig = requireFunc(path.join(root, 'config', 'environment.js'));
 
     // log('appConfig', appConfig);
     podModulePrefix = appConfig('development').podModulePrefix || '';

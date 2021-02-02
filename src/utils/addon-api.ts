@@ -1,4 +1,4 @@
-import { Location, TextDocumentIdentifier, Command, CodeActionParams, CodeAction, Position, CompletionItem, TextDocument } from 'vscode-languageserver';
+import { Location, TextDocumentIdentifier, Command, CodeActionParams, CodeAction, Position, CompletionItem } from 'vscode-languageserver/node';
 import {
   getProjectAddonsRoots,
   getPackageJSON,
@@ -7,8 +7,9 @@ import {
   ADDON_CONFIG_KEY,
   hasEmberLanguageServerExtension,
 } from './layout-helpers';
+import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as path from 'path';
-import { log, logInfo, logError } from './logger';
+import { log, logInfo, logError, safeStringify } from './logger';
 import Server from '../server';
 import ASTPath from './../glimmer-utils';
 import DAGMap from 'dag-map';
@@ -16,8 +17,11 @@ import CoreScriptDefinitionProvider from './../builtin-addons/core/script-defini
 import CoreTemplateDefinitionProvider from './../builtin-addons/core/template-definition-provider';
 import ScriptCompletionProvider from './../builtin-addons/core/script-completion-provider';
 import TemplateCompletionProvider from './../builtin-addons/core/template-completion-provider';
-import ProjectTemplateLinter from './../builtin-addons/core/template-linter';
 import { Project } from '../project-roots';
+
+import TemplateLintFixesCodeAction from '../builtin-addons/core/code-actions/template-lint-fixes';
+import TemplateLintCommentsCodeAction from '../builtin-addons/core/code-actions/template-lint-comments';
+import TypedTemplatesCodeAction from '../builtin-addons/core/code-actions/typed-template-comments';
 
 interface BaseAPIParams {
   server: Server;
@@ -78,7 +82,7 @@ export async function queryELSAddonsAPIChain(callbacks: any[], root: string, par
 
   for (const callback of callbacks) {
     try {
-      const tempResult = await callback(root, Object.assign({}, params, { results: JSON.parse(JSON.stringify(lastResult)) }));
+      const tempResult = await callback(root, Object.assign({}, params, { results: JSON.parse(safeStringify(lastResult)) }));
 
       // API must return array
       if (Array.isArray(tempResult)) {
@@ -98,14 +102,23 @@ export function initBuiltinProviders(): ProjectProviders {
   const templateDefinition = new CoreTemplateDefinitionProvider();
   const scriptCompletion = new ScriptCompletionProvider();
   const templateCompletion = new TemplateCompletionProvider();
-  const templateCodeActionProvider = new ProjectTemplateLinter();
+
+  const templateLintFixesCodeAction = new TemplateLintFixesCodeAction();
+  const templateLintCommentsCodeAction = new TemplateLintCommentsCodeAction();
+  const typedTemplatesCodeAction = new TypedTemplatesCodeAction();
 
   return {
     definitionProviders: [scriptDefinition.onDefinition.bind(scriptDefinition), templateDefinition.onDefinition.bind(templateDefinition)],
     referencesProviders: [],
-    codeActionProviders: [templateCodeActionProvider.onCodeAction.bind(templateCodeActionProvider)],
+    codeActionProviders: [
+      templateLintFixesCodeAction.onCodeAction.bind(templateLintFixesCodeAction),
+      templateLintCommentsCodeAction.onCodeAction.bind(templateLintCommentsCodeAction),
+      typedTemplatesCodeAction.onCodeAction.bind(typedTemplatesCodeAction),
+    ],
     initFunctions: [
-      templateCodeActionProvider.onInit.bind(templateCodeActionProvider),
+      templateLintFixesCodeAction.onInit.bind(templateLintFixesCodeAction),
+      templateLintCommentsCodeAction.onInit.bind(templateLintCommentsCodeAction),
+      typedTemplatesCodeAction.onInit.bind(typedTemplatesCodeAction),
       templateCompletion.initRegistry.bind(templateCompletion),
       scriptCompletion.initRegistry.bind(scriptCompletion),
     ],
@@ -122,12 +135,15 @@ function create<T>(model: new () => T): T {
   return new model();
 }
 
+// @ts-expect-error @todo - fix webpack imports
+const requireFunc = typeof __webpack_require__ === 'function' ? __non_webpack_require__ : require;
+
 function requireUncached(module: string) {
-  delete require.cache[require.resolve(module)];
+  delete require.cache[requireFunc.resolve(module)];
   let result = {};
 
   try {
-    result = require(module);
+    result = requireFunc(module);
 
     if (isConstructor(result)) {
       const instance: PublicAddonAPI = create(result as any);
@@ -299,7 +315,7 @@ export interface ProjectProviders {
   info: string[];
 }
 
-interface ExtensionCapabilities {
+export interface ExtensionCapabilities {
   definitionProvider: undefined | true | false;
   codeActionProvider: undefined | true | false;
   referencesProvider:
