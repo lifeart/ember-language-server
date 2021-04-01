@@ -147,7 +147,7 @@ export function getPathsForComponentTemplates(root: string, maybeComponentName: 
   return paths;
 }
 
-export function getAddonImport(root: string, importPath: string, appName: string) {
+export function getAddonImport(root: string, importPath: string) {
   const importParts = importPath.split('/');
   let addonName = importParts.shift();
 
@@ -160,7 +160,7 @@ export function getAddonImport(root: string, importPath: string, appName: string
   }
 
   const items: string[] = [];
-  const roots = items.concat(mProjectAddonsRoots(root), mProjectInRepoAddonsRoots(root), mProjectInRepoAddonsRoots(path.join(root, appName)));
+  const roots = items.concat(mProjectAddonsRoots(root), mProjectInRepoAddonsRoots(root));
   let existingPaths: string[] = [];
   let hasValidPath = false;
 
@@ -176,7 +176,6 @@ export function getAddonImport(root: string, importPath: string, appName: string
     const addonPaths: string[][] = [];
     const possibleLocations = [
       [rootPath, 'app', ...importParts],
-      [rootPath, 'tests', ...importParts],
       [rootPath, 'addon', ...importParts],
       [rootPath, '', ...importParts],
     ];

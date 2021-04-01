@@ -356,14 +356,10 @@ export function hasAddonFolderInPath(name: string) {
   return name.includes(path.sep + 'addon' + path.sep) || name.includes(path.sep + 'addon-test-support' + path.sep);
 }
 
-export function getProjectAddonsInfo(root: string, appName?: string) {
-  const childAppRoot = appName ? mProjectInRepoAddonsRoots(path.join(root, appName)) : [];
-
-  const roots = ([] as string[])
-    .concat(mProjectAddonsRoots(root), mProjectInRepoAddonsRoots(root), childAppRoot as any)
-    .filter((pathItem: any) => typeof pathItem === 'string');
+export function getProjectAddonsInfo(root: string) {
+  const roots = ([] as string[]).concat(mProjectAddonsRoots(root), mProjectInRepoAddonsRoots(root)).filter((pathItem: unknown) => typeof pathItem === 'string');
   // log('roots', roots);
-  const meta: any = [];
+  const meta: CompletionItem[][] = [];
 
   roots.forEach((packagePath: string) => {
     const info = getPackageJSON(packagePath);
