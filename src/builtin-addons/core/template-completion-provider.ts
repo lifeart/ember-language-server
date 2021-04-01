@@ -36,9 +36,10 @@ import {
   listModifiers,
   builtinModifiers,
   mGetProjectAddonsInfo,
+  hasNamespaceSupport,
 } from '../../utils/layout-helpers';
 
-import { normalizeToAngleBracketComponent } from '../../utils/normalizers';
+import { normalizeToAngleBracketComponent, normalizeToClassicComponent } from '../../utils/normalizers';
 import { getAppRootFromConfig, mProjectRoot } from '../../utils/common-helpers';
 import { getTemplateBlocks } from '../../utils/template-tokens-collector';
 import { ASTNode } from 'ast-types';
@@ -78,8 +79,14 @@ function isArgumentName(name: string) {
 }
 
 export default class TemplateCompletionProvider {
+  project!: Project;
+  server!: Server;
+  hasNamespaceSupport = false;
   async initRegistry(_: Server, project: Project) {
     try {
+      this.project = project;
+      this.server = _;
+      this.hasNamespaceSupport = hasNamespaceSupport(project.root);
       const initStartTime = Date.now();
 
       const appRoot = await getAppRootFromConfig(_);
@@ -341,6 +348,22 @@ export default class TemplateCompletionProvider {
       }
     } catch (e) {
       log('error', e);
+    }
+
+    if (this.hasNamespaceSupport) {
+      const registry = this.server.getRegistry(this.project.root);
+
+      completions.forEach((item) => {
+        if (item.detail === 'component') {
+          const paths = registry.component[normalizeToClassicComponent(item.label)] || [];
+
+          this.project.addonsMeta.forEach(({ name, root }) => {
+            if (paths.includes(root)) {
+              item.label = `${name}$${item.label}`;
+            }
+          });
+        }
+      });
     }
 
     return completions;

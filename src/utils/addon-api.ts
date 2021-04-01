@@ -123,6 +123,7 @@ export function initBuiltinProviders(): ProjectProviders {
       scriptCompletion.initRegistry.bind(scriptCompletion),
     ],
     info: [],
+    addonsMeta: [],
     completionProviders: [scriptCompletion.onComplete.bind(scriptCompletion), templateCompletion.onComplete.bind(templateCompletion)],
   };
 }
@@ -185,8 +186,17 @@ export function collectProjectProviders(root: string, addons: string[]): Project
     .filter((pathItem) => typeof pathItem === 'string');
   const dagMap: DAGMap<HandlerObject> = new DAGMap();
 
+  const addonsMeta: AddonMeta[] = [];
+
   roots.forEach((packagePath: string) => {
     const info = getPackageJSON(packagePath);
+
+    if (info.name) {
+      addonsMeta.push({
+        name: info.name,
+        root: packagePath,
+      });
+    }
 
     if (hasEmberLanguageServerExtension(info)) {
       const handlerPath = languageServerHandler(info);
@@ -213,6 +223,7 @@ export function collectProjectProviders(root: string, addons: string[]): Project
     codeActionProviders: CodeActionResolveFunction[];
     initFunctions: InitFunction[];
     info: string[];
+    addonsMeta: { name: string; root: string }[];
   } = {
     definitionProviders: [],
     referencesProviders: [],
@@ -220,6 +231,7 @@ export function collectProjectProviders(root: string, addons: string[]): Project
     codeActionProviders: [],
     initFunctions: [],
     info: [],
+    addonsMeta,
   };
 
   // onReference, onComplete, onDefinition
@@ -306,6 +318,7 @@ export function collectProjectProviders(root: string, addons: string[]): Project
   return result;
 }
 
+export type AddonMeta = { root: string; name: string };
 export interface ProjectProviders {
   definitionProviders: DefinitionResolveFunction[];
   referencesProviders: ReferenceResolveFunction[];
@@ -313,6 +326,7 @@ export interface ProjectProviders {
   codeActionProviders: CodeActionResolveFunction[];
   initFunctions: InitFunction[];
   info: string[];
+  addonsMeta: AddonMeta[];
 }
 
 export interface ExtensionCapabilities {
