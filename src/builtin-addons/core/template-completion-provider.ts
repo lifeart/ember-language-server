@@ -366,7 +366,11 @@ export default class TemplateCompletionProvider {
             });
           });
 
-          return false;
+          if (roots.length) {
+            return false;
+          } else {
+            return true;
+          }
         }
 
         return true;
