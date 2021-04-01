@@ -247,16 +247,11 @@ export function getAddonPathsForType(root: string, collection: 'services' | 'mod
   return existingPaths;
 }
 
-export function getAddonPathsForComponentTemplates(root: string, maybeComponentName: string, appRoot: string, addonName?: string) {
+export function getAddonPathsForComponentTemplates(root: string, maybeComponentName: string) {
   const items: string[] = [];
-  let roots = items.concat(mProjectAddonsRoots(root), mProjectInRepoAddonsRoots(root), mProjectInRepoAddonsRoots(path.join(root, appRoot)));
+  const roots = items.concat(mProjectAddonsRoots(root), mProjectInRepoAddonsRoots(root));
   let existingPaths: string[] = [];
   let hasValidPath = false;
-
-  // if addonName is present then only iterate over the root with that addon
-  if (addonName) {
-    roots = roots.filter((rootItem) => rootItem.includes(addonName));
-  }
 
   roots.forEach((rootPath: string) => {
     if (hasValidPath) {

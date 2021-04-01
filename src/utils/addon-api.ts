@@ -121,6 +121,7 @@ export function initBuiltinProviders(): ProjectProviders {
       typedTemplatesCodeAction.onInit.bind(typedTemplatesCodeAction),
       templateCompletion.initRegistry.bind(templateCompletion),
       scriptCompletion.initRegistry.bind(scriptCompletion),
+      templateDefinition.onInit.bind(templateDefinition),
     ],
     info: [],
     addonsMeta: [],

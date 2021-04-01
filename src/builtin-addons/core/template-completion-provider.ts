@@ -40,7 +40,6 @@ import {
 } from '../../utils/layout-helpers';
 
 import { normalizeToAngleBracketComponent, normalizeToClassicComponent } from '../../utils/normalizers';
-import { getAppRootFromConfig, mProjectRoot } from '../../utils/common-helpers';
 import { getTemplateBlocks } from '../../utils/template-tokens-collector';
 import { ASTNode } from 'ast-types';
 import { ASTv1 } from '@glimmer/syntax';
@@ -89,20 +88,17 @@ export default class TemplateCompletionProvider {
       this.hasNamespaceSupport = hasNamespaceSupport(project.root);
       const initStartTime = Date.now();
 
-      const appRoot = await getAppRootFromConfig(_);
-      const prjRoot = mProjectRoot(_.projectRoots, project.root, appRoot);
-
       mListHelpers(project.root);
       mListModifiers(project.root);
       mListRoutes(project.root);
       mListComponents(project.root);
-      mGetProjectAddonsInfo(prjRoot, appRoot);
+      mGetProjectAddonsInfo(project.root);
       logInfo(project.root + ': registry initialized in ' + (Date.now() - initStartTime) + 'ms');
     } catch (e) {
       logError(e);
     }
   }
-  getAllAngleBracketComponents(root: string, uri: string, appRoot: string) {
+  getAllAngleBracketComponents(root: string, uri: string) {
     const items: CompletionItem[] = [];
 
     return uniqBy(
@@ -112,7 +108,7 @@ export default class TemplateCompletionProvider {
           mListComponents(root),
           mListPodsComponents(root),
           mListMURouteLevelComponents(root, uri),
-          mGetProjectAddonsInfo(root, appRoot).filter(({ detail }: { detail: string }) => {
+          mGetProjectAddonsInfo(root).filter(({ detail }: { detail: string }) => {
             return detail === 'component';
           })
         )
@@ -129,35 +125,35 @@ export default class TemplateCompletionProvider {
 
     return candidates;
   }
-  getMustachePathCandidates(root: string, appRoot: string) {
+  getMustachePathCandidates(root: string) {
     const candidates: CompletionItem[] = [
       ...mListComponents(root),
       ...mListMUComponents(root),
       ...mListPodsComponents(root),
       ...mListHelpers(root),
-      ...mGetProjectAddonsInfo(root, appRoot).filter(({ detail }: { detail: string }) => {
+      ...mGetProjectAddonsInfo(root).filter(({ detail }: { detail: string }) => {
         return detail === 'component' || detail === 'helper';
       }),
     ];
 
     return candidates;
   }
-  getBlockPathCandidates(root: string, appRoot: string) {
+  getBlockPathCandidates(root: string) {
     const candidates: CompletionItem[] = [
       ...mListComponents(root),
       ...mListMUComponents(root),
       ...mListPodsComponents(root),
-      ...mGetProjectAddonsInfo(root, appRoot).filter(({ detail }: { detail: string }) => {
+      ...mGetProjectAddonsInfo(root).filter(({ detail }: { detail: string }) => {
         return detail === 'component';
       }),
     ];
 
     return candidates;
   }
-  getSubExpressionPathCandidates(root: string, appRoot: string) {
+  getSubExpressionPathCandidates(root: string) {
     const candidates: CompletionItem[] = [
       ...mListHelpers(root),
-      ...mGetProjectAddonsInfo(root, appRoot).filter(({ detail }: { detail: string }) => {
+      ...mGetProjectAddonsInfo(root).filter(({ detail }: { detail: string }) => {
         return detail === 'helper';
       }),
     ];
@@ -180,12 +176,12 @@ export default class TemplateCompletionProvider {
 
     return scopedValues;
   }
-  getParentComponentYields(root: string, focusPath: ASTNode & { tag: string }, appRoot: string) {
+  getParentComponentYields(root: string, focusPath: ASTNode & { tag: string }) {
     if (focusPath.type !== 'ElementNode') {
       return [];
     }
 
-    const paths = provideComponentTemplatePaths(root, focusPath.tag, appRoot).filter((p) => fs.existsSync(p));
+    const paths = provideComponentTemplatePaths(root, focusPath.tag).filter((p) => fs.existsSync(p));
 
     if (!paths.length) {
       return [];
@@ -214,21 +210,18 @@ export default class TemplateCompletionProvider {
     const focusPath = params.focusPath;
     const uri = params.textDocument.uri;
     const originalText = params.originalText || '';
-    const appRoot = await getAppRootFromConfig(params.server);
-
-    root = mProjectRoot(params.server.projectRoots, root, appRoot);
 
     try {
       if (isNamedBlockName(focusPath)) {
         log('isNamedBlockName');
         // <:main>
-        const yields = this.getParentComponentYields(root, focusPath.parent, appRoot);
+        const yields = this.getParentComponentYields(root, focusPath.parent);
 
         completions.push(...yields);
       } else if (isAngleComponentPath(focusPath) && !isNamedBlockName(focusPath)) {
         log('isAngleComponentPath');
         // <Foo>
-        const candidates = this.getAllAngleBracketComponents(root, uri, appRoot);
+        const candidates = this.getAllAngleBracketComponents(root, uri);
         const scopedValues = this.getScopedValues(focusPath);
 
         log(candidates, scopedValues);
@@ -244,7 +237,7 @@ export default class TemplateCompletionProvider {
           !maybeComponentName.includes('.');
 
         if (isValidComponent) {
-          const tpls: string[] = provideComponentTemplatePaths(root, maybeComponentName, appRoot);
+          const tpls: string[] = provideComponentTemplatePaths(root, maybeComponentName);
           const existingTpls = tpls.filter(fs.existsSync);
 
           if (existingTpls.length) {
@@ -288,7 +281,7 @@ export default class TemplateCompletionProvider {
       } else if (isMustachePath(focusPath)) {
         // {{foo-bar?}}
         log('isMustachePath');
-        const candidates = this.getMustachePathCandidates(root, appRoot);
+        const candidates = this.getMustachePathCandidates(root);
         const localCandidates = this.getLocalPathExpressionCandidates(root, uri, originalText);
 
         if (isScopedPathExpression(focusPath)) {
@@ -303,7 +296,7 @@ export default class TemplateCompletionProvider {
       } else if (isBlockPath(focusPath)) {
         // {{#foo-bar?}} {{/foo-bar}}
         log('isBlockPath');
-        const candidates = this.getBlockPathCandidates(root, appRoot);
+        const candidates = this.getBlockPathCandidates(root);
 
         if (isScopedPathExpression(focusPath)) {
           const scopedValues = this.getScopedValues(focusPath);
@@ -316,7 +309,7 @@ export default class TemplateCompletionProvider {
       } else if (isSubExpressionPath(focusPath)) {
         // {{foo-bar name=(subexpr? )}}
         log('isSubExpressionPath');
-        const candidates = this.getSubExpressionPathCandidates(root, appRoot);
+        const candidates = this.getSubExpressionPathCandidates(root);
 
         completions.push(...uniqBy(candidates, 'label'));
         completions.push(...emberSubExpressionItems);
@@ -340,7 +333,7 @@ export default class TemplateCompletionProvider {
         completions.push(...uniqBy(mListRoutes(root), 'label'));
       } else if (isModifierPath(focusPath)) {
         log('isModifierPath');
-        const addonModifiers = mGetProjectAddonsInfo(root, appRoot).filter(({ detail }: { detail: string }) => {
+        const addonModifiers = mGetProjectAddonsInfo(root).filter(({ detail }: { detail: string }) => {
           return detail === 'modifier';
         });
 
