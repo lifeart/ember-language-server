@@ -346,8 +346,6 @@ export default class TemplateCompletionProvider {
     if (this.hasNamespaceSupport) {
       const registry = this.server.getRegistry(this.project.root);
 
-      console.log('this.project.addonsMeta', this.project.addonsMeta);
-      console.log('projectRoot', this.project.root);
       completions.forEach((item) => {
         if (item.detail === 'component') {
           const paths = registry.component[normalizeToClassicComponent(item.label)] || [];
@@ -365,8 +363,6 @@ export default class TemplateCompletionProvider {
           }
         }
       });
-    } else {
-      console.log('no namespace support');
     }
 
     return completions;
