@@ -311,9 +311,13 @@ export default class TemplateDefinitionProvider {
       return path.join(...pathParts.filter((part: any) => !!part));
     });
 
-    let paths = [];
+    let paths = [...getPathsForComponentScripts(root, maybeComponentName), ...getPathsForComponentTemplates(root, maybeComponentName), ...helpers].filter(
+      fs.existsSync
+    );
 
-    paths = getAddonPathsForComponentTemplates(root, maybeComponentName);
+    if (!paths.length) {
+      paths = mAddonPathsForComponentTemplates(root, maybeComponentName);
+    }
 
     if (addonName) {
       const addonMeta = this.project.addonsMeta.find((el) => el.name === addonName);
@@ -323,12 +327,6 @@ export default class TemplateDefinitionProvider {
           return p.startsWith(addonMeta.root);
         });
       }
-    }
-
-    if (!paths.length) {
-      paths = [...getPathsForComponentScripts(root, maybeComponentName), ...getPathsForComponentTemplates(root, maybeComponentName), ...helpers].filter(
-        fs.existsSync
-      );
     }
 
     return pathsToLocations(...(paths.length > 1 ? paths.filter(isTemplatePath) : paths));
