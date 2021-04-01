@@ -361,7 +361,7 @@ export default class TemplateCompletionProvider {
             extraCompletions.push({
               ...item,
               ...{
-                label: `${normalizeToAngleBracketComponent(r.root)}$${item.label}`,
+                label: `${normalizeToAngleBracketComponent(r.name)}$${item.label}`,
               },
             });
           });
