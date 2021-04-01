@@ -353,17 +353,27 @@ export default class TemplateCompletionProvider {
     if (this.hasNamespaceSupport) {
       const registry = this.server.getRegistry(this.project.root);
 
+      console.log('this.project.addonsMeta', this.project.addonsMeta);
+      console.log('projectRoot', this.project.root);
       completions.forEach((item) => {
         if (item.detail === 'component') {
           const paths = registry.component[normalizeToClassicComponent(item.label)] || [];
+          const roots = this.project.addonsMeta
+            .filter(({ root }) => {
+              return paths.find((p) => p.startsWith(root));
+            })
+            .sort((a, b) => {
+              return b.root.length - a.root.length;
+            });
+          const closestRoot: null | string = roots.length ? roots[0].name : null;
 
-          this.project.addonsMeta.forEach(({ name, root }) => {
-            if (paths.includes(root)) {
-              item.label = `${name}$${item.label}`;
-            }
-          });
+          if (closestRoot !== null) {
+            item.label = `${normalizeToAngleBracketComponent(closestRoot)}$${item.label}`;
+          }
         }
       });
+    } else {
+      console.log('no namespace support');
     }
 
     return completions;

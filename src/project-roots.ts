@@ -100,7 +100,7 @@ export class Project {
   }
   constructor(public readonly root: string, addons: string[]) {
     this.providers = collectProjectProviders(root, addons);
-    this.addonsMeta = this.providers.addonsMeta;
+    this.addonsMeta = this.providers.addonsMeta.filter((el) => el.root !== this.root);
     this.builtinProviders = initBuiltinProviders();
     const maybePrefix = getPodModulePrefix(root);
 
