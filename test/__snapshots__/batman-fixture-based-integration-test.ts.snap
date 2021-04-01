@@ -22,3 +22,21 @@ Array [
   },
 ]
 `;
+
+exports[`With \`batman project\` initialized on server Definition request return proper component location from batman syntax component name 1`] = `
+Array [
+  Object {
+    "range": Object {
+      "end": Object {
+        "character": 0,
+        "line": 0,
+      },
+      "start": Object {
+        "character": 0,
+        "line": 0,
+      },
+    },
+    "uri": "/lib/foo/addon/templates/components/bar.hbs",
+  },
+]
+`;

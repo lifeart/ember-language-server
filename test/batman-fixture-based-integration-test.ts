@@ -1,10 +1,10 @@
 import * as cp from 'child_process';
 import * as path from 'path';
 import { URI } from 'vscode-uri';
-import { startServer, initServer, reloadProjects, openFile } from './test_helpers/integration-helpers';
+import { startServer, initServer, reloadProjects, openFile, normalizeUri } from './test_helpers/integration-helpers';
 import { createMessageConnection, MessageConnection, Logger, StreamMessageReader, StreamMessageWriter } from 'vscode-jsonrpc/node';
 
-import { CompletionRequest } from 'vscode-languageserver-protocol/node';
+import { CompletionRequest, DefinitionRequest } from 'vscode-languageserver-protocol/node';
 
 describe('With `batman project` initialized on server', () => {
   let connection: MessageConnection;
@@ -45,7 +45,6 @@ describe('With `batman project` initialized on server', () => {
   });
 
   describe('Completion request', () => {
-    jest.setTimeout(15000);
     it('returns all angle-bracket in a element expression for in repo addons with batman syntax', async () => {
       const applicationTemplatePath = path.join(__dirname, 'fixtures', 'batman', 'app', 'templates', 'batman-completion.hbs');
       const params = {
@@ -61,6 +60,30 @@ describe('With `batman project` initialized on server', () => {
       openFile(connection, applicationTemplatePath);
 
       const response = await connection.sendRequest(CompletionRequest.method, params);
+
+      expect(response).toMatchSnapshot();
+    });
+  });
+
+  describe('Definition request', () => {
+    it('return proper component location from batman syntax component name', async () => {
+      const base = path.join(__dirname, 'fixtures', 'batman');
+      const applicationTemplatePath = path.join(base, 'app', 'templates', 'batman-definition.hbs');
+      const params = {
+        textDocument: {
+          uri: URI.file(applicationTemplatePath).toString(),
+        },
+        position: {
+          line: 0,
+          character: 2,
+        },
+      };
+
+      openFile(connection, applicationTemplatePath);
+
+      let response = await connection.sendRequest(DefinitionRequest.method, params);
+
+      response = normalizeUri(response, base);
 
       expect(response).toMatchSnapshot();
     });
