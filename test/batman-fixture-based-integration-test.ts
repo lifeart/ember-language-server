@@ -88,4 +88,26 @@ describe('With `batman project` initialized on server', () => {
       expect(response).toMatchSnapshot();
     });
   });
+
+  it('return proper import location from in-repo addon', async () => {
+    const base = path.join(__dirname, 'fixtures', 'batman');
+    const applicationTemplatePath = path.join(base, 'app', 'components', 'another-awesome-component.js');
+    const params = {
+      textDocument: {
+        uri: URI.file(applicationTemplatePath).toString(),
+      },
+      position: {
+        line: 0,
+        character: 18,
+      },
+    };
+
+    openFile(connection, applicationTemplatePath);
+
+    let response = await connection.sendRequest(DefinitionRequest.method, params);
+
+    response = normalizeUri(response, base);
+
+    expect(response).toMatchSnapshot();
+  });
 });

@@ -40,3 +40,21 @@ Array [
   },
 ]
 `;
+
+exports[`With \`batman project\` initialized on server return proper import location from in-repo addon 1`] = `
+Array [
+  Object {
+    "range": Object {
+      "end": Object {
+        "character": 0,
+        "line": 0,
+      },
+      "start": Object {
+        "character": 0,
+        "line": 0,
+      },
+    },
+    "uri": "/lib/foo/app/components/bar.js",
+  },
+]
+`;
