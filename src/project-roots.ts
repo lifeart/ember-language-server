@@ -44,8 +44,8 @@ export class Project {
   get roots() {
     const mainRoot = this.root;
     const otherRoots = this.addonsMeta.map((meta) => meta.root);
-    // because all searches based on "startsWith", we could omit roots in same namespace,
-    // like {root/a, root/b}, because we wil get results of it from root itself
+    // because all registry searches based on "startsWith", we could omit roots in same namespace,
+    // like {root/a, root/b}, because we will get results of it from {root} itself
     const differentRoots = otherRoots.filter((root) => !root.startsWith(mainRoot));
 
     return [mainRoot, ...differentRoots];
