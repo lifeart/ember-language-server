@@ -166,9 +166,29 @@ export default class TemplateLinter {
         }
       }
 
-      const linterPath = await (Files.resolveModulePath(project.root, 'ember-template-lint', nodePath, () => {
+      let linterPath = await (Files.resolveModulePath(project.root, 'ember-template-lint', nodePath, () => {
         /* intentially empty default callback */
-      }) as Promise<any>);
+      }) as Promise<string | null>);
+
+      if (!linterPath) {
+        const closestPaths = ['..', '../..', '../../..'];
+
+        while (closestPaths.length) {
+          try {
+            const part = closestPaths.shift() as string;
+
+            linterPath = await (Files.resolveModulePath(path.join(project.root, part), 'ember-template-lint', nodePath, () => {
+              /* intentially empty default callback */
+            }) as Promise<string | null>);
+
+            if (linterPath) {
+              break;
+            }
+          } catch {
+            // eol
+          }
+        }
+      }
 
       if (!linterPath) {
         return;
