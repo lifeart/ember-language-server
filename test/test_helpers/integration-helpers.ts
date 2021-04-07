@@ -1,9 +1,12 @@
+/* eslint-disable semi */
 import * as path from 'path';
 import * as fs from 'fs';
 import { createTempDir } from 'broccoli-test-helper';
 import { URI } from 'vscode-uri';
 import { MessageConnection } from 'vscode-jsonrpc/node';
 import * as spawn from 'cross-spawn';
+import { set } from 'lodash';
+
 import {
   DidOpenTextDocumentNotification,
   InitializeRequest,
@@ -47,6 +50,35 @@ export async function initFileStructure(files) {
   };
 }
 
+type RecursiveRecord<T> = Record<string, string | T>;
+
+export function normalizeToFs(files: RecursiveRecord<string | RecursiveRecord<string>>): RecursiveRecord<string | RecursiveRecord<string>> {
+  const newShape = {};
+
+  Object.keys(files).forEach((key) => {
+    const parts = key.split('/');
+    const isRef = typeof files[key] !== 'string';
+    const value = isRef ? normalizeToFs(files[key as keyof typeof files] as RecursiveRecord<string>) : files[key];
+    const isFilePath = key.includes('.');
+
+    if (isFilePath) {
+      const fileName = parts.pop();
+
+      if (parts.length) {
+        set(newShape, parts.join('.'), {
+          [fileName]: value,
+        });
+      } else {
+        newShape[fileName] = value;
+      }
+    } else {
+      set(newShape, parts.join('.'), value);
+    }
+  });
+
+  return newShape;
+}
+
 export async function createProject(
   files,
   connection: MessageConnection,
@@ -54,7 +86,7 @@ export async function createProject(
 ): Promise<{ normalizedPath: string; result: UnknownResult; destroy(): void }> {
   const dir = await createTempDir();
 
-  dir.write(files);
+  dir.write(normalizeToFs(files));
   const normalizedPath = projectName ? path.normalize(path.join(dir.path(), projectName)) : path.normalize(dir.path());
 
   const params = {
