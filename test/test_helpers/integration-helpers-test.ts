@@ -1,4 +1,4 @@
-import { normalizeToFs } from './integration-helpers';
+import { normalizeToFs, flattenFsProject } from './integration-helpers';
 
 describe('normalizeToFs', () => {
   it('support existing cases', () => {
@@ -41,5 +41,25 @@ describe('normalizeToFs', () => {
     };
 
     expect(normalizeToFs(files)).toStrictEqual(expectedObj);
+  });
+});
+
+describe('flattenFsProject', () => {
+  it('works as expected', () => {
+    const input = {
+      a: {
+        b: {
+          c: 'd',
+          e: 'f',
+        },
+      },
+    };
+
+    const output = {
+      'a/b/c': 'd',
+      'a/b/e': 'f',
+    };
+
+    expect(flattenFsProject(input)).toStrictEqual(output);
   });
 });

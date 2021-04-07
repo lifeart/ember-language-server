@@ -52,6 +52,65 @@ export async function initFileStructure(files) {
 
 type RecursiveRecord<T> = Record<string, string | T>;
 
+export function flattenFsProject(obj: Record<string, unknown | string> | string) {
+  if (typeof obj === 'string') {
+    return obj;
+  }
+
+  const result = {};
+
+  Object.keys(obj).forEach((key) => {
+    if (typeof obj[key] === 'string') {
+      result[`${key}`] = obj[key];
+    } else if (typeof obj[key] === 'object') {
+      Object.keys(obj[key]).forEach((subKey) => {
+        result[`${key}/${subKey}`] = flattenFsProject(obj[key][subKey]);
+      });
+    }
+  });
+
+  const isAllNestedKeysConverted = Object.values(result).every((value) => typeof value === 'string');
+
+  if (!isAllNestedKeysConverted) {
+    return flattenFsProject(result);
+  }
+
+  return result;
+}
+
+export function fsProjectToObject(projectRoot: string) {
+  const folder = fs.readdirSync(projectRoot, {
+    withFileTypes: true,
+  });
+  const result = {};
+  const ignoredFileExtensions = ['md', 'html', 'css', 'txt'];
+
+  folder.forEach((file) => {
+    const fsPath = path.join(projectRoot, file.name);
+
+    if (file.isDirectory()) {
+      result[file.name] = fsProjectToObject(fsPath);
+    } else if (file.isFile() && !file.name.startsWith('.') && !(file.name === 'project.json')) {
+      const ext = file.name.split('.').pop();
+
+      if (ignoredFileExtensions.includes(ext)) {
+        return;
+      }
+
+      result[file.name] = fs.readFileSync(fsPath, 'utf8');
+    }
+  });
+
+  return result;
+}
+
+export function fsProjectToJSON(projectRoot: string) {
+  const obj = fsProjectToObject(projectRoot);
+  const json = flattenFsProject(obj);
+
+  fs.writeFileSync(path.join(projectRoot, 'project.json'), JSON.stringify(json, null, 2), { encoding: 'utf8' });
+}
+
 export function normalizeToFs(files: RecursiveRecord<string | RecursiveRecord<string>>): RecursiveRecord<string | RecursiveRecord<string>> {
   const newShape = {};
 
