@@ -171,21 +171,26 @@ export async function createProject(
   files,
   connection: MessageConnection,
   projectName?: string | string[],
-  ignoreRoot?: string
+  config?: { local: { addons: string[]; ignoredProjects: string[] } }
 ): Promise<{ normalizedPath: string | string[]; originalPath: string; result: UnknownResult | UnknownResult[]; destroy(): void }> {
   const dir = await createTempDir();
 
   dir.write(normalizeToFs(files));
 
-  if (ignoreRoot) {
-    const configParams = {
-      command: 'els.setConfig',
-      arguments: [{ local: { addons: [], ignoreRoots: [ignoreRoot] } }],
-    };
+  if (config && Array.isArray(config.local.ignoredProjects)) {
+    const ignoredProjects = config.local.ignoredProjects;
 
-    (await connection.sendRequest(ExecuteCommandRequest.type, configParams)) as {
-      registry: Registry;
-    };
+    for (let i = 0; i < ignoredProjects.length; i++) {
+      const ignoredProject = ignoredProjects[i];
+      const configParams = {
+        command: 'els.setConfig',
+        arguments: [{ local: { addons: [], ignoredProjects: [ignoredProject] } }],
+      };
+
+      (await connection.sendRequest(ExecuteCommandRequest.type, configParams)) as {
+        registry: Registry;
+      };
+    }
   }
 
   if (Array.isArray(projectName)) {
@@ -242,8 +247,16 @@ function _buildResponse(response: unknown, normalizedPath: string, result: Unkno
   };
 }
 
-export async function getResult(reqType, connection: MessageConnection, files, fileToInspect, position, projectName?: string | string[], ignoreRoot?: string) {
-  const { normalizedPath, originalPath, destroy, result } = await createProject(files, connection, projectName, ignoreRoot);
+export async function getResult(
+  reqType,
+  connection: MessageConnection,
+  files,
+  fileToInspect,
+  position,
+  projectName?: string | string[],
+  config?: { local: { addons: string[]; ignoredProjects: string[] } }
+) {
+  const { normalizedPath, originalPath, destroy, result } = await createProject(files, connection, projectName, config);
   const modelPath = path.join(originalPath, fileToInspect);
 
   if (!fs.existsSync(modelPath)) {
