@@ -180,17 +180,12 @@ export async function createProject(
   if (config && Array.isArray(config.local.ignoredProjects)) {
     const ignoredProjects = config.local.ignoredProjects;
 
-    for (let i = 0; i < ignoredProjects.length; i++) {
-      const ignoredProject = ignoredProjects[i];
-      const configParams = {
-        command: 'els.setConfig',
-        arguments: [{ local: { addons: [], ignoredProjects: [ignoredProject] } }],
-      };
+    const configParams = {
+      command: 'els.setConfig',
+      arguments: [{ local: { addons: [], ignoredProjects: ignoredProjects } }],
+    };
 
-      (await connection.sendRequest(ExecuteCommandRequest.type, configParams)) as {
-        registry: Registry;
-      };
-    }
+    await connection.sendRequest(ExecuteCommandRequest.type, configParams);
   }
 
   if (Array.isArray(projectName)) {
