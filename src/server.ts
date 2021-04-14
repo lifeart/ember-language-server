@@ -54,6 +54,7 @@ import { Usage, findRelatedFiles } from './utils/usages-api';
 import { URI } from 'vscode-uri';
 import { MatchResultType } from './utils/path-matcher';
 import { FileChangeType } from 'vscode-languageserver/node';
+import { debounce } from 'lodash';
 
 export default class Server {
   initializers: any[] = [];
@@ -264,11 +265,14 @@ export default class Server {
 
     this.documents.listen(this.connection);
 
+    this.onDidChangeContent = this.onDidChangeContent.bind(this);
+    this._onDidChangeContent = this._onDidChangeContent.bind(this);
+
     // Bind event handlers
     this.connection.onInitialize(this.onInitialize.bind(this));
     this.connection.onInitialized(this.onInitialized.bind(this));
-    this.documents.onDidChangeContent(this.onDidChangeContent.bind(this));
-    this.documents.onDidOpen(this.onDidChangeContent.bind(this));
+    this.documents.onDidChangeContent(this.onDidChangeContent);
+    this.documents.onDidOpen(this.onDidChangeContent);
     this.connection.onDidChangeWatchedFiles(this.onDidChangeWatchedFiles.bind(this));
     this.connection.onDocumentSymbol(this.onDocumentSymbol.bind(this));
     this.connection.onDefinition(this.definitionProvider.handler);
@@ -443,23 +447,24 @@ export default class Server {
     return results;
   }
 
+  lastChangeEvent!: TextDocumentChangeEvent<TextDocument>;
+
   private async onDidChangeContent(change: TextDocumentChangeEvent<TextDocument>) {
+    this.lastChangeEvent = change;
+    debounce(this._onDidChangeContent, 250);
+  }
+
+  private async _onDidChangeContent() {
     // this.setStatusText('did-change');
+    const change = this.lastChangeEvent;
 
     const lintResults = await this.templateLinter.lint(change.document);
-    const results: Diagnostic[] = [];
 
     if (Array.isArray(lintResults)) {
-      lintResults.forEach((result) => {
-        results.push(result);
-      });
+      this.connection.sendDiagnostics({ version: change.document.version, uri: change.document.uri, diagnostics: lintResults });
     }
 
     const addonResults = await this.runAddonLinters(change.document);
-
-    addonResults.forEach((result) => {
-      results.push(result);
-    });
 
     const project = this.projectRoots.projectForUri(change.document.uri);
 
@@ -467,7 +472,7 @@ export default class Server {
       project.trackChange(change.document.uri, FileChangeType.Changed);
     }
 
-    this.connection.sendDiagnostics({ uri: change.document.uri, diagnostics: results });
+    this.connection.sendDiagnostics({ version: change.document.version, uri: change.document.uri, diagnostics: addonResults });
   }
 
   private onDidChangeWatchedFiles(items: DidChangeWatchedFilesParams) {
