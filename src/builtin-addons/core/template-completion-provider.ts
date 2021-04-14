@@ -135,7 +135,7 @@ export default class TemplateCompletionProvider {
   project!: Project;
   server!: Server;
   hasNamespaceSupport = false;
-  meta: { [key: string]: boolean } = {
+  meta = {
     projectAddonsInfoInitialized: false,
     helpersRegistryInitialized: false,
     modifiersRegistryInitialized: false,
@@ -144,7 +144,7 @@ export default class TemplateCompletionProvider {
     muComponentsRegistryInitialized: false,
     routesRegistryInitialized: false,
   };
-  enableRegistryCache(value: string) {
+  enableRegistryCache(value: keyof typeof TemplateCompletionProvider.prototype['meta']) {
     if (this.server.flags.hasExternalFileWatcher) {
       this.meta[value] = true;
     }
