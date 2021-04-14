@@ -517,18 +517,67 @@ export default class TemplateCompletionProvider {
       } else if (isLinkToTarget(focusPath)) {
         // {{link-to "name" "target?"}}, {{#link-to "target?"}} {{/link-to}}
         log('isLinkToTarget');
-        completions.push(...uniqBy(mListRoutes(root), 'label'));
+
+        if (!this.meta.routesRegistryInitialized) {
+          mListRoutes(root);
+          this.enableRegistryCache('routesRegistryInitialized');
+        }
+
+        const registry = this.server.getRegistry(this.project.roots);
+
+        const results = Object.keys(registry.routePath).map((name) => {
+          return {
+            label: name,
+            kind: CompletionItemKind.File,
+            detail: 'route',
+          };
+        });
+
+        completions.push(...results);
       } else if (isLinkComponentRouteTarget(focusPath)) {
         // <LinkTo @route="foo.." />
         log('isLinkComponentRouteTarget');
-        completions.push(...uniqBy(mListRoutes(root), 'label'));
-      } else if (isModifierPath(focusPath)) {
-        log('isModifierPath');
-        const addonModifiers = mGetProjectAddonsInfo(root).filter(({ detail }: { detail: string }) => {
-          return detail === 'modifier';
+
+        if (!this.meta.routesRegistryInitialized) {
+          mListRoutes(root);
+          this.enableRegistryCache('routesRegistryInitialized');
+        }
+
+        const registry = this.server.getRegistry(this.project.roots);
+
+        const results = Object.keys(registry.routePath).map((name) => {
+          return {
+            label: name,
+            kind: CompletionItemKind.File,
+            detail: 'route',
+          };
         });
 
-        completions.push(...uniqBy([...emberModifierItems, ...mListModifiers(root), ...addonModifiers, ...builtinModifiers()], 'label'));
+        completions.push(...results);
+      } else if (isModifierPath(focusPath)) {
+        log('isModifierPath');
+
+        if (!this.meta.modifiersRegistryInitialized) {
+          mListModifiers(root);
+          this.enableRegistryCache('modifiersRegistryInitialized');
+        }
+
+        if (!this.meta.projectAddonsInfoInitialized) {
+          mGetProjectAddonsInfo(root);
+          this.enableRegistryCache('projectAddonsInfoInitialized');
+        }
+
+        const registry = this.server.getRegistry(this.project.roots);
+
+        const resolvedModifiers = Object.keys(registry.modifier).map((name) => {
+          return {
+            label: name,
+            kind: CompletionItemKind.Method,
+            detail: 'modifier',
+          };
+        });
+
+        completions.push(...uniqBy([...emberModifierItems, ...resolvedModifiers, ...builtinModifiers()], 'label'));
       }
     } catch (e) {
       log('error', e);
