@@ -135,6 +135,18 @@ export default class TemplateCompletionProvider {
   project!: Project;
   server!: Server;
   hasNamespaceSupport = false;
+  meta: { [key: string]: boolean } = {
+    projectAddonsInfoInitialized: false,
+    helpersRegistryInitialized: false,
+    modifiersRegistryInitialized: false,
+    componentsRegistryInitialized: false,
+    routesRegistryInitialized: false,
+  };
+  enableRegistryCache(value: string) {
+    if (this.server.flags.hasExternalFileWatcher) {
+      this.meta[value] = true;
+    }
+  }
   async initRegistry(_: Server, project: Project) {
     this.project = project;
     this.server = _;
@@ -145,10 +157,20 @@ export default class TemplateCompletionProvider {
         const initStartTime = Date.now();
 
         mListHelpers(project.root);
+        this.enableRegistryCache('helpersRegistryInitialized');
+
         mListModifiers(project.root);
+        this.enableRegistryCache('modifiersRegistryInitialized');
+
         mListRoutes(project.root);
+        this.enableRegistryCache('routesRegistryInitialized');
+
         mListComponents(project.root);
+        this.enableRegistryCache('componentsRegistryInitialized');
+
         mGetProjectAddonsInfo(project.root);
+        this.enableRegistryCache('projectAddonsInfoInitialized');
+
         logInfo(project.root + ': registry initialized in ' + (Date.now() - initStartTime) + 'ms');
       } catch (e) {
         logError(e);
