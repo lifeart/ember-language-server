@@ -232,29 +232,82 @@ export default class TemplateCompletionProvider {
     return candidates;
   }
   getMustachePathCandidates(root: string) {
+    if (!this.meta.projectAddonsInfoInitialized) {
+      mGetProjectAddonsInfo(root);
+      this.enableRegistryCache('projectAddonsInfoInitialized');
+    }
+
+    if (!this.meta.muComponentsRegistryInitialized) {
+      mListMUComponents(root);
+      this.enableRegistryCache('muComponentsRegistryInitialized');
+    }
+
+    if (!this.meta.componentsRegistryInitialized) {
+      mListComponents(root);
+      this.enableRegistryCache('componentsRegistryInitialized');
+    }
+
+    if (!this.meta.podComponentsRegistryInitialized) {
+      mListPodsComponents(root);
+      this.enableRegistryCache('podComponentsRegistryInitialized');
+    }
+
+    if (!this.meta.helpersRegistryInitialized) {
+      mListHelpers(root);
+      this.enableRegistryCache('helpersRegistryInitialized');
+    }
+
+    const registry = this.server.getRegistry(this.project.roots);
+
     const candidates: CompletionItem[] = [
-      ...mListComponents(root),
-      ...mListMUComponents(root),
-      ...mListPodsComponents(root),
-      ...mListHelpers(root),
-      ...mGetProjectAddonsInfo(root).filter(({ detail }: { detail: string }) => {
-        return detail === 'component' || detail === 'helper';
+      ...Object.keys(registry.component).map((rawName) => {
+        return {
+          label: rawName,
+          kind: CompletionItemKind.Class,
+          detail: 'component',
+        };
+      }),
+      ...Object.keys(registry.helper).map((rawName) => {
+        return {
+          label: rawName,
+          kind: CompletionItemKind.Function,
+          detail: 'helper',
+        };
       }),
     ];
 
     return candidates;
   }
-  getBlockPathCandidates(root: string) {
-    const candidates: CompletionItem[] = [
-      ...mListComponents(root),
-      ...mListMUComponents(root),
-      ...mListPodsComponents(root),
-      ...mGetProjectAddonsInfo(root).filter(({ detail }: { detail: string }) => {
-        return detail === 'component';
-      }),
-    ];
+  getBlockPathCandidates(root: string): CompletionItem[] {
+    if (!this.meta.projectAddonsInfoInitialized) {
+      mGetProjectAddonsInfo(root);
+      this.enableRegistryCache('projectAddonsInfoInitialized');
+    }
 
-    return candidates;
+    if (!this.meta.muComponentsRegistryInitialized) {
+      mListMUComponents(root);
+      this.enableRegistryCache('muComponentsRegistryInitialized');
+    }
+
+    if (!this.meta.componentsRegistryInitialized) {
+      mListComponents(root);
+      this.enableRegistryCache('componentsRegistryInitialized');
+    }
+
+    if (!this.meta.podComponentsRegistryInitialized) {
+      mListPodsComponents(root);
+      this.enableRegistryCache('podComponentsRegistryInitialized');
+    }
+
+    const registry = this.server.getRegistry(this.project.roots);
+
+    return Object.keys(registry.component).map((rawName) => {
+      return {
+        label: rawName,
+        kind: CompletionItemKind.Class,
+        detail: 'component',
+      };
+    });
   }
   getSubExpressionPathCandidates(root: string) {
     if (!this.meta.helpersRegistryInitialized) {
@@ -273,7 +326,7 @@ export default class TemplateCompletionProvider {
       return {
         label: helperName,
         kind: CompletionItemKind.Function,
-        description: 'helper',
+        detail: 'helper',
       };
     });
   }
