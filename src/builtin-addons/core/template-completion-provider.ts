@@ -140,6 +140,8 @@ export default class TemplateCompletionProvider {
     helpersRegistryInitialized: false,
     modifiersRegistryInitialized: false,
     componentsRegistryInitialized: false,
+    podComponentsRegistryInitialized: false,
+    muComponentsRegistryInitialized: false,
     routesRegistryInitialized: false,
   };
   enableRegistryCache(value: string) {
@@ -182,15 +184,38 @@ export default class TemplateCompletionProvider {
   getAllAngleBracketComponents(root: string, uri: string) {
     const items: CompletionItem[] = [];
 
+    if (!this.meta.projectAddonsInfoInitialized) {
+      mGetProjectAddonsInfo(root);
+      this.enableRegistryCache('projectAddonsInfoInitialized');
+    }
+
+    if (!this.meta.muComponentsRegistryInitialized) {
+      mListMUComponents(root);
+      this.enableRegistryCache('muComponentsRegistryInitialized');
+    }
+
+    if (!this.meta.componentsRegistryInitialized) {
+      mListComponents(root);
+      this.enableRegistryCache('componentsRegistryInitialized');
+    }
+
+    if (!this.meta.podComponentsRegistryInitialized) {
+      mListPodsComponents(root);
+      this.enableRegistryCache('podComponentsRegistryInitialized');
+    }
+
+    const registry = this.server.getRegistry(this.project.roots);
+
     return uniqBy(
       items
         .concat(
-          mListMUComponents(root),
-          mListComponents(root),
-          mListPodsComponents(root),
           mListMURouteLevelComponents(root, uri),
-          mGetProjectAddonsInfo(root).filter(({ detail }: { detail: string }) => {
-            return detail === 'component';
+          Object.keys(registry.component).map((rawName) => {
+            return {
+              label: rawName,
+              kind: CompletionItemKind.Class,
+              detail: 'component',
+            };
           })
         )
         .map((item: CompletionItem) => {
@@ -232,14 +257,25 @@ export default class TemplateCompletionProvider {
     return candidates;
   }
   getSubExpressionPathCandidates(root: string) {
-    const candidates: CompletionItem[] = [
-      ...mListHelpers(root),
-      ...mGetProjectAddonsInfo(root).filter(({ detail }: { detail: string }) => {
-        return detail === 'helper';
-      }),
-    ];
+    if (!this.meta.helpersRegistryInitialized) {
+      mListHelpers(root);
+      this.enableRegistryCache('helpersRegistryInitialized');
+    }
 
-    return candidates;
+    if (!this.meta.projectAddonsInfoInitialized) {
+      mGetProjectAddonsInfo(root);
+      this.enableRegistryCache('projectAddonsInfoInitialized');
+    }
+
+    const registry = this.server.getRegistry(this.project.roots);
+
+    return Object.keys(registry.helper).map((helperName) => {
+      return {
+        label: helperName,
+        kind: CompletionItemKind.Function,
+        description: 'helper',
+      };
+    });
   }
   getScopedValues(focusPath: ASTPath) {
     const scopedValues = getLocalScope(focusPath).map(({ name, node, path }) => {
