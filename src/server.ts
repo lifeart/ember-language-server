@@ -137,9 +137,15 @@ export default class Server {
       this.connection.workspace.onDidChangeWorkspaceFolders(this.onDidChangeWorkspaceFolders.bind(this));
     }
 
-    this.executors['els.setConfig'] = async (_, __, [config]: [{ local: { addons: string[]; ignoredProjects: string[] } }]) => {
+    this.executors['els.setConfig'] = async (_, __, [config]: [{ local: { addons: string[]; ignoredProjects: string[]; useBuiltinLinting: boolean } }]) => {
       this.projectRoots.setLocalAddons(config.local.addons);
       this.projectRoots.setIgnoredProjects(config.local.ignoredProjects);
+
+      if (config.local.useBuiltinLinting === false) {
+        this.templateLinter.disable();
+      } else if (config.local.useBuiltinLinting === true) {
+        this.templateLinter.enable();
+      }
 
       if (this.lazyInit) {
         this.executeInitializers();
@@ -460,11 +466,19 @@ export default class Server {
 
     const lintResults = await this.templateLinter.lint(change.document);
 
+    if (change !== this.lastChangeEvent) {
+      return;
+    }
+
     if (Array.isArray(lintResults)) {
       this.connection.sendDiagnostics({ version: change.document.version, uri: change.document.uri, diagnostics: lintResults });
     }
 
     const addonResults = await this.runAddonLinters(change.document);
+
+    if (change !== this.lastChangeEvent) {
+      return;
+    }
 
     const project = this.projectRoots.projectForUri(change.document.uri);
 
