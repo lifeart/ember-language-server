@@ -22,7 +22,7 @@ const mListServices = memoize(listServices, { length: 1, maxAge: 60000 });
 const mListTransforms = memoize(listTransforms, { length: 1, maxAge: 60000 });
 
 export default class ScriptCompletionProvider {
-  meta = {
+  meta: { [key: string]: boolean } = {
     modelsRegistryInitialized: false,
     routesRegistryInitialized: false,
     servicesRegistryInitialized: false,
@@ -31,6 +31,11 @@ export default class ScriptCompletionProvider {
   };
   server!: Server;
   project!: Project;
+  enableRegistryCache(value: string) {
+    if (this.server.flags.hasExternalFileWatcher) {
+      this.meta[value] = true;
+    }
+  }
   async initRegistry(_: Server, project: Project) {
     this.project = project;
     this.server = _;
@@ -40,9 +45,9 @@ export default class ScriptCompletionProvider {
         const initStartTime = Date.now();
 
         mListModels(project.root);
-        this.meta.modelsRegistryInitialized = true;
+        this.enableRegistryCache('modelsRegistryInitialized');
         mListServices(project.root);
-        this.meta.servicesRegistryInitialized = true;
+        this.enableRegistryCache('servicesRegistryInitialized');
         logInfo(project.root + ': script registry initialized in ' + (Date.now() - initStartTime) + 'ms');
       } catch (e) {
         logError(e);
@@ -67,12 +72,12 @@ export default class ScriptCompletionProvider {
 
         if (!this.meta.modelsRegistryInitialized) {
           mListModels(root);
-          this.meta.modelsRegistryInitialized = true;
+          this.enableRegistryCache('modelsRegistryInitialized');
         }
 
         if (!this.meta.projectAddonsInfoInitialized) {
           mGetProjectAddonsInfo(root);
-          this.meta.projectAddonsInfoInitialized = true;
+          this.enableRegistryCache('projectAddonsInfoInitialized');
         }
 
         const registry = this.server.getRegistry(this.project.roots);
@@ -89,12 +94,12 @@ export default class ScriptCompletionProvider {
 
         if (!this.meta.routesRegistryInitialized) {
           mListRoutes(root);
-          this.meta.routesRegistryInitialized = true;
+          this.enableRegistryCache('routesRegistryInitialized');
         }
 
         if (!this.meta.projectAddonsInfoInitialized) {
           mGetProjectAddonsInfo(root);
-          this.meta.projectAddonsInfoInitialized = true;
+          this.enableRegistryCache('projectAddonsInfoInitialized');
         }
 
         const registry = this.server.getRegistry(this.project.roots);
@@ -111,12 +116,12 @@ export default class ScriptCompletionProvider {
 
         if (!this.meta.servicesRegistryInitialized) {
           mListServices(root);
-          this.meta.servicesRegistryInitialized = true;
+          this.enableRegistryCache('servicesRegistryInitialized');
         }
 
         if (!this.meta.projectAddonsInfoInitialized) {
           mGetProjectAddonsInfo(root);
-          this.meta.projectAddonsInfoInitialized = true;
+          this.enableRegistryCache('projectAddonsInfoInitialized');
         }
 
         const registry = this.server.getRegistry(this.project.roots);
@@ -165,12 +170,12 @@ export default class ScriptCompletionProvider {
 
         if (!this.meta.transformsRegistryInitialized) {
           mListTransforms(root);
-          this.meta.transformsRegistryInitialized = true;
+          this.enableRegistryCache('transformsRegistryInitialized');
         }
 
         if (!this.meta.projectAddonsInfoInitialized) {
           mGetProjectAddonsInfo(root);
-          this.meta.projectAddonsInfoInitialized = true;
+          this.enableRegistryCache('projectAddonsInfoInitialized');
         }
 
         const registry = this.server.getRegistry(this.project.roots);
