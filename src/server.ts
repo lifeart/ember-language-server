@@ -55,9 +55,10 @@ import { URI } from 'vscode-uri';
 import { MatchResultType } from './utils/path-matcher';
 import { FileChangeType } from 'vscode-languageserver/node';
 import { debounce } from 'lodash';
+import { Initializer } from './types';
 
 export default class Server {
-  initializers: any[] = [];
+  initializers: Initializer[] = [];
   lazyInit = false;
   // Create a connection for the server. The connection defaults to Node's IPC as a transport, but
   // also supports stdio via command line flag
@@ -129,7 +130,7 @@ export default class Server {
   referenceProvider: ReferenceProvider = new ReferenceProvider(this);
   codeActionProvider: CodeActionProvider = new CodeActionProvider(this);
   executeInitializers() {
-    this.initializers.forEach((cb: any) => cb());
+    this.initializers.forEach((cb) => cb());
     this.initializers = [];
   }
   private onInitialized() {
