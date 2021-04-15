@@ -572,7 +572,7 @@ export default class TemplateCompletionProvider {
         const resolvedModifiers = Object.keys(registry.modifier).map((name) => {
           return {
             label: name,
-            kind: CompletionItemKind.Method,
+            kind: CompletionItemKind.Function,
             detail: 'modifier',
           };
         });

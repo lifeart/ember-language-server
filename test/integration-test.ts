@@ -1474,13 +1474,19 @@ describe('integration', function () {
         }),
       };
 
-      const result = await getResult(CompletionRequest.method, connection, files, 'lib/addon/components/item.hbs', { line: 0, character: 1 }, [
-        '',
+      let result = await getResult(CompletionRequest.method, connection, files, 'lib/addon/components/item.hbs', { line: 0, character: 1 }, [
+        'lib',
         'child-project',
       ]);
 
+      expect(result).toMatchSnapshot();
       expect(result.length).toBe(2);
       expect(result[0].response.length).toBe(1);
+      expect(result[1].response.length).toBe(1);
+
+      result = await getResult(CompletionRequest.method, connection, files, 'lib/addon/components/item.hbs', { line: 0, character: 1 }, ['child-project']);
+
+      expect(result[0].response.length).toBe(3);
     });
 
     it('able to ignore main project in favor of child project', async () => {
