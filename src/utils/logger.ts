@@ -46,16 +46,16 @@ export function safeStringify(obj: unknown, indent = 2) {
   return retVal;
 }
 
-export function log(...args: any[]) {
-  if (!debug || !log_file) {
-    return;
+export function log(...args: unknown[]) {
+  const output = args.map((a) => safeStringify(a)).join(' ');
+
+  if (remoteConsole) {
+    remoteConsole.log(output);
   }
 
-  const output = args
-    .map((a: any) => {
-      return safeStringify(a);
-    })
-    .join(' ');
+  if (!log_file) {
+    return;
+  }
 
   log_file.write('----------------------------------------' + '\r\n');
   log_file.write(util.format(output) + '\r\n');
