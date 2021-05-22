@@ -38,7 +38,7 @@ describe('Usages API', () => {
 
     expect(findRelatedFiles('foo-bar').length).toBe(0);
   });
-  it('should extract component template tokens by giving path for different kinds',  async () => {
+  it('should extract component template tokens by giving path for different kinds', async () => {
     expect(findRelatedFiles('foo-bar').length).toBe(0);
 
     updateTemplateTokens('component', 'foo', createFile('foo.hbs', '<FooBar />'));
