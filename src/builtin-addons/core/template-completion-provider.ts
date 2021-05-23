@@ -37,6 +37,7 @@ import {
   hasNamespaceSupport,
   isRootStartingWithFilePath,
   isScriptPath,
+  isTestFile,
 } from '../../utils/layout-helpers';
 
 import { normalizeToAngleBracketComponent } from '../../utils/normalizers';
@@ -45,7 +46,6 @@ import { ASTNode } from 'ast-types';
 import { ASTv1 } from '@glimmer/syntax';
 import { URI } from 'vscode-uri';
 import { componentsContextData } from './template-context-provider';
-import { isTestFile } from '../../utils/layout-helpers';
 
 const mListModifiers = memoize(listModifiers, { length: 1, maxAge: 60000 }); // 1 second
 const mListComponents = memoize(listComponents, { length: 1, maxAge: 60000 }); // 1 second
