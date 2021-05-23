@@ -4,9 +4,7 @@ import {
   safeWalkSync,
   resolvePackageRoot,
   getPackageJSON,
-  pureComponentName,
   listPodsComponents,
-  listMUComponents,
   listComponents,
   listHelpers,
   listRoutes,
@@ -18,6 +16,7 @@ import * as path from 'path';
 
 import { initFileStructure } from './../test_helpers/integration-helpers';
 import { getRegistryForRoot } from '../../src/utils/registry-api';
+import { Project } from '../../src/project';
 
 describe('definition-helpers', function () {
   describe('isMuApp()', function () {
@@ -57,23 +56,13 @@ describe('definition-helpers', function () {
     });
   });
 
-  describe('pureComponentName()', function () {
-    it('return component name without extension and layout postix', function () {
-      expect(pureComponentName('/foo/bar-baz.js')).toEqual('foo/bar-baz');
-      expect(pureComponentName('/foo/bar-baz.ts')).toEqual('foo/bar-baz');
-      expect(pureComponentName('/foo/bar-baz/component.js')).toEqual('foo/bar-baz');
-      expect(pureComponentName('/foo/bar-baz/component.ts')).toEqual('foo/bar-baz');
-      expect(pureComponentName('/foo/bar-baz/template.hbs')).toEqual('foo/bar-baz');
-      expect(pureComponentName('/foo/bar-baz.hbs')).toEqual('foo/bar-baz');
-      expect(pureComponentName('foo/bar-baz.hbs')).toEqual('foo/bar-baz');
-    });
-  });
-
   describe('listPodsComponents()', function () {
     it('return expected list of components for pods project', function () {
       const root = path.join(__dirname, './../fixtures/pod-project');
 
-      listPodsComponents(root);
+      const project = new Project(root);
+
+      listPodsComponents(project);
       const keys = Object.keys(getRegistryForRoot(root).component);
 
       const hasAllComponentsInRegistry = ['foo-bar-js', 'foo-bar-js', 'foo-bar-ts'].every((el) => {
@@ -81,14 +70,6 @@ describe('definition-helpers', function () {
       });
 
       expect(hasAllComponentsInRegistry).toEqual(true);
-    });
-  });
-
-  describe('listMUComponents()', function () {
-    it('return expected list of components for mu project', function () {
-      const components = listMUComponents(path.join(__dirname, './../fixtures/mu-project'));
-
-      expect(components.map(({ label }: { label: string }) => label)).toEqual(['foo-bar-js', 'foo-bar-js', 'foo-bar-ts']);
     });
   });
 

@@ -441,48 +441,27 @@ export function getProjectAddonsInfo(root: string): void {
     }
 
     if (version === 1) {
-      listComponents(packagePath);
-      listRoutes(packagePath);
-      listHelpers(packagePath);
-      listModels(packagePath);
-      listTransforms(packagePath);
-      listServices(packagePath);
-      listModifiers(packagePath);
+      const localProject = new Project(packagePath);
+
+      listComponents(localProject);
+      listRoutes(localProject);
+      listHelpers(localProject);
+      listModels(localProject);
+      listTransforms(localProject);
+      listServices(localProject);
+      listModifiers(localProject);
     }
   });
 }
 
-// todo - remove pureComponent name usage here prior to project.matchPathToType
-export function pureComponentName(relativePath: string) {
-  const ext = path.extname(relativePath); // .hbs
-
-  if (relativePath.startsWith('/')) {
-    relativePath = relativePath.slice(1);
-  }
-
-  if (relativePath.endsWith(`/template${ext}`)) {
-    return relativePath.replace(`/template${ext}`, '');
-  } else if (relativePath.endsWith(`/component${ext}`)) {
-    return relativePath.replace(`/component${ext}`, '');
-  } else if (relativePath.endsWith(`/helper${ext}`)) {
-    return relativePath.replace(`/helper${ext}`, '');
-  } else if (relativePath.endsWith(`/index${ext}`)) {
-    return relativePath.replace(`/index${ext}`, '');
-  } else if (relativePath.endsWith(`/styles${ext}`)) {
-    return relativePath.replace(`/styles${ext}`, '');
-  } else {
-    return relativePath.replace(ext, '');
-  }
-}
-
-export function listPodsComponents(root: string): void {
-  const podModulePrefix = podModulePrefixForRoot(root);
+export function listPodsComponents(project: Project): void {
+  const podModulePrefix = podModulePrefixForRoot(project.root);
 
   if (podModulePrefix === null) {
     return;
   }
 
-  const entryPath = path.resolve(path.join(root, 'app', podModulePrefix, 'components'));
+  const entryPath = path.resolve(path.join(project.root, 'app', podModulePrefix, 'components'));
 
   const jsPaths = safeWalkSync(entryPath, {
     directories: false,
@@ -490,28 +469,12 @@ export function listPodsComponents(root: string): void {
   });
 
   jsPaths.forEach((filePath: string) => {
-    addToRegistry(pureComponentName(filePath), 'component', [path.join(entryPath, filePath)]);
+    const data = project.matchPathToType(filePath);
+
+    if (data?.type === 'component') {
+      addToRegistry(data.name, data.type, [path.join(entryPath, filePath)]);
+    }
   });
-}
-
-export function listMUComponents(root: string): CompletionItem[] {
-  const entryPath = path.resolve(path.join(root, 'src', 'ui', 'components'));
-  const jsPaths = safeWalkSync(entryPath, {
-    directories: false,
-    globs: ['**/*.{js,ts,hbs}'],
-  });
-
-  const items = jsPaths.map((filePath: string) => {
-    addToRegistry(pureComponentName(filePath), 'component', [path.join(entryPath, filePath)]);
-
-    return {
-      kind: CompletionItemKind.Class,
-      label: pureComponentName(filePath),
-      detail: 'component',
-    };
-  });
-
-  return items;
 }
 
 export function builtinModifiers(): CompletionItem[] {
@@ -530,9 +493,9 @@ export function hasNamespaceSupport(root: string) {
   return hasDep(pack, 'ember-holy-futuristic-template-namespacing-batman');
 }
 
-export function listComponents(_root: string): void {
+export function listComponents(project: Project): void {
   // log('listComponents');
-  const root = path.resolve(_root);
+  const root = path.resolve(project.root);
   const scriptEntry = path.join(root, 'app', 'components');
   const templateEntry = path.join(root, 'app', 'templates', 'components');
   const addonComponents = path.join(root, 'addon', 'components');
@@ -547,10 +510,20 @@ export function listComponents(_root: string): void {
   });
 
   addonComponentsPaths.forEach((p) => {
-    addToRegistry(pureComponentName(p), 'component', [path.join(addonComponents, p)]);
+    const fsPath = path.join(addonComponents, p);
+    const name = project.matchPathToType(fsPath)?.name;
+
+    if (name) {
+      addToRegistry(name, 'component', [fsPath]);
+    }
   });
   addonTemplatesPaths.forEach((p) => {
-    addToRegistry(pureComponentName(p), 'component', [path.join(addonTemplates, p)]);
+    const fsPath = path.join(addonTemplates, p);
+    const name = project.matchPathToType(fsPath)?.name;
+
+    if (name) {
+      addToRegistry(name, 'component', [fsPath]);
+    }
   });
 
   const jsPaths = safeWalkSync(scriptEntry, {
@@ -559,7 +532,12 @@ export function listComponents(_root: string): void {
   });
 
   jsPaths.forEach((p) => {
-    addToRegistry(pureComponentName(p), 'component', [path.join(scriptEntry, p)]);
+    const fsPath = path.join(scriptEntry, p);
+    const name = project.matchPathToType(fsPath)?.name;
+
+    if (name) {
+      addToRegistry(name, 'component', [fsPath]);
+    }
   });
 
   const hbsPaths = safeWalkSync(templateEntry, {
@@ -568,7 +546,12 @@ export function listComponents(_root: string): void {
   });
 
   hbsPaths.forEach((p) => {
-    addToRegistry(pureComponentName(p), 'component', [path.join(templateEntry, p)]);
+    const fsPath = path.join(templateEntry, p);
+    const name = project.matchPathToType(fsPath)?.name;
+
+    if (name) {
+      addToRegistry(name, 'component', [fsPath]);
+    }
   });
 }
 
@@ -604,53 +587,50 @@ export function findAddonItemsForProject(project: Project) {
 }
 
 function listCollection(
-  root: string,
+  project: Project,
   prefix: 'app' | 'addon',
   collectionName: 'transforms' | 'modifiers' | 'services' | 'models' | 'helpers',
   kindType: CompletionItemKind,
   detail: 'transform' | 'service' | 'model' | 'helper' | 'modifier'
 ) {
-  const entry = path.resolve(path.join(root, prefix, collectionName));
+  const entry = path.resolve(path.join(project.root, prefix, collectionName));
   const paths = safeWalkSync(entry, {
     directories: false,
     globs: ['**/*.{js,ts}'],
   });
 
-  const items = paths.map((filePath: string) => {
-    addToRegistry(pureComponentName(filePath), detail, [path.join(entry, filePath)]);
+  paths.forEach((filePath: string) => {
+    const fsPath = path.join(entry, filePath);
+    const data = project.matchPathToType(fsPath);
 
-    return {
-      kind: kindType,
-      label: pureComponentName(filePath),
-      detail,
-    };
+    if (data && data.type === detail) {
+      addToRegistry(data.name, detail, [fsPath]);
+    }
   });
-
-  return items;
 }
 
-export function listModifiers(root: string): CompletionItem[] {
-  return listCollection(root, 'app', 'modifiers', CompletionItemKind.Function, 'modifier');
+export function listModifiers(project: Project): void {
+  return listCollection(project, 'app', 'modifiers', CompletionItemKind.Function, 'modifier');
 }
 
-export function listModels(root: string): CompletionItem[] {
-  return listCollection(root, 'app', 'models', CompletionItemKind.Class, 'model');
+export function listModels(project: Project): void {
+  return listCollection(project, 'app', 'models', CompletionItemKind.Class, 'model');
 }
 
-export function listServices(root: string): CompletionItem[] {
-  return listCollection(root, 'app', 'services', CompletionItemKind.Class, 'service');
+export function listServices(project: Project): void {
+  return listCollection(project, 'app', 'services', CompletionItemKind.Class, 'service');
 }
 
-export function listHelpers(root: string): CompletionItem[] {
-  return listCollection(root, 'app', 'helpers', CompletionItemKind.Function, 'helper');
+export function listHelpers(project: Project): void {
+  return listCollection(project, 'app', 'helpers', CompletionItemKind.Function, 'helper');
 }
 
-export function listTransforms(root: string): CompletionItem[] {
-  return listCollection(root, 'app', 'transforms', CompletionItemKind.Function, 'transform');
+export function listTransforms(project: Project): void {
+  return listCollection(project, 'app', 'transforms', CompletionItemKind.Function, 'transform');
 }
 
-export function listRoutes(_root: string): void {
-  const root = path.resolve(_root);
+export function listRoutes(project: Project): void {
+  const root = path.resolve(project.root);
   const scriptEntry = path.join(root, 'app', 'routes');
   const templateEntry = path.join(root, 'app', 'templates');
   const controllersEntry = path.join(root, 'app', 'controllers');
