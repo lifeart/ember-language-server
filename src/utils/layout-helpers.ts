@@ -3,9 +3,9 @@ import * as walkSync from 'walk-sync';
 import * as fs from 'fs';
 import * as path from 'path';
 import { CompletionItem, CompletionItemKind } from 'vscode-languageserver/node';
-import { Project } from '../project';
 import { addToRegistry, normalizeMatchNaming } from './registry-api';
 import { clean, coerce, valid } from 'semver';
+import { BaseProject } from '../base-project';
 
 // const GLOBAL_REGISTRY = ['primitive-name'][['relatedFiles']];
 
@@ -434,7 +434,7 @@ export function getProjectAddonsInfo(root: string): void {
     }
 
     if (version === 1) {
-      const localProject = new Project(packagePath);
+      const localProject = new BaseProject(packagePath);
 
       listComponents(localProject);
       listRoutes(localProject);
@@ -447,7 +447,7 @@ export function getProjectAddonsInfo(root: string): void {
   });
 }
 
-export function listPodsComponents(project: Project): void {
+export function listPodsComponents(project: BaseProject): void {
   const podModulePrefix = podModulePrefixForRoot(project.root);
 
   if (podModulePrefix === null) {
@@ -486,7 +486,7 @@ export function hasNamespaceSupport(root: string) {
   return hasDep(pack, 'ember-holy-futuristic-template-namespacing-batman');
 }
 
-export function listComponents(project: Project): void {
+export function listComponents(project: BaseProject): void {
   // log('listComponents');
   const root = path.resolve(project.root);
   const scriptEntry = path.join(root, 'app', 'components');
@@ -548,7 +548,7 @@ export function listComponents(project: Project): void {
   });
 }
 
-function findRegistryItemsForProject(project: Project, prefix: string, globs: string[]): void {
+function findRegistryItemsForProject(project: BaseProject, prefix: string, globs: string[]): void {
   const entry = path.resolve(path.join(project.root, prefix));
   const paths = safeWalkSync(entry, {
     directories: false,
@@ -567,20 +567,20 @@ function findRegistryItemsForProject(project: Project, prefix: string, globs: st
   });
 }
 
-export function findTestsForProject(project: Project) {
+export function findTestsForProject(project: BaseProject) {
   findRegistryItemsForProject(project, 'tests', ['**/*.{js,ts}']);
 }
 
-export function findAppItemsForProject(project: Project) {
+export function findAppItemsForProject(project: BaseProject) {
   findRegistryItemsForProject(project, 'app', ['**/*.{js,ts,css,less,sass,hbs}']);
 }
 
-export function findAddonItemsForProject(project: Project) {
+export function findAddonItemsForProject(project: BaseProject) {
   findRegistryItemsForProject(project, 'addon', ['**/*.{js,ts,css,less,sass,hbs}']);
 }
 
 function listCollection(
-  project: Project,
+  project: BaseProject,
   prefix: 'app' | 'addon',
   collectionName: 'transforms' | 'modifiers' | 'services' | 'models' | 'helpers',
   detail: 'transform' | 'service' | 'model' | 'helper' | 'modifier'
@@ -601,27 +601,27 @@ function listCollection(
   });
 }
 
-export function listModifiers(project: Project): void {
+export function listModifiers(project: BaseProject): void {
   return listCollection(project, 'app', 'modifiers', 'modifier');
 }
 
-export function listModels(project: Project): void {
+export function listModels(project: BaseProject): void {
   return listCollection(project, 'app', 'models', 'model');
 }
 
-export function listServices(project: Project): void {
+export function listServices(project: BaseProject): void {
   return listCollection(project, 'app', 'services', 'service');
 }
 
-export function listHelpers(project: Project): void {
+export function listHelpers(project: BaseProject): void {
   return listCollection(project, 'app', 'helpers', 'helper');
 }
 
-export function listTransforms(project: Project): void {
+export function listTransforms(project: BaseProject): void {
   return listCollection(project, 'app', 'transforms', 'transform');
 }
 
-export function listRoutes(project: Project): void {
+export function listRoutes(project: BaseProject): void {
   const root = path.resolve(project.root);
   const scriptEntry = path.join(root, 'app', 'routes');
   const templateEntry = path.join(root, 'app', 'templates');

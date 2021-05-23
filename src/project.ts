@@ -1,8 +1,6 @@
-import { PodMatcher, ClassicPathMatcher } from './utils/path-matcher';
 import { addToRegistry, removeFromRegistry, normalizeMatchNaming, NormalizedRegistryItem } from './utils/registry-api';
 import { ProjectProviders, collectProjectProviders, AddonMeta, DependencyMeta } from './utils/addon-api';
 import {
-  getPodModulePrefix,
   findTestsForProject,
   findAddonItemsForProject,
   findAppItemsForProject,
@@ -12,6 +10,7 @@ import {
   cached,
   PackageInfo,
 } from './utils/layout-helpers';
+import { BaseProject } from './base-project';
 import Server from './server';
 import { Diagnostic, FileChangeType } from 'vscode-languageserver/node';
 import { TextDocument } from 'vscode-languageserver-textdocument';
@@ -28,9 +27,7 @@ export interface Executors {
   [key: string]: Executor;
 }
 
-export class Project {
-  private classicMatcher!: ClassicPathMatcher;
-  private podMatcher!: PodMatcher;
+export class Project extends BaseProject {
   providers!: ProjectProviders;
   builtinProviders!: ProjectProviders;
   addonsMeta: AddonMeta[] = [];
@@ -41,7 +38,6 @@ export class Project {
   linters: Linter[] = [];
   initIssues: Error[] = [];
   files: Map<string, { version: number }> = new Map();
-  podModulePrefix = '';
   @cached
   get roots() {
     const mainRoot = this.root;
@@ -55,9 +51,6 @@ export class Project {
     const differentRoots = filteredRoots.filter((root) => !isRootStartingWithFilePath(root, mainRoot));
 
     return [mainRoot, ...differentRoots];
-  }
-  matchPathToType(filePath: string) {
-    return this.classicMatcher.metaFromPath(filePath) || this.podMatcher.metaFromPath(filePath);
   }
   trackChange(uri: string, change: FileChangeType) {
     // prevent leaks
@@ -121,6 +114,7 @@ export class Project {
     return this.packageJSON.name;
   }
   constructor(public readonly root: string, addons: string[] = []) {
+    super(root);
     this.providers = collectProjectProviders(root, addons);
     this.addonsMeta = this.providers.addonsMeta.filter((el) => el.root !== this.root);
 
@@ -141,16 +135,6 @@ export class Project {
     });
 
     this.builtinProviders = initBuiltinProviders();
-    const maybePrefix = getPodModulePrefix(root);
-
-    if (maybePrefix) {
-      this.podModulePrefix = 'app/' + maybePrefix;
-    } else {
-      this.podModulePrefix = 'app';
-    }
-
-    this.classicMatcher = new ClassicPathMatcher(this.root);
-    this.podMatcher = new PodMatcher(this.root, this.podModulePrefix);
   }
   unload() {
     this.initIssues = [];
