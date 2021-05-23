@@ -1,9 +1,6 @@
-import * as path from 'path';
 import * as fs from 'fs';
 import { CompletionItem, CompletionItemKind } from 'vscode-languageserver/node';
 
-import { isModuleUnificationApp, podModulePrefixForRoot } from '../../utils/layout-helpers';
-import { getGlobalRegistry } from '../../utils/registry-api';
 import { log } from '../../utils/logger';
 
 import { extractComponentInformationFromMeta, IComponentMetaInformation, IJsMeta, processJSFile, processTemplate } from 'ember-meta-explorer';
@@ -18,41 +15,6 @@ function localizeName(name: string) {
   } else {
     return 'this.' + name;
   }
-}
-
-function findComponentScripts(root: string, componentName: string) {
-  const possibleLocations = [];
-  const registry = getGlobalRegistry();
-
-  if (registry.component.has(componentName)) {
-    const els: string[] = Array.from((registry.component.get(componentName) as any).values());
-
-    els.forEach((el) => {
-      if (el.includes(root)) {
-        possibleLocations.push([el]);
-      }
-    });
-  }
-
-  if (isModuleUnificationApp(root)) {
-    possibleLocations.push([root, 'src', 'ui', 'components', componentName, 'component.js']);
-    possibleLocations.push([root, 'src', 'ui', 'components', componentName, 'component.ts']);
-  } else {
-    possibleLocations.push([root, 'app', 'components', componentName, 'component.js']);
-    possibleLocations.push([root, 'app', 'components', componentName, 'component.ts']);
-    possibleLocations.push([root, 'app', 'components', componentName, 'index.js']);
-    possibleLocations.push([root, 'app', 'components', componentName, 'index.ts']);
-    possibleLocations.push([root, 'app', 'components', componentName + '.js']);
-    possibleLocations.push([root, 'app', 'components', componentName + '.ts']);
-    const prefix = podModulePrefixForRoot(root);
-
-    if (prefix) {
-      possibleLocations.push([root, 'app', prefix, 'components', componentName, 'component.js']);
-      possibleLocations.push([root, 'app', prefix, 'components', componentName, 'component.ts']);
-    }
-  }
-
-  return possibleLocations.map((locArr: string[]) => path.join.apply(null, locArr));
 }
 
 export function componentsContextData(maybeScripts: string[], templateContent: string): CompletionItem[] {

@@ -590,7 +590,6 @@ function listCollection(
   project: Project,
   prefix: 'app' | 'addon',
   collectionName: 'transforms' | 'modifiers' | 'services' | 'models' | 'helpers',
-  kindType: CompletionItemKind,
   detail: 'transform' | 'service' | 'model' | 'helper' | 'modifier'
 ) {
   const entry = path.resolve(path.join(project.root, prefix, collectionName));
@@ -610,23 +609,23 @@ function listCollection(
 }
 
 export function listModifiers(project: Project): void {
-  return listCollection(project, 'app', 'modifiers', CompletionItemKind.Function, 'modifier');
+  return listCollection(project, 'app', 'modifiers', 'modifier');
 }
 
 export function listModels(project: Project): void {
-  return listCollection(project, 'app', 'models', CompletionItemKind.Class, 'model');
+  return listCollection(project, 'app', 'models', 'model');
 }
 
 export function listServices(project: Project): void {
-  return listCollection(project, 'app', 'services', CompletionItemKind.Class, 'service');
+  return listCollection(project, 'app', 'services', 'service');
 }
 
 export function listHelpers(project: Project): void {
-  return listCollection(project, 'app', 'helpers', CompletionItemKind.Function, 'helper');
+  return listCollection(project, 'app', 'helpers', 'helper');
 }
 
 export function listTransforms(project: Project): void {
-  return listCollection(project, 'app', 'transforms', CompletionItemKind.Function, 'transform');
+  return listCollection(project, 'app', 'transforms', 'transform');
 }
 
 export function listRoutes(project: Project): void {

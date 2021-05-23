@@ -155,13 +155,13 @@ export default class TemplateCompletionProvider {
       try {
         const initStartTime = Date.now();
 
-        mListHelpers(project.root);
+        mListHelpers(project);
         this.enableRegistryCache('helpersRegistryInitialized');
 
-        mListModifiers(project.root);
+        mListModifiers(project);
         this.enableRegistryCache('modifiersRegistryInitialized');
 
-        mListRoutes(project.root);
+        mListRoutes(project);
         this.enableRegistryCache('routesRegistryInitialized');
 
         mListComponents(project);
@@ -253,7 +253,7 @@ export default class TemplateCompletionProvider {
     }
 
     if (!this.meta.helpersRegistryInitialized) {
-      mListHelpers(root);
+      mListHelpers(this.project);
       this.enableRegistryCache('helpersRegistryInitialized');
     }
 
@@ -304,14 +304,14 @@ export default class TemplateCompletionProvider {
       };
     });
   }
-  getSubExpressionPathCandidates(root: string) {
+  getSubExpressionPathCandidates() {
     if (!this.meta.helpersRegistryInitialized) {
-      mListHelpers(root);
+      mListHelpers(this.project);
       this.enableRegistryCache('helpersRegistryInitialized');
     }
 
     if (!this.meta.projectAddonsInfoInitialized) {
-      mGetProjectAddonsInfo(root);
+      mGetProjectAddonsInfo(this.project.root);
       this.enableRegistryCache('projectAddonsInfoInitialized');
     }
 
@@ -495,7 +495,7 @@ export default class TemplateCompletionProvider {
       } else if (isSubExpressionPath(focusPath)) {
         // {{foo-bar name=(subexpr? )}}
         log('isSubExpressionPath');
-        const candidates = this.getSubExpressionPathCandidates(root);
+        const candidates = this.getSubExpressionPathCandidates();
 
         completions.push(...uniqBy(candidates, 'label'));
         completions.push(...emberSubExpressionItems);
@@ -514,7 +514,7 @@ export default class TemplateCompletionProvider {
         log('isLinkToTarget');
 
         if (!this.meta.routesRegistryInitialized) {
-          mListRoutes(root);
+          mListRoutes(this.project);
           this.enableRegistryCache('routesRegistryInitialized');
         }
 
@@ -534,7 +534,7 @@ export default class TemplateCompletionProvider {
         log('isLinkComponentRouteTarget');
 
         if (!this.meta.routesRegistryInitialized) {
-          mListRoutes(root);
+          mListRoutes(this.project);
           this.enableRegistryCache('routesRegistryInitialized');
         }
 
@@ -553,7 +553,7 @@ export default class TemplateCompletionProvider {
         log('isModifierPath');
 
         if (!this.meta.modifiersRegistryInitialized) {
-          mListModifiers(root);
+          mListModifiers(this.project);
           this.enableRegistryCache('modifiersRegistryInitialized');
         }
 
