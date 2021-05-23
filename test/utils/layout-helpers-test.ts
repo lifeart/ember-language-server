@@ -17,6 +17,7 @@ import * as path from 'path';
 import { initFileStructure } from './../test_helpers/integration-helpers';
 import { getRegistryForRoot } from '../../src/utils/registry-api';
 import { Project } from '../../src/project';
+import { BaseProject } from '../../src/base-project';
 
 describe('definition-helpers', function () {
   describe('isMuApp()', function () {
@@ -77,7 +78,7 @@ describe('definition-helpers', function () {
     it('return expected list of components for classic project', function () {
       const root = path.join(__dirname, './../fixtures/full-project');
 
-      listComponents(root);
+      listComponents(new BaseProject(root));
 
       const keys = Object.keys(getRegistryForRoot(root).component);
 
@@ -93,9 +94,17 @@ describe('definition-helpers', function () {
 
   describe('listHelpers()', function () {
     it('return expected list of helpers for classic project', function () {
-      const components = listHelpers(path.join(__dirname, './../fixtures/full-project'));
+      const root = path.join(__dirname, './../fixtures/full-project');
 
-      expect(components.map(({ label }: { label: string }) => label)).toEqual(['some-helper']);
+      let keys = Object.keys(getRegistryForRoot(root).helper);
+
+      expect(keys.includes('some-helper')).toBe(false);
+
+      listHelpers(new BaseProject(root));
+
+      keys = Object.keys(getRegistryForRoot(root).helper);
+
+      expect(keys.includes('some-helper')).toBe(true);
     });
   });
 
@@ -103,7 +112,7 @@ describe('definition-helpers', function () {
     it('return expected list of routes for classic project', function () {
       const root = path.join(__dirname, './../fixtures/full-project');
 
-      listRoutes(root);
+      listRoutes(new BaseProject(root));
 
       const keys = Object.keys(getRegistryForRoot(root).routePath);
 
