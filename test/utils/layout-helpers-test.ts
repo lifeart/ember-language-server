@@ -16,7 +16,6 @@ import * as path from 'path';
 
 import { initFileStructure } from './../test_helpers/integration-helpers';
 import { getRegistryForRoot } from '../../src/utils/registry-api';
-import { Project } from '../../src/project';
 import { BaseProject } from '../../src/base-project';
 
 describe('definition-helpers', function () {
@@ -61,12 +60,13 @@ describe('definition-helpers', function () {
     it('return expected list of components for pods project', function () {
       const root = path.join(__dirname, './../fixtures/pod-project');
 
-      const project = new Project(root);
+      const project = new BaseProject(root);
 
       listPodsComponents(project);
+
       const keys = Object.keys(getRegistryForRoot(root).component);
 
-      const hasAllComponentsInRegistry = ['foo-bar-js', 'foo-bar-js', 'foo-bar-ts'].every((el) => {
+      const hasAllComponentsInRegistry = ['foo-bar-js', 'foo-bar-ts'].every((el) => {
         return keys.includes(el);
       });
 
