@@ -32,15 +32,6 @@ export const mGetProjectAddonsInfo = memoize(getProjectAddonsInfo, {
   maxAge: 600000,
 }); // 1 second
 
-const mProjectAddonsRoots = memoize(getProjectAddonsRoots, {
-  length: 3,
-  maxAge: 600000,
-});
-const mProjectInRepoAddonsRoots = memoize(getProjectInRepoAddonsRoots, {
-  length: 1,
-  maxAge: 600000,
-});
-
 export const isAddonRoot = memoize(isProjectAddonRoot, {
   length: 1,
   maxAge: 600000,
@@ -429,7 +420,9 @@ export function hasAddonFolderInPath(name: string) {
 }
 
 export function getProjectAddonsInfo(root: string): void {
-  const roots = ([] as string[]).concat(mProjectAddonsRoots(root), mProjectInRepoAddonsRoots(root)).filter((pathItem: unknown) => typeof pathItem === 'string');
+  const roots = ([] as string[])
+    .concat(getProjectAddonsRoots(root), getProjectInRepoAddonsRoots(root))
+    .filter((pathItem: unknown) => typeof pathItem === 'string');
 
   roots.forEach((packagePath: string) => {
     const info = getPackageJSON(packagePath);

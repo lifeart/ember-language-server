@@ -1,6 +1,6 @@
 import { PodMatcher, ClassicPathMatcher } from './utils/path-matcher';
 import { addToRegistry, removeFromRegistry, normalizeMatchNaming, NormalizedRegistryItem } from './utils/registry-api';
-import { ProjectProviders, collectProjectProviders, initBuiltinProviders, AddonMeta, DependencyMeta } from './utils/addon-api';
+import { ProjectProviders, collectProjectProviders, AddonMeta, DependencyMeta } from './utils/addon-api';
 import {
   getPodModulePrefix,
   findTestsForProject,
@@ -18,6 +18,7 @@ import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as path from 'path';
 import { logError, logInfo } from './utils/logger';
 import { URI } from 'vscode-uri';
+import { initBuiltinProviders } from './utils/builtin-addons-initializer';
 
 export type Executor = (server: Server, command: string, args: unknown[]) => Promise<unknown>;
 export type Destructor = (project: Project) => void;
