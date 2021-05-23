@@ -33,7 +33,7 @@ export const mGetProjectAddonsInfo = memoize(getProjectAddonsInfo, {
 }); // 1 second
 
 const mProjectAddonsRoots = memoize(getProjectAddonsRoots, {
-  length: 1,
+  length: 3,
   maxAge: 600000,
 });
 const mProjectInRepoAddonsRoots = memoize(getProjectInRepoAddonsRoots, {
