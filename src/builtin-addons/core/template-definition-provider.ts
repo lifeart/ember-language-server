@@ -39,7 +39,7 @@ export function provideComponentTemplatePaths(root: string, rawComponentName: st
   const items = getPathsFromRegistry('component', maybeComponentName, root);
 
   if (items.length) {
-    const results = items.filter((el) => el.endsWith('.hbs'));
+    const results = items.filter((el) => isTemplatePath(el));
 
     if (results.length) {
       return results;

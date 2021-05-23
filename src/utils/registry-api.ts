@@ -1,5 +1,5 @@
 import { updateTemplateTokens, UsageType } from './usages-api';
-import { isRootStartingWithFilePath, normalizeRoutePath } from './layout-helpers';
+import { isRootStartingWithFilePath, isTemplatePath, normalizeRoutePath } from './layout-helpers';
 import { MatchResult } from './path-matcher';
 import * as path from 'path';
 
@@ -60,7 +60,7 @@ export function removeFromRegistry(normalizedName: string, kind: REGISTRY_KIND, 
       files.forEach((file) => {
         regItem.delete(file);
 
-        if (file.endsWith('.hbs')) {
+        if (isTemplatePath(file)) {
           updateTemplateTokens(kind as UsageType, normalizedName, null);
         }
       });
@@ -130,7 +130,7 @@ export function addToRegistry(normalizedName: string, kind: REGISTRY_KIND, files
 
         regItem.add(file);
 
-        if ((kind === 'component' || kind === 'routePath') && file.endsWith('.hbs')) {
+        if ((kind === 'component' || kind === 'routePath') && isTemplatePath(file)) {
           updateTemplateTokens(kind, normalizedName, file);
         }
       });
