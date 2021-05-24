@@ -5,7 +5,7 @@ import { logError, logInfo } from './utils/logger';
 import * as walkSync from 'walk-sync';
 import { URI } from 'vscode-uri';
 import * as fs from 'fs';
-import { isGlimmerXProject, isELSAddonRoot, isRootStartingWithFilePath } from './utils/layout-helpers';
+import { isGlimmerXProject, isELSAddonRoot, isRootStartingWithFilePath, getPackageJSON } from './utils/layout-helpers';
 
 import Server from './server';
 
@@ -104,6 +104,18 @@ export default class ProjectRoots {
     }
 
     try {
+      const info = getPackageJSON(projectPath);
+
+      if (this.ignoredProjects.includes(info.name as string)) {
+        logInfo('--------------------');
+        logInfo(`Skipping "${info.name}" initialization, because it's marked as ignored in uELS settings.`);
+        logInfo(`Skipped path: ${projectPath}`);
+        logInfo('If you use this addon/engine/project in host app, not marked as ignored, all LS features will work for it.');
+        logInfo('--------------------');
+
+        return false;
+      }
+
       const project = new Project(projectPath, this.localAddons);
 
       this.projects.set(projectPath, project);
