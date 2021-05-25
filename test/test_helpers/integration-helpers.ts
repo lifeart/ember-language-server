@@ -197,7 +197,13 @@ export async function createProject(
       const normalizedPath = currProject ? path.normalize(path.join(dir.path(), currProject)) : path.normalize(dir.path());
 
       normalizedPaths.push(normalizedPath);
-      resultsArr.push(await _buildResult(connection, normalizedPath));
+
+      const projectData = await _buildResult(connection, normalizedPath);
+
+      // project may be not created, because it's marked as ignored
+      if (projectData) {
+        resultsArr.push(projectData);
+      }
     }
 
     return {
@@ -237,7 +243,7 @@ export function textDocument(modelPath, position = { line: 0, character: 0 }) {
 function _buildResponse(response: unknown, normalizedPath: string, result: UnknownResult) {
   return {
     response: normalizeUri(response, normalizedPath),
-    registry: normalizeRegistry(normalizedPath, (result.registry || {}) as Registry),
+    registry: normalizeRegistry(normalizedPath, result.registry as Registry),
     addonsMeta: normalizeAddonsMeta(normalizedPath, result.addonsMeta as { name: string; root: string }[]),
   };
 }
@@ -252,6 +258,7 @@ export async function getResult(
   config?: { local: { addons: string[]; ignoredProjects: string[] } }
 ) {
   const { normalizedPath, originalPath, destroy, result } = await createProject(files, connection, projectName, config);
+
   const modelPath = path.join(originalPath, fileToInspect);
 
   if (!fs.existsSync(modelPath)) {
