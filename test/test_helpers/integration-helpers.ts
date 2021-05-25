@@ -479,7 +479,7 @@ export function makeAddonPackage(name, config, addonConfig = undefined) {
   return JSON.stringify(pack);
 }
 
-export function initServer(connection: MessageConnection, projectName: string) {
+export function initServer(connection: MessageConnection, projectName: string): Promise<{ serverInfo: { name: string; version: string } }> {
   const params = {
     rootUri: URI.file(path.join(__dirname, '..', 'fixtures', projectName)).toString(),
     capabilities: {},

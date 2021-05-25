@@ -23,6 +23,7 @@ import { CompletionRequest, DefinitionRequest, DocumentSymbolRequest, ExecuteCom
 describe('integration', function () {
   let connection: MessageConnection;
   let serverProcess: cp.ChildProcess;
+  let isInitialized = false;
 
   beforeAll(async () => {
     serverProcess = startServer();
@@ -46,7 +47,9 @@ describe('integration', function () {
   });
 
   beforeEach(async () => {
-    await setServerConfig(connection, { local: { addons: [], ignoredProjects: [] } });
+    if (isInitialized) {
+      await setServerConfig(connection, { local: { addons: [], ignoredProjects: [] } });
+    }
   });
 
   afterAll(() => {
@@ -62,6 +65,7 @@ describe('integration', function () {
       expect(response.serverInfo.version.split('.').length).toEqual(3);
       delete response.serverInfo.version;
       expect(response).toMatchSnapshot();
+      isInitialized = true;
     });
   });
 
@@ -1533,7 +1537,7 @@ describe('integration', function () {
     it('reverse ignore working as expected', async () => {
       const files = {
         'child-project/app/components': {
-          'foo.hbs': '',
+          'foo.hbs': '<',
           'bar.hbs': '',
         },
         'child-project/package.json': JSON.stringify({
@@ -1557,7 +1561,7 @@ describe('integration', function () {
 
       await setServerConfig(connection, { local: { addons: [], ignoredProjects: ['!parent-project'] } });
 
-      const result = await getResult(CompletionRequest.method, connection, files, 'lib/addon/components/item.hbs', { line: 0, character: 1 }, [
+      const result = await getResult(CompletionRequest.method, connection, files, 'child-project/app/components/foo.hbs', { line: 0, character: 1 }, [
         '',
         'child-project',
       ]);
