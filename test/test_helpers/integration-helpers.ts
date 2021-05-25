@@ -160,7 +160,7 @@ export function normalizeToFs(files: RecursiveRecord<string | RecursiveRecord<st
   return newShape;
 }
 
-async function _buildResult(connection: MessageConnection, normalizedPath: string) {
+async function registerProject(connection: MessageConnection, normalizedPath: string) {
   const params = {
     command: 'els.registerProjectPath',
     arguments: [normalizedPath],
@@ -214,7 +214,7 @@ export async function createProject(
 
       normalizedPaths.push(normalizedPath);
 
-      const projectData = await _buildResult(connection, normalizedPath);
+      const projectData = await registerProject(connection, normalizedPath);
 
       // project may be not created, because it's marked as ignored
       if (projectData) {
@@ -238,7 +238,7 @@ export async function createProject(
     };
   } else {
     const normalizedPath = projectName ? path.normalize(path.join(dir.path(), projectName)) : path.normalize(dir.path());
-    const result = await _buildResult(connection, normalizedPath);
+    const result = await registerProject(connection, normalizedPath);
 
     return {
       normalizedPath,
