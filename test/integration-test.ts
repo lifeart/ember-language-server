@@ -1524,10 +1524,9 @@ describe('integration', function () {
         { local: { addons: [], ignoredProjects: ['parent-project'] } }
       );
 
-      expect(result.length).toBe(1);
+      expect(result.length).toBe(2);
       expect(result[0].response.length).toBe(3);
     });
-
 
     it('reverse ignore working as expected', async () => {
       const files = {
@@ -1564,7 +1563,7 @@ describe('integration', function () {
         { local: { addons: [], ignoredProjects: ['!parent-project'] } }
       );
 
-      expect(result.length).toBe(1);
+      expect(result.length).toBe(2);
       expect(result[0].response.length).toBe(3);
     });
 
