@@ -28,7 +28,7 @@ export default class ProjectRoots {
 
   isIgnoredProject(name: string) {
     if (typeof name === undefined) {
-      return true;
+      return false;
     }
 
     if (this.ignoredProjects.includes(name)) {
@@ -121,6 +121,10 @@ export default class ProjectRoots {
 
     try {
       const info = getPackageJSON(projectPath);
+
+      if (!info.name) {
+        logInfo(`Unable to get project name from package.json at ${projectPath}`);
+      }
 
       if (this.isIgnoredProject(info.name as string)) {
         logInfo('--------------------');
