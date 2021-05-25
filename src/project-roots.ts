@@ -207,7 +207,7 @@ export default class ProjectRoots {
       .map((root) => {
         const projectName = this.projects.get(root)?.name;
 
-        if (projectName && this.isIgnoredProject(projectName)) {
+        if (projectName && this.ignoredProjects.includes(projectName)) {
           return;
         }
 
@@ -241,7 +241,7 @@ export default class ProjectRoots {
         it's safe to do, because root will be non empty if addon already registered as Project
       */
       const fistSubRoot = Array.from(this.projects.values())
-        .filter((project) => project.name && !this.isIgnoredProject(project.name))
+        .filter((project) => project.name && !this.ignoredProjects.includes(project.name))
         .find((project) => project.roots.some((subRoot) => isRootStartingWithFilePath(subRoot.toLocaleLowerCase(), filePath)));
 
       if (fistSubRoot) {
