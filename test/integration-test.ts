@@ -1561,15 +1561,33 @@ describe('integration', function () {
 
       await setServerConfig(connection, { local: { addons: [], ignoredProjects: ['!parent-project'] } });
 
-      const result = await getResult(CompletionRequest.method, connection, files, 'child-project/app/components/foo.hbs', { line: 0, character: 1 }, [
+      let result = await getResult(CompletionRequest.method, connection, files, 'child-project/app/components/foo.hbs', { line: 0, character: 1 }, [
         '',
         'child-project',
       ]);
 
-      expect(JSON.stringify(result)).toBe('f');
       expect(result.length).toBe(2);
       expect(result[0].response.length).toBe(0);
-      expect(result[1].response.length).toBe(2);
+
+      result = await getResult(CompletionRequest.method, connection, files, 'lib/addon/components/item.hbs', { line: 0, character: 1 }, ['', 'child-project']);
+
+      expect(result.length).toBe(2);
+      expect(result[0].response.length).toBe(3);
+
+      await setServerConfig(connection, { local: { addons: [], ignoredProjects: ['!child-project'] } });
+
+      result = await getResult(CompletionRequest.method, connection, files, 'child-project/app/components/foo.hbs', { line: 0, character: 1 }, [
+        '',
+        'child-project',
+      ]);
+
+      expect(result.length).toBe(2);
+      expect(result[0].response.length).toBe(3);
+
+      result = await getResult(CompletionRequest.method, connection, files, 'lib/addon/components/item.hbs', { line: 0, character: 1 }, ['', 'child-project']);
+
+      expect(result.length).toBe(2);
+      expect(result[0].response.length).toBe(0);
     });
 
     it('support parent project addon calling child project', async () => {
