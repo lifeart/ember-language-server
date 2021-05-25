@@ -118,7 +118,7 @@ export default class ProjectRoots {
         logInfo('--------------------');
 
         return {
-          initIssues: ['Unable to create project, because it ignored according to config'],
+          initIssues: [`Unable to create project "${info.name}", because it ignored according to config`],
           providers: {
             definitionProviders: [],
             referencesProviders: [],
