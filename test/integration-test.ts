@@ -1563,7 +1563,8 @@ describe('integration', function () {
       ]);
 
       expect(result.length).toBe(2);
-      expect(result[0].response.length).toBe(3);
+      expect(result[0].response.length).toBe(0);
+      expect(result[1].response.length).toBe(2);
     });
 
     it('support parent project addon calling child project', async () => {
