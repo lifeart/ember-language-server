@@ -105,8 +105,12 @@ export default class ProjectRoots {
 
     try {
       const info = getPackageJSON(projectPath);
+      const hasReverseIgnore = this.ignoredProjects.filter((el) => el.startsWith('!'));
 
-      if (this.ignoredProjects.includes(info.name as string)) {
+      if (
+        this.ignoredProjects.includes(info.name as string) ||
+        (hasReverseIgnore.length && !hasReverseIgnore.some((inverseIgnore) => `!${info.name}` === inverseIgnore))
+      ) {
         logInfo('--------------------');
         logInfo(`Skipping "${info.name}" initialization, because it's marked as ignored in uELS settings.`);
         logInfo(`Skipped path: ${projectPath}`);

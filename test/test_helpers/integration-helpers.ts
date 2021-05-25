@@ -172,7 +172,7 @@ export async function createProject(
   connection: MessageConnection,
   projectName?: string | string[],
   config?: { local: { addons: string[]; ignoredProjects: string[] } }
-): Promise<{ normalizedPath: string | string[]; originalPath: string; result: UnknownResult | UnknownResult[]; destroy(): void }> {
+): Promise<{ normalizedPath: string | string[]; originalPath: string; result: UnknownResult | UnknownResult[]; destroy(): Promise<void> }> {
   const dir = await createTempDir();
 
   dir.write(normalizeToFs(files));
@@ -203,6 +203,12 @@ export async function createProject(
       // project may be not created, because it's marked as ignored
       if (projectData) {
         resultsArr.push(projectData);
+      } else {
+        resultsArr.push({
+          registry: {},
+          addonsMeta: [],
+          response: null,
+        });
       }
     }
 
