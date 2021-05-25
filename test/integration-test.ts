@@ -1556,6 +1556,9 @@ describe('integration', function () {
         },
         'package.json': JSON.stringify({
           name: 'parent-project',
+          'ember-addon': {
+            paths: ['lib'],
+          },
         }),
       };
 
