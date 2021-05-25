@@ -23,7 +23,6 @@ import { CompletionRequest, DefinitionRequest, DocumentSymbolRequest, ExecuteCom
 describe('integration', function () {
   let connection: MessageConnection;
   let serverProcess: cp.ChildProcess;
-  let isInitialized = false;
 
   beforeAll(async () => {
     serverProcess = startServer();
@@ -46,12 +45,6 @@ describe('integration', function () {
     await new Promise((resolve) => setTimeout(resolve, 1000));
   });
 
-  beforeEach(async () => {
-    if (isInitialized) {
-      await setServerConfig(connection, { local: { addons: [], ignoredProjects: [] } });
-    }
-  });
-
   afterAll(() => {
     connection.dispose();
     serverProcess.kill();
@@ -65,7 +58,6 @@ describe('integration', function () {
       expect(response.serverInfo.version.split('.').length).toEqual(3);
       delete response.serverInfo.version;
       expect(response).toMatchSnapshot();
-      isInitialized = true;
     });
   });
 
@@ -1532,6 +1524,8 @@ describe('integration', function () {
 
       expect(result.length).toBe(2);
       expect(result[0].response.length).toBe(3);
+
+      await setServerConfig(connection);
     });
 
     it('reverse ignore working as expected', async () => {
@@ -1581,11 +1575,42 @@ describe('integration', function () {
 
       result = await getResult(CompletionRequest.method, connection, files, 'second-project/app/components/baz.hbs', pos, projects);
 
-      //expect(result[0].response).toMatchSnapshot();
       expect(result[0].response.length).toBe(0);
+
+      await setServerConfig(connection, { local: { addons: [], ignoredProjects: ['!second-project'] } });
+
+      result = await getResult(CompletionRequest.method, connection, files, 'first-project/app/components/foo.hbs', pos, projects);
+
+      expect(result[0].response.length).toBe(0);
+
+      result = await getResult(CompletionRequest.method, connection, files, 'lib/addon/components/item.hbs', pos, projects);
+
+      expect(result[0].response.length).toBe(2);
+
+      result = await getResult(CompletionRequest.method, connection, files, 'second-project/app/components/baz.hbs', pos, projects);
+
+      expect(result[0].response.length).toBe(2);
+
+      await setServerConfig(connection, { local: { addons: [], ignoredProjects: ['second-project', 'first-project'] } });
+
+      result = await getResult(CompletionRequest.method, connection, files, 'first-project/app/components/foo.hbs', pos, projects);
+
+      expect(result[0].response.length).toBe(0);
+
+      result = await getResult(CompletionRequest.method, connection, files, 'lib/addon/components/item.hbs', pos, projects);
+
+      expect(result[0].response.length).toBe(0);
+
+      result = await getResult(CompletionRequest.method, connection, files, 'second-project/app/components/baz.hbs', pos, projects);
+
+      expect(result[0].response.length).toBe(0);
+
+      await setServerConfig(connection);
     });
 
     it('support parent project addon calling child project', async () => {
+      await setServerConfig(connection);
+
       const result = await getResult(
         DefinitionRequest.method,
         connection,

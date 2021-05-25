@@ -171,7 +171,7 @@ async function registerProject(connection: MessageConnection, normalizedPath: st
   };
 }
 
-export async function setServerConfig(connection: MessageConnection, config) {
+export async function setServerConfig(connection: MessageConnection, config = { local: { addons: [], ignoredProjects: [] } }) {
   const configParams = {
     command: 'els.setConfig',
     arguments: [config],

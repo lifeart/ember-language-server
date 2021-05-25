@@ -37,6 +37,10 @@ export default class ProjectRoots {
 
     const hasReverseIgnore = this.ignoredProjects.filter((el) => el.startsWith('!'));
 
+    if (!hasReverseIgnore.length) {
+      return false;
+    }
+
     const allowedProjectName = `!${name}`;
 
     return !hasReverseIgnore.includes(allowedProjectName);
@@ -134,7 +138,7 @@ export default class ProjectRoots {
         logInfo('--------------------');
 
         return {
-          initIssues: [`Unable to create project "${info.name}", because it ignored according to config`],
+          initIssues: [`Unable to create project "${info.name}", because it ignored according to config: [${this.ignoredProjects.join(',')}]`],
           providers: {
             definitionProviders: [],
             referencesProviders: [],
