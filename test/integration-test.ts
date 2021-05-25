@@ -1566,6 +1566,7 @@ describe('integration', function () {
         'child-project',
       ]);
 
+      expect(JSON.stringify(result)).toBe('f');
       expect(result.length).toBe(2);
       expect(result[0].response.length).toBe(0);
       expect(result[1].response.length).toBe(2);
