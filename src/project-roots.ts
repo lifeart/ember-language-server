@@ -27,7 +27,7 @@ export default class ProjectRoots {
   }
 
   isIgnoredProject(name: string) {
-    if (typeof name === undefined) {
+    if (typeof name === 'undefined') {
       return false;
     }
 
