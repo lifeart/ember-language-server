@@ -237,7 +237,7 @@ export function textDocument(modelPath, position = { line: 0, character: 0 }) {
 function _buildResponse(response: unknown, normalizedPath: string, result: UnknownResult) {
   return {
     response: normalizeUri(response, normalizedPath),
-    registry: normalizeRegistry(normalizedPath, result.registry as Registry),
+    registry: normalizeRegistry(normalizedPath, (result.registry || {}) as Registry),
     addonsMeta: normalizeAddonsMeta(normalizedPath, result.addonsMeta as { name: string; root: string }[]),
   };
 }
