@@ -263,6 +263,7 @@ export function textDocument(modelPath, position = { line: 0, character: 0 }) {
 }
 
 interface IResponse<T> {
+  initIssues?: string[];
   response: T;
   // eslint-disable-next-line @typescript-eslint/ban-types
   registry: object;
@@ -270,11 +271,17 @@ interface IResponse<T> {
 }
 
 function _buildResponse<T>(response: T, normalizedPath: string, result: UnknownResult): IResponse<T> {
-  return {
+  const content: IResponse<T> = {
     response: normalizeUri(response as Record<string, unknown>, normalizedPath),
     registry: normalizeRegistry(normalizedPath, result.registry as Registry),
     addonsMeta: normalizeAddonsMeta(normalizedPath, result.addonsMeta as AddonMeta[]),
   };
+
+  if (Array.isArray(result.initIssues) && result.initIssues.length) {
+    content.initIssues = result.initIssues;
+  }
+
+  return content;
 }
 
 export async function getResult(

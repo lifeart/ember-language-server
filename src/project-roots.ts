@@ -150,7 +150,21 @@ export default class ProjectRoots {
     } catch (e) {
       logError(e);
 
-      return false;
+      return {
+        initIssues: [e.toString()],
+        providers: {
+          definitionProviders: [],
+          referencesProviders: [],
+          completionProviders: [],
+          codeActionProviders: [],
+          initFunctions: [],
+          info: [],
+          addonsMeta: [],
+        },
+        addonsMeta: [],
+        name: `[${projectPath}]`,
+        registry: {},
+      };
     }
   }
 
