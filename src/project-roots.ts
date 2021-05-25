@@ -117,7 +117,21 @@ export default class ProjectRoots {
         logInfo('If you use this addon/engine/project in host app, not marked as ignored, all LS features will work for it.');
         logInfo('--------------------');
 
-        return false;
+        return {
+          initIssues: ['Unable to create project, because it ignored according to config'],
+          providers: {
+            definitionProviders: [],
+            referencesProviders: [],
+            completionProviders: [],
+            codeActionProviders: [],
+            initFunctions: [],
+            info: [],
+            addonsMeta: [],
+          },
+          addonsMeta: [],
+          name: info.name,
+          registry: {},
+        };
       }
 
       const project = new Project(projectPath, this.localAddons);
