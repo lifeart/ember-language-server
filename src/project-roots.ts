@@ -26,6 +26,22 @@ export default class ProjectRoots {
     });
   }
 
+  isIgnoredProject(name: string) {
+    if (typeof name === undefined) {
+      return true;
+    }
+
+    if (this.ignoredProjects.includes(name)) {
+      return true;
+    }
+
+    const hasReverseIgnore = this.ignoredProjects.filter((el) => el.startsWith('!'));
+
+    const allowedProjectName = `!${name}`;
+
+    return !hasReverseIgnore.includes(allowedProjectName);
+  }
+
   reloadProject(projectRoot: string) {
     this.removeProject(projectRoot);
     this.onProjectAdd(projectRoot);
@@ -105,12 +121,8 @@ export default class ProjectRoots {
 
     try {
       const info = getPackageJSON(projectPath);
-      const hasReverseIgnore = this.ignoredProjects.filter((el) => el.startsWith('!'));
 
-      if (
-        this.ignoredProjects.includes(info.name as string) ||
-        (hasReverseIgnore.length && !hasReverseIgnore.some((inverseIgnore) => `!${info.name}` === inverseIgnore))
-      ) {
+      if (this.isIgnoredProject(info.name as string)) {
         logInfo('--------------------');
         logInfo(`Skipping "${info.name}" initialization, because it's marked as ignored in uELS settings.`);
         logInfo(`Skipped path: ${projectPath}`);
@@ -191,7 +203,7 @@ export default class ProjectRoots {
       .map((root) => {
         const projectName = this.projects.get(root)?.name;
 
-        if (projectName && this.ignoredProjects.includes(projectName)) {
+        if (projectName && this.isIgnoredProject(projectName)) {
           return;
         }
 
@@ -225,7 +237,7 @@ export default class ProjectRoots {
         it's safe to do, because root will be non empty if addon already registered as Project
       */
       const fistSubRoot = Array.from(this.projects.values())
-        .filter((project) => project.name && !this.ignoredProjects.includes(project.name))
+        .filter((project) => project.name && !this.isIgnoredProject(project.name))
         .find((project) => project.roots.some((subRoot) => isRootStartingWithFilePath(subRoot.toLocaleLowerCase(), filePath)));
 
       if (fistSubRoot) {
