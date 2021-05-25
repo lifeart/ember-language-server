@@ -14,6 +14,7 @@ import {
   normalizePath,
   Registry,
   UnknownResult,
+  setServerConfig,
 } from './test_helpers/integration-helpers';
 import { createMessageConnection, MessageConnection, Logger, StreamMessageReader, StreamMessageWriter } from 'vscode-jsonrpc/node';
 
@@ -42,6 +43,10 @@ describe('integration', function () {
     // connection.trace(2, {log: console.log}, false);
     connection.listen();
     await new Promise((resolve) => setTimeout(resolve, 1000));
+  });
+
+  beforeEach(async () => {
+    await setServerConfig(connection, { local: { addons: [], ignoredProjects: [] } });
   });
 
   afterAll(() => {
@@ -1514,15 +1519,12 @@ describe('integration', function () {
         }),
       };
 
-      const result = await getResult(
-        CompletionRequest.method,
-        connection,
-        files,
-        'lib/addon/components/item.hbs',
-        { line: 0, character: 1 },
-        ['', 'child-project'],
-        { local: { addons: [], ignoredProjects: ['parent-project'] } }
-      );
+      await setServerConfig(connection, { local: { addons: [], ignoredProjects: ['parent-project'] } });
+
+      const result = await getResult(CompletionRequest.method, connection, files, 'lib/addon/components/item.hbs', { line: 0, character: 1 }, [
+        '',
+        'child-project',
+      ]);
 
       expect(result.length).toBe(2);
       expect(result[0].response.length).toBe(3);
@@ -1553,15 +1555,12 @@ describe('integration', function () {
         }),
       };
 
-      const result = await getResult(
-        CompletionRequest.method,
-        connection,
-        files,
-        'lib/addon/components/item.hbs',
-        { line: 0, character: 1 },
-        ['', 'child-project'],
-        { local: { addons: [], ignoredProjects: ['!parent-project'] } }
-      );
+      await setServerConfig(connection, { local: { addons: [], ignoredProjects: ['!parent-project'] } });
+
+      const result = await getResult(CompletionRequest.method, connection, files, 'lib/addon/components/item.hbs', { line: 0, character: 1 }, [
+        '',
+        'child-project',
+      ]);
 
       expect(result.length).toBe(2);
       expect(result[0].response.length).toBe(3);
