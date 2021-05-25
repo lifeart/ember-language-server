@@ -1591,6 +1591,16 @@ describe('integration', function () {
 
       expect(result[0].response.length).toBe(2);
 
+      await setServerConfig(connection, { local: { addons: [], ignoredProjects: ['!second-project', '!first-project'] } });
+
+      result = await getResult(CompletionRequest.method, connection, files, 'first-project/app/components/foo.hbs', pos, projects);
+
+      expect(result[0].response.length).toBe(3);
+
+      result = await getResult(CompletionRequest.method, connection, files, 'second-project/app/components/baz.hbs', pos, projects);
+
+      expect(result[0].response.length).toBe(2);
+
       await setServerConfig(connection, { local: { addons: [], ignoredProjects: ['second-project', 'first-project'] } });
 
       result = await getResult(CompletionRequest.method, connection, files, 'first-project/app/components/foo.hbs', pos, projects);
