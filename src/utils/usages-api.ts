@@ -7,14 +7,16 @@ export interface TemplateTokenMeta {
   tokens: string[];
 }
 
-const TEMPLATE_TOKENS: {
+export type ITemplateTokens = {
   component: {
     [key: string]: TemplateTokenMeta;
   };
   routePath: {
     [key: string]: TemplateTokenMeta;
   };
-} = {
+};
+
+const TEMPLATE_TOKENS: ITemplateTokens = {
   component: {},
   routePath: {},
 };
@@ -116,7 +118,7 @@ export async function waitForTokensToBeCollected() {
   }
 }
 
-export function getAllTemplatTokens() {
+export function getAllTemplatTokens(): ITemplateTokens {
   return JSON.parse(JSON.stringify(TEMPLATE_TOKENS));
 }
 

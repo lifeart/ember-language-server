@@ -50,12 +50,13 @@ import { log, setConsole, logError, logInfo } from './utils/logger';
 import TemplateCompletionProvider from './completion-provider/template-completion-provider';
 import ScriptCompletionProvider from './completion-provider/script-completion-provider';
 import { getRegistryForRoot, addToRegistry, REGISTRY_KIND, normalizeMatchNaming, IRegistry, getRegistryForRoots } from './utils/registry-api';
-import { Usage, findRelatedFiles, waitForTokensToBeCollected, getAllTemplatTokens } from './utils/usages-api';
+import { Usage, findRelatedFiles, waitForTokensToBeCollected, getAllTemplatTokens, ITemplateTokens } from './utils/usages-api';
 import { URI } from 'vscode-uri';
 import { MatchResultType } from './utils/path-matcher';
 import { FileChangeType } from 'vscode-languageserver/node';
 import { debounce } from 'lodash';
 import { Config, Initializer } from './types';
+import { isFileBelongsToRoots } from './utils/layout-helpers';
 
 export default class Server {
   initializers: Initializer[] = [];
@@ -164,10 +165,40 @@ export default class Server {
       };
     };
 
-    this.executors['els.getLegacyTemplateTokens'] = async () => {
+    this.executors['els.getLegacyTemplateTokens'] = async (_, __, [projectPath]: [string]) => {
+      const project = this.projectRoots.projectForPath(projectPath);
+
+      if (!project) {
+        return {
+          msg: 'Unable to find project for path',
+          path: projectPath,
+        };
+      }
+
       await waitForTokensToBeCollected();
 
-      return getAllTemplatTokens();
+      const allTokens = getAllTemplatTokens();
+      const projectTokens: ITemplateTokens = {
+        component: {},
+        routePath: {},
+      };
+
+      Object.keys(allTokens).forEach((key: keyof ITemplateTokens) => {
+        Object.keys(allTokens[key]).forEach((pathName) => {
+          const meta = allTokens[key][pathName];
+
+          if (isFileBelongsToRoots(project.roots, meta.source)) {
+            projectTokens[key][pathName] = meta;
+          }
+        });
+      });
+
+      return {
+        projectName: project.name,
+        root: project.root,
+        roots: project.roots,
+        tokens: projectTokens,
+      };
     };
 
     this.executors['els.reloadProject'] = async (_, __, [projectPath]: [string]) => {
