@@ -49,7 +49,16 @@ import { CodeActionProvider } from './code-action-provider/entry';
 import { log, setConsole, logError, logInfo } from './utils/logger';
 import TemplateCompletionProvider from './completion-provider/template-completion-provider';
 import ScriptCompletionProvider from './completion-provider/script-completion-provider';
-import { getRegistryForRoot, addToRegistry, REGISTRY_KIND, normalizeMatchNaming, IRegistry, getRegistryForRoots, disableTemplateTokensCollection, enableTemplateTokensCollection } from './utils/registry-api';
+import {
+  getRegistryForRoot,
+  addToRegistry,
+  REGISTRY_KIND,
+  normalizeMatchNaming,
+  IRegistry,
+  getRegistryForRoots,
+  disableTemplateTokensCollection,
+  enableTemplateTokensCollection,
+} from './utils/registry-api';
 import { Usage, findRelatedFiles, waitForTokensToBeCollected, getAllTemplateTokens, ITemplateTokens } from './utils/usages-api';
 import { URI } from 'vscode-uri';
 import { MatchResultType } from './utils/path-matcher';
