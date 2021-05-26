@@ -79,38 +79,12 @@ export type IRegistry = {
 };
 
 export function getRegistryForRoots(rawRoots: string[]) {
-  const roots = rawRoots.slice(0);
-  const mainRegistry = getRegistryForRoot(roots.pop() as string);
-
-  roots.forEach((root) => {
-    const subRegistry = getRegistryForRoot(root);
-
-    Object.keys(subRegistry).forEach((keyName) => {
-      const collection: { [key: string]: string[] } = subRegistry[keyName as keyof typeof subRegistry];
-
-      Object.keys(collection).forEach((itemName) => {
-        if (!Array.isArray(mainRegistry[keyName as keyof typeof mainRegistry][itemName])) {
-          mainRegistry[keyName as keyof typeof mainRegistry][itemName] = [];
-        }
-
-        const rootRef = mainRegistry[keyName as keyof typeof mainRegistry][itemName];
-
-        collection[itemName].forEach((filePath) => {
-          if (!rootRef.includes(filePath)) {
-            rootRef.push(filePath);
-          }
-        });
-      });
-    });
-  });
-
-  return mainRegistry;
+  return _getRegistryForRoots(rawRoots);
 }
 
-export function getRegistryForRoot(rawRoot: string): IRegistry {
-  const root = path.resolve(rawRoot);
-  const lowRoot = root.toLowerCase();
-
+function _getRegistryForRoots(rawRoots: string[]) {
+  const roots = rawRoots.map((rawRoot) => path.resolve(rawRoot));
+  const lowRoot = roots.map((root) => root.toLowerCase());
   const registryForRoot: IRegistry = {
     transform: {},
     helper: {},
@@ -120,6 +94,7 @@ export function getRegistryForRoot(rawRoot: string): IRegistry {
     service: {},
     modifier: {},
   };
+
   const registry = getGlobalRegistry();
 
   Object.keys(registry).forEach((key: REGISTRY_KIND) => {
@@ -129,7 +104,11 @@ export function getRegistryForRoot(rawRoot: string): IRegistry {
       const items: string[] = [];
 
       paths.forEach((normalizedPath) => {
-        if (isRootStartingWithFilePath(lowRoot, normalizedPath.toLowerCase())) {
+        if (
+          lowRoot.some((lowRoot) => {
+            return isRootStartingWithFilePath(lowRoot, normalizedPath.toLowerCase());
+          })
+        ) {
           items.push(normalizedPath);
         }
       });
@@ -141,6 +120,10 @@ export function getRegistryForRoot(rawRoot: string): IRegistry {
   });
 
   return registryForRoot;
+}
+
+export function getRegistryForRoot(rawRoot: string): IRegistry {
+  return _getRegistryForRoots([rawRoot]);
 }
 
 export function addToRegistry(normalizedName: string, kind: REGISTRY_KIND, files: string[]) {
