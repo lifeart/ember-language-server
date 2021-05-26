@@ -50,7 +50,7 @@ import { log, setConsole, logError, logInfo } from './utils/logger';
 import TemplateCompletionProvider from './completion-provider/template-completion-provider';
 import ScriptCompletionProvider from './completion-provider/script-completion-provider';
 import { getRegistryForRoot, addToRegistry, REGISTRY_KIND, normalizeMatchNaming, IRegistry, getRegistryForRoots } from './utils/registry-api';
-import { Usage, findRelatedFiles, waitForTokensToBeCollected, getAllTemplatTokens, ITemplateTokens } from './utils/usages-api';
+import { Usage, findRelatedFiles, waitForTokensToBeCollected, getAllTemplateTokens, ITemplateTokens } from './utils/usages-api';
 import { URI } from 'vscode-uri';
 import { MatchResultType } from './utils/path-matcher';
 import { FileChangeType } from 'vscode-languageserver/node';
@@ -177,7 +177,7 @@ export default class Server {
 
       await waitForTokensToBeCollected();
 
-      const allTokens = getAllTemplatTokens();
+      const allTokens = getAllTemplateTokens();
       const projectTokens: ITemplateTokens = {
         component: {},
         routePath: {},

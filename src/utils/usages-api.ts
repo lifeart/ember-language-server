@@ -118,8 +118,8 @@ export async function waitForTokensToBeCollected() {
   }
 }
 
-export function getAllTemplatTokens(): ITemplateTokens {
-  return JSON.parse(JSON.stringify(TEMPLATE_TOKENS));
+export function getAllTemplateTokens(): ITemplateTokens {
+  return TEMPLATE_TOKENS;
 }
 
 function extractTokens() {
