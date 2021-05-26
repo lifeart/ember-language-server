@@ -116,6 +116,10 @@ export async function waitForTokensToBeCollected() {
   }
 }
 
+export function getAllTemplatTokens() {
+  return JSON.parse(JSON.stringify(TEMPLATE_TOKENS));
+}
+
 function extractTokens() {
   if (!tokenQueue.length) {
     return;
