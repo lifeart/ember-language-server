@@ -150,7 +150,10 @@ export default class Server {
       const project = this.projectRoots.projectForPath(fullPath);
 
       if (!project) {
-        return null;
+        return {
+          msg: 'Unable to find project by given file path, try to register it first, using els.registerProjectPath command',
+          path: filePath,
+        };
       }
 
       return {
