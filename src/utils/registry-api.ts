@@ -78,6 +78,35 @@ export type IRegistry = {
   };
 };
 
+export function getRegistryForRoots(rawRoots: string[]) {
+  const roots = rawRoots.slice(0);
+  const mainRegistry = getRegistryForRoot(roots.pop() as string);
+
+  roots.forEach((root) => {
+    const subRegistry = getRegistryForRoot(root);
+
+    Object.keys(subRegistry).forEach((keyName) => {
+      const collection: { [key: string]: string[] } = subRegistry[keyName as keyof typeof subRegistry];
+
+      Object.keys(collection).forEach((itemName) => {
+        if (!Array.isArray(mainRegistry[keyName as keyof typeof mainRegistry][itemName])) {
+          mainRegistry[keyName as keyof typeof mainRegistry][itemName] = [];
+        }
+
+        const rootRef = mainRegistry[keyName as keyof typeof mainRegistry][itemName];
+
+        collection[itemName].forEach((filePath) => {
+          if (!rootRef.includes(filePath)) {
+            rootRef.push(filePath);
+          }
+        });
+      });
+    });
+  });
+
+  return mainRegistry;
+}
+
 export function getRegistryForRoot(rawRoot: string): IRegistry {
   const root = path.resolve(rawRoot);
   const lowRoot = root.toLowerCase();
