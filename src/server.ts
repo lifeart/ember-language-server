@@ -5,7 +5,6 @@
 'use strict';
 
 import * as path from 'path';
-import * as fs from 'fs';
 
 import { TextDocument } from 'vscode-languageserver-textdocument';
 
@@ -65,13 +64,15 @@ import { MatchResultType } from './utils/path-matcher';
 import { FileChangeType } from 'vscode-languageserver/node';
 import { debounce } from 'lodash';
 import { Config, Initializer } from './types';
-import { isFileBelongsToRoots, mGetProjectAddonsInfo } from './utils/layout-helpers';
+import { asyncGetJSON, isFileBelongsToRoots, mGetProjectAddonsInfo } from './utils/layout-helpers';
+import FSProvider, { setFSImplementation } from './fs-provider';
 
 export interface IServerConfig {
   local: Config;
 }
 
 export default class Server {
+  fs = new FSProvider();
   initializers: Initializer[] = [];
   lazyInit = false;
   // Create a connection for the server. The connection defaults to Node's IPC as a transport, but
@@ -107,9 +108,9 @@ export default class Server {
     }
   }
 
-  setConfiguration(config: Config) {
+  async setConfiguration(config: Config) {
     if (config.addons) {
-      this.projectRoots.setLocalAddons(config.addons);
+      await this.projectRoots.setLocalAddons(config.addons);
     }
 
     if (config.ignoredProjects) {
@@ -140,8 +141,11 @@ export default class Server {
 
   referenceProvider: ReferenceProvider = new ReferenceProvider(this);
   codeActionProvider: CodeActionProvider = new CodeActionProvider(this);
-  executeInitializers() {
-    this.initializers.forEach((cb) => cb());
+  async executeInitializers() {
+    for (const initializer of this.initializers) {
+      await initializer();
+    }
+
     this.initializers = [];
   }
   private onInitialized() {
@@ -150,15 +154,15 @@ export default class Server {
     }
 
     this.executors['els.setConfig'] = async (_, __, [config]: [IServerConfig]) => {
-      this.setConfiguration(config.local);
+      await this.setConfiguration(config.local);
 
       if (this.lazyInit) {
-        this.executeInitializers();
+        await this.executeInitializers();
       }
     };
 
     this.executors['els.registerProjectPath'] = async (_, __, [projectPath]: [string]) => {
-      return this.projectRoots.onProjectAdd(projectPath);
+      return await this.projectRoots.onProjectAdd(projectPath);
     };
 
     this.executors['els.provideDiagnostics'] = async (_, __, [document]: [TextDocument]) => {
@@ -176,7 +180,7 @@ export default class Server {
         };
       }
 
-      mGetProjectAddonsInfo(project.root);
+      await mGetProjectAddonsInfo(project.root);
       project.invalidateRegistry();
 
       return {
@@ -228,7 +232,7 @@ export default class Server {
         const project = this.projectRoots.projectForPath(projectPath);
 
         if (project) {
-          this.projectRoots.reloadProject(project.root);
+          await this.projectRoots.reloadProject(project.root);
 
           return {
             msg: `Project reloaded`,
@@ -241,7 +245,7 @@ export default class Server {
           };
         }
       } else {
-        this.projectRoots.reloadProjects();
+        await this.projectRoots.reloadProjects();
 
         return {
           msg: 'Projects reloaded',
@@ -323,6 +327,7 @@ export default class Server {
     // for open, change and close text document events
 
     setConsole(this.connection.console);
+    setFSImplementation(this.fs);
 
     this.documents.listen(this.connection);
 
@@ -407,7 +412,7 @@ export default class Server {
   };
   // After the server has started the client sends an initilize request. The server receives
   // in the passed params the rootPath of the workspace plus the client capabilites.
-  private onInitialize({ rootUri, rootPath, workspaceFolders, initializationOptions, capabilities }: InitializeParams): InitializeResult {
+  private async onInitialize({ rootUri, rootPath, workspaceFolders, initializationOptions, capabilities }: InitializeParams): Promise<InitializeResult> {
     rootPath = rootUri ? URI.parse(rootUri).fsPath : rootPath;
     this.clientCapabilities = capabilities || {};
 
@@ -422,32 +427,32 @@ export default class Server {
     }
 
     if (initializationOptions && initializationOptions.isELSTesting) {
-      this.onInitialized();
+      await this.onInitialized();
       setConsole(null); //no console for testing as we use stdio for communication
     }
 
     log(`Initializing Ember Language Server at ${rootPath}`);
 
-    this.initializers.push(() => {
-      this.projectRoots.initialize(rootPath as string);
+    this.initializers.push(async () => {
+      await this.projectRoots.initialize(rootPath as string);
 
       if (workspaceFolders && Array.isArray(workspaceFolders)) {
-        workspaceFolders.forEach((folder) => {
+        for (const folder of workspaceFolders) {
           const folderPath = URI.parse(folder.uri).fsPath;
 
           if (folderPath && rootPath !== folderPath) {
-            this.projectRoots.findProjectsInsideRoot(folderPath);
+            await this.projectRoots.findProjectsInsideRoot(folderPath);
           }
-        });
+        }
       }
     });
 
     if (!this.lazyInit) {
-      this.executeInitializers();
+      await this.executeInitializers();
     }
     // this.setStatusText('Initialized');
 
-    const info = JSON.parse(fs.readFileSync(path.join(__dirname, './../package.json'), 'utf8'));
+    const info: { name: string; version: string } = (await asyncGetJSON(path.join(__dirname, './../package.json'))) as { name: string; version: string };
 
     return {
       serverInfo: {
@@ -585,8 +590,8 @@ export default class Server {
     // const Deleted = 3;
   }
 
-  private onDidChangeConfiguration({ settings }: { settings: Config }) {
-    this.setConfiguration(settings);
+  private async onDidChangeConfiguration({ settings }: { settings: Config }) {
+    await this.setConfiguration(settings);
   }
 
   private async onReference(params: ReferenceParams): Promise<Location[]> {
@@ -619,7 +624,7 @@ export default class Server {
   // this.connection.sendNotification('els.setStatusBarText', [text]);
   // }
 
-  private onDocumentSymbol(params: DocumentSymbolParams): SymbolInformation[] {
+  private async onDocumentSymbol(params: DocumentSymbolParams): Promise<SymbolInformation[]> {
     const uri = params.textDocument.uri;
     const filePath = URI.parse(uri).fsPath;
 
@@ -633,7 +638,7 @@ export default class Server {
 
     if (providers.length === 0) return [];
 
-    const content = fs.readFileSync(filePath, 'utf-8');
+    const content = await this.fs.readFile(filePath);
 
     return providers.map((providers) => providers.process(content)).reduce((a, b) => a.concat(b), []);
   }
