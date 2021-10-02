@@ -1,6 +1,6 @@
 import * as fs from 'fs';
 import { Connection } from 'vscode-languageserver';
-import { DocumentUri } from 'vscode-languageserver-protocol';
+import { DocumentUri, ExecuteCommandRequest } from 'vscode-languageserver-protocol';
 import { URI } from 'vscode-uri';
 import { logInfo } from './utils/logger';
 
@@ -61,23 +61,31 @@ export class AsyncFsProvider extends FSProvider {
     this.connection = connection;
   }
   _getGetUri(uri: DocumentUri | fs.PathLike): URI {
-    const entry = URI.isUri(uri) ? uri : URI.file(uri as string);
+    const entry = URI.file(uri as string);
 
     return entry;
   }
+  _sendCommand(command: string, ...options: unknown[]) {
+    return this.connection.sendRequest(ExecuteCommandRequest.type.method, {
+      command,
+      arguments: options,
+    });
+  }
   async readFile(uri: DocumentUri | fs.PathLike): Promise<string> {
-    logInfo('readFile: ' + uri);
-
     const entry = this._getGetUri(uri);
-    const result = await this.connection.sendRequest('els.fs.readFile', [entry]);
+
+    const result = await this._sendCommand('els.fs.readFile', entry);
+
+    if (typeof result !== 'string') {
+      return '';
+    }
 
     return result as string;
   }
   async exists(uri: DocumentUri | fs.PathLike): Promise<boolean> {
-    logInfo('exists: ' + uri);
-
     const entry = this._getGetUri(uri);
-    const result = await this.connection.sendRequest('els.fs.stat', [entry]);
+
+    const result = await this._sendCommand('els.fs.stat', entry);
 
     if (result === null) {
       return false;
