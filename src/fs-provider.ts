@@ -2,7 +2,6 @@ import * as fs from 'fs';
 import { Connection } from 'vscode-languageserver';
 import { DocumentUri, ExecuteCommandRequest } from 'vscode-languageserver-protocol';
 import { URI } from 'vscode-uri';
-import { logInfo } from './utils/logger';
 
 let currentFSImplementation!: FSProvider;
 

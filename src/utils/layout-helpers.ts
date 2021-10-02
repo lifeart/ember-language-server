@@ -52,7 +52,17 @@ export interface PackageInfo {
   };
 }
 
+let _supportSyncFS = true;
+
+export function setSyncFSSupport(value: boolean) {
+  _supportSyncFS = value;
+}
+
 export async function safeWalkSync(filePath: string | false, opts: any) {
+  if (!_supportSyncFS) {
+    return [];
+  }
+
   if (!filePath) {
     return [];
   }
