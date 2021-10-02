@@ -377,7 +377,7 @@ export async function getProjectAddonsInfo(root: string): Promise<void> {
     const version = addonVersion(info);
 
     if (version === null) {
-      break;
+      continue;
     }
 
     if (version === 1) {
