@@ -1,4 +1,5 @@
 import * as fs from 'fs';
+import { Connection } from 'vscode-languageserver';
 import { DocumentUri } from 'vscode-languageserver-protocol';
 import { URI } from 'vscode-uri';
 
@@ -49,5 +50,34 @@ export default class FSProvider {
   }
   readdirSync(filePath: fs.PathLike, options?: BufferEncoding | { encoding: BufferEncoding | null; withFileTypes?: false | undefined } | null | undefined) {
     return fs.readdirSync(filePath, options);
+  }
+}
+
+export class AsyncFsProvider extends FSProvider {
+  connection!: Connection;
+  constructor(connection: Connection) {
+    super();
+    this.connection = connection;
+  }
+  _getGetUri(uri: DocumentUri | fs.PathLike): URI {
+    const entry = URI.isUri(uri) ? uri : URI.file(uri as string);
+
+    return entry;
+  }
+  async readFile(uri: DocumentUri | fs.PathLike): Promise<string> {
+    const entry = this._getGetUri(uri);
+    const result = await this.connection.sendRequest('els.fs.readFile', [entry]);
+
+    return result as string;
+  }
+  async exists(uri: DocumentUri | fs.PathLike): Promise<boolean> {
+    const entry = this._getGetUri(uri);
+    const result = await this.connection.sendRequest('els.fs.stat', [entry]);
+
+    if (result === null) {
+      return false;
+    } else {
+      return true;
+    }
   }
 }

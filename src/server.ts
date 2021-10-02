@@ -60,14 +60,14 @@ import { FileChangeType } from 'vscode-languageserver/node';
 import { debounce } from 'lodash';
 import { Config, Initializer } from './types';
 import { asyncGetJSON, isFileBelongsToRoots, mGetProjectAddonsInfo } from './utils/layout-helpers';
-import FSProvider, { setFSImplementation } from './fs-provider';
+import FSProvider, { AsyncFsProvider, setFSImplementation } from './fs-provider';
 
 export interface IServerConfig {
   local: Config;
 }
 
 export default class Server {
-  fs = new FSProvider();
+  fs!: FSProvider;
   initializers: Initializer[] = [];
   lazyInit = false;
   // Create a connection for the server. The connection defaults to Node's IPC as a transport, but
@@ -314,12 +314,13 @@ export default class Server {
     }
   }
   clientCapabilities!: ClientCapabilities;
-  constructor(connection: Connection) {
+  constructor(connection: Connection, options: { type: 'node' | 'worker' } = { type: 'node' }) {
     if (!connection) {
       throw new Error('uELS constructor accept connection instance as first argument');
     }
 
     this.connection = connection;
+    this.fs = options?.type === 'node' ? new FSProvider() : new AsyncFsProvider(connection);
     // Make the text document manager listen on the connection
     // for open, change and close text document events
 

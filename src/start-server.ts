@@ -7,6 +7,8 @@ const connection: Connection = process.argv.includes('--stdio')
   ? createConnection(new StreamMessageReader(process.stdin), new StreamMessageWriter(process.stdout))
   : createConnection(new IPCMessageReader(process), new IPCMessageWriter(process));
 
-const server = new Server(connection);
+const server = new Server(connection, {
+  type: 'node',
+});
 
 server.listen();
