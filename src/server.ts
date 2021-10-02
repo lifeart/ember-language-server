@@ -9,9 +9,6 @@ import * as path from 'path';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 
 import {
-  IPCMessageReader,
-  IPCMessageWriter,
-  createConnection,
   DidChangeWatchedFilesParams,
   Connection,
   TextDocuments,
@@ -26,15 +23,13 @@ import {
   SymbolInformation,
   TextDocumentPositionParams,
   CompletionItem,
-  StreamMessageReader,
   WorkspaceFoldersChangeEvent,
   TextDocumentSyncKind,
-  StreamMessageWriter,
   ReferenceParams,
   Location,
   ExecuteCommandParams,
   TextDocumentChangeEvent,
-} from 'vscode-languageserver/node';
+} from 'vscode-languageserver';
 
 import ProjectRoots from './project-roots';
 import { Project, Executors } from './project';
@@ -77,10 +72,7 @@ export default class Server {
   lazyInit = false;
   // Create a connection for the server. The connection defaults to Node's IPC as a transport, but
   // also supports stdio via command line flag
-  connection: Connection = process.argv.includes('--stdio')
-    ? createConnection(new StreamMessageReader(process.stdin), new StreamMessageWriter(process.stdout))
-    : createConnection(new IPCMessageReader(process), new IPCMessageWriter(process));
-
+  connection!: Connection;
   // Create a simple text document manager. The text document manager
   // supports full document sync only
   documents: TextDocuments<TextDocument> = new TextDocuments(TextDocument);
@@ -322,7 +314,12 @@ export default class Server {
     }
   }
   clientCapabilities!: ClientCapabilities;
-  constructor() {
+  constructor(connection: Connection) {
+    if (!connection) {
+      throw new Error('uELS constructor accept connection instance as first argument');
+    }
+
+    this.connection = connection;
     // Make the text document manager listen on the connection
     // for open, change and close text document events
 
