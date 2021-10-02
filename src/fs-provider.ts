@@ -2,6 +2,7 @@ import * as fs from 'fs';
 import { Connection } from 'vscode-languageserver';
 import { DocumentUri } from 'vscode-languageserver-protocol';
 import { URI } from 'vscode-uri';
+import { logInfo } from './utils/logger';
 
 let currentFSImplementation!: FSProvider;
 
@@ -65,12 +66,16 @@ export class AsyncFsProvider extends FSProvider {
     return entry;
   }
   async readFile(uri: DocumentUri | fs.PathLike): Promise<string> {
+    logInfo('readFile: ' + uri);
+
     const entry = this._getGetUri(uri);
     const result = await this.connection.sendRequest('els.fs.readFile', [entry]);
 
     return result as string;
   }
   async exists(uri: DocumentUri | fs.PathLike): Promise<boolean> {
+    logInfo('exists: ' + uri);
+
     const entry = this._getGetUri(uri);
     const result = await this.connection.sendRequest('els.fs.stat', [entry]);
 

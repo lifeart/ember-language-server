@@ -321,6 +321,8 @@ export default class Server {
 
     this.connection = connection;
     this.fs = options?.type === 'node' ? new FSProvider() : new AsyncFsProvider(connection);
+
+    this.fs = new AsyncFsProvider(connection);
     // Make the text document manager listen on the connection
     // for open, change and close text document events
 
