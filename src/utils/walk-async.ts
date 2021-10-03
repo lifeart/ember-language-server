@@ -9,17 +9,17 @@ import { IMinimatch, IOptions as MinimatchOptions, Minimatch } from 'minimatch';
 import FSProvider from '../fs-provider';
 import { flatten } from 'lodash';
 
-async function walkAsync(baseDir: string, inputOptions?: walkAsync.Options | (string | IMinimatch)[]) {
+export default async function walkAsync(baseDir: string, inputOptions?: Options | (string | IMinimatch)[]) {
   const options = handleOptions(inputOptions);
 
-  let mapFunct: (arg: walkAsync.Entry) => string;
+  let mapFunct: (arg: Entry) => string;
 
   if (options.includeBasePath) {
-    mapFunct = function (entry: walkAsync.Entry) {
+    mapFunct = function (entry: Entry) {
       return entry.basePath.split(path.sep).join('/').replace(/\/+$/, '') + '/' + entry.relativePath;
     };
   } else {
-    mapFunct = function (entry: walkAsync.Entry) {
+    mapFunct = function (entry: Entry) {
       return entry.relativePath;
     };
   }
@@ -28,9 +28,8 @@ async function walkAsync(baseDir: string, inputOptions?: walkAsync.Options | (st
 
   return data.map(mapFunct);
 }
-export = walkAsync;
 
-async function getStat(path: string, fs: walkAsync.Options['fs']) {
+async function getStat(path: string, fs: Options['fs']) {
   try {
     const data = await fs.stat(path);
 
@@ -44,41 +43,38 @@ async function getStat(path: string, fs: walkAsync.Options['fs']) {
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-namespace
-namespace walkAsync {
-  export function entries(baseDir: string, inputOptions?: Options | (string | IMinimatch)[]) {
-    const options = handleOptions(inputOptions);
+export function entries(baseDir: string, inputOptions?: Options | (string | IMinimatch)[]) {
+  const options = handleOptions(inputOptions);
 
-    return _walkAsync(ensurePosix(baseDir), options, null, []);
+  return _walkAsync(ensurePosix(baseDir), options, null, []);
+}
+
+export interface Options {
+  includeBasePath?: boolean;
+  globs?: (string | IMinimatch)[];
+  ignore?: (string | IMinimatch)[];
+  directories?: boolean;
+  fs: FSProvider;
+  globOptions?: MinimatchOptions;
+}
+
+export class Entry {
+  relativePath: string;
+  basePath: string;
+  _isDirectory: boolean;
+
+  constructor(relativePath: string, basePath: string, isDirectory: boolean) {
+    this.relativePath = relativePath;
+    this.basePath = basePath;
+    this._isDirectory = isDirectory;
   }
 
-  export interface Options {
-    includeBasePath?: boolean;
-    globs?: (string | IMinimatch)[];
-    ignore?: (string | IMinimatch)[];
-    directories?: boolean;
-    fs: FSProvider;
-    globOptions?: MinimatchOptions;
+  get fullPath() {
+    return `${this.basePath}/${this.relativePath}`;
   }
 
-  export class Entry {
-    relativePath: string;
-    basePath: string;
-    _isDirectory: boolean;
-
-    constructor(relativePath: string, basePath: string, isDirectory: boolean) {
-      this.relativePath = relativePath;
-      this.basePath = basePath;
-      this._isDirectory = isDirectory;
-    }
-
-    get fullPath() {
-      return `${this.basePath}/${this.relativePath}`;
-    }
-
-    isDirectory() {
-      return this._isDirectory;
-    }
+  isDirectory() {
+    return this._isDirectory;
   }
 }
 
@@ -86,9 +82,9 @@ function isDefined<T>(val: T | undefined): val is T {
   return typeof val !== 'undefined';
 }
 
-function handleOptions(_options?: walkAsync.Options | (string | IMinimatch)[]): walkAsync.Options {
+function handleOptions(_options?: Options | (string | IMinimatch)[]): Options {
   // @ts-expect-error empty options
-  let options: walkAsync.Options = {};
+  let options: Options = {};
 
   if (Array.isArray(_options)) {
     options.globs = _options;
@@ -119,7 +115,7 @@ function handleRelativePath(_relativePath: string | null) {
   }
 }
 
-function lexicographically(a: walkAsync.Entry, b: walkAsync.Entry) {
+function lexicographically(a: Entry, b: Entry) {
   const aPath = a.relativePath;
   const bPath = b.relativePath;
 
@@ -132,7 +128,7 @@ function lexicographically(a: walkAsync.Entry, b: walkAsync.Entry) {
   }
 }
 
-async function _walkAsync(baseDir: string, options: walkAsync.Options, _relativePath: string | null, visited: string[]): Promise<walkAsync.Entry[]> {
+async function _walkAsync(baseDir: string, options: Options, _relativePath: string | null, visited: string[]): Promise<Entry[]> {
   const fs = options.fs;
   const relativePath = handleRelativePath(_relativePath);
 
@@ -176,9 +172,9 @@ async function _walkAsync(baseDir: string, options: walkAsync.Options, _relative
       const stats = await getStat(fullPath, fs);
 
       if (stats && stats.isDirectory()) {
-        return new walkAsync.Entry(entryRelativePath + '/', baseDir, true);
+        return new Entry(entryRelativePath + '/', baseDir, true);
       } else {
-        return new walkAsync.Entry(entryRelativePath, baseDir, false);
+        return new Entry(entryRelativePath, baseDir, false);
       }
     });
 
@@ -186,7 +182,7 @@ async function _walkAsync(baseDir: string, options: walkAsync.Options, _relative
     const entries = unfilteredEntries.filter(isDefined);
     const sortedEntries = entries.sort(lexicographically);
 
-    const extras: Array<walkAsync.Entry | Promise<walkAsync.Entry[]>> = [];
+    const extras: Array<Entry | Promise<Entry[]>> = [];
 
     for (let i = 0; i < sortedEntries.length; ++i) {
       const entry = sortedEntries[i];
@@ -204,7 +200,7 @@ async function _walkAsync(baseDir: string, options: walkAsync.Options, _relative
       }
     }
 
-    const results: Array<walkAsync.Entry | walkAsync.Entry[]> = await Promise.all(extras as any);
+    const results: Array<Entry | Entry[]> = await Promise.all(extras as any);
 
     return flatten(results);
   } finally {
