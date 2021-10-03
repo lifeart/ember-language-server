@@ -3,7 +3,6 @@ import { Connection } from 'vscode-languageserver';
 import { DocumentUri, ExecuteCommandRequest } from 'vscode-languageserver-protocol';
 import { URI } from 'vscode-uri';
 import { convertToFsStat, FileStat } from './utils/fs-utils';
-import * as path from 'path';
 
 let currentFSImplementation!: FSProvider;
 

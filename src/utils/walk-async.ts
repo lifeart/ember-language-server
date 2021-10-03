@@ -9,7 +9,7 @@ import { IMinimatch, IOptions as MinimatchOptions, Minimatch } from 'minimatch';
 import FSProvider from '../fs-provider';
 import { flatten } from 'lodash';
 
-function walkAsync(baseDir: string, inputOptions?: walkAsync.Options | (string | IMinimatch)[]) {
+async function walkAsync(baseDir: string, inputOptions?: walkAsync.Options | (string | IMinimatch)[]) {
   const options = handleOptions(inputOptions);
 
   let mapFunct: (arg: walkAsync.Entry) => string;
@@ -24,7 +24,9 @@ function walkAsync(baseDir: string, inputOptions?: walkAsync.Options | (string |
     };
   }
 
-  return _walkAsync(baseDir, options, null, []).map(mapFunct);
+  const data = await _walkAsync(baseDir, options, null, []);
+
+  return data.map(mapFunct);
 }
 export = walkAsync;
 
