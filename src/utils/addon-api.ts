@@ -7,6 +7,7 @@ import {
   hasEmberLanguageServerExtension,
   addonVersion,
   asyncGetPackageJSON,
+  getRequireSupport,
 } from './layout-helpers';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as path from 'path';
@@ -102,6 +103,14 @@ function create<T>(model: new () => T): T {
 const requireFunc = typeof __webpack_require__ === 'function' ? __non_webpack_require__ : require;
 
 function requireUncached(module: string) {
+  if (!getRequireSupport()) {
+    return {
+      onInit() {
+        throw new Error('Unable to use require in worker environment');
+      },
+    };
+  }
+
   delete require.cache[requireFunc.resolve(module)];
   let result = {};
 

@@ -11,6 +11,7 @@ import * as path from 'path';
 
 import Server from './server';
 import { Project } from './project';
+import { getRequireSupport } from './utils/layout-helpers';
 
 export interface TemplateLinterError {
   fatal?: boolean;
@@ -194,6 +195,10 @@ export default class TemplateLinter {
       }) as Promise<string>);
 
       if (!linterPath) {
+        return;
+      }
+
+      if (!getRequireSupport()) {
         return;
       }
 

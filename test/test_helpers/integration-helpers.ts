@@ -65,12 +65,18 @@ export function asyncFSProvider() {
       data = null;
     }
 
+    if (data === null) {
+      console.log('els.fs.readFile', data, fsPath);
+    }
+
     return data;
   };
 
   commands['els.fs.stat'] = async (uri: URI): Promise<FileStat | null> => {
     const fsPath = URI.from(uri).fsPath;
     let data: fs.Stats = null;
+
+    console.log('els.fs.stat', fsPath);
 
     try {
       data = fs.statSync(fsPath);
@@ -97,10 +103,32 @@ export function asyncFSProvider() {
     try {
       data = fs.readdirSync(fsPath);
     } catch (e) {
+      console.log(e);
       data = null;
     }
 
-    return data;
+    if (data === null) {
+      console.log('els.fs.readDirectory', data, fsPath);
+
+      return null;
+    }
+
+    return (data as string[])
+      .map((el) => {
+        let stat = FileType.Unknown;
+
+        try {
+          const statData = fs.statSync(path.join(fsPath, path.sep, el));
+
+          stat = fileTypeFromFsStat(statData);
+        } catch (e) {
+          return null;
+          // EOL;
+        }
+
+        return [el, stat];
+      })
+      .filter((el) => el !== null);
   };
 
   return commands;

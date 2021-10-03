@@ -60,7 +60,7 @@ import { MatchResultType } from './utils/path-matcher';
 import { FileChangeType } from 'vscode-languageserver/node';
 import { debounce } from 'lodash';
 import { Config, Initializer } from './types';
-import { asyncGetJSON, isFileBelongsToRoots, mGetProjectAddonsInfo, setSyncFSSupport } from './utils/layout-helpers';
+import { asyncGetJSON, isFileBelongsToRoots, mGetProjectAddonsInfo, setRequireSupport, setSyncFSSupport } from './utils/layout-helpers';
 import FSProvider, { AsyncFsProvider, setFSImplementation } from './fs-provider';
 
 export interface IServerConfig {
@@ -340,6 +340,7 @@ export default class Server {
     this.fs = this.options.fs === 'sync' ? new FSProvider() : new AsyncFsProvider(this);
 
     setSyncFSSupport(this.options.fs === 'sync');
+    setRequireSupport(this.options.type === 'node');
 
     // Make the text document manager listen on the connection
     // for open, change and close text document events

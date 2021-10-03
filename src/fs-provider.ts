@@ -52,13 +52,25 @@ export default class FSProvider {
     return fs.createWriteStream(filePath, flags);
   }
   async readDirectory(filePath: string): Promise<[string, FileType][]> {
-    const files: string[] = fs.readdirSync(filePath).map((el) => {
-      return el;
-    });
+    try {
+      const files: string[] = fs.readdirSync(filePath).map((el) => {
+        return el;
+      });
 
-    return files.map((fName) => {
-      return [fName, fileTypeFromFsStat(fs.statSync(path.join(filePath, '/', fName)))];
-    });
+      return files.map((fName) => {
+        let fType = FileType.Unknown;
+
+        try {
+          fType = fileTypeFromFsStat(fs.statSync(path.join(filePath, '/', fName)));
+        } catch (e) {
+          // EOL;
+        }
+
+        return [fName, fType];
+      });
+    } catch (e) {
+      throw null;
+    }
   }
   realpathSync(filePath: fs.PathLike, options?: { encoding?: BufferEncoding | null } | BufferEncoding | null) {
     if (!this.hasRealFsAccess) {

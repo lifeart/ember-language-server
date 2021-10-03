@@ -49,15 +49,20 @@ export default async function walkAsync(baseDir: string, inputOptions?: Options 
     };
   }
 
-  const data = await _walkAsync(baseDir, options, null, []);
+  const pathSet: Set<string> = new Set();
+  const data = await _walkAsync(baseDir, options, null, pathSet);
 
-  return data.map(mapFunct);
+  try {
+    return data.map(mapFunct);
+  } finally {
+    pathSet.clear();
+  }
 }
 
 export function entries(baseDir: string, inputOptions?: Options | string[]) {
   const options = handleOptions(inputOptions);
 
-  return _walkAsync(ensurePosix(baseDir), options, null, []);
+  return _walkAsync(ensurePosix(baseDir), options, null, new Set());
 }
 
 export interface Options {
@@ -128,16 +133,16 @@ function lexicographically(a: Entry, b: Entry) {
   }
 }
 
-async function _walkAsync(baseDir: string, options: Options, _relativePath: string | null, visited: string[]): Promise<Entry[]> {
+async function _walkAsync(baseDir: string, options: Options, _relativePath: string | null, visited: Set<string>): Promise<Entry[]> {
   const fs = options.fs;
   const relativePath = handleRelativePath(_relativePath);
 
   const realPath = fs.hasRealFsAccess ? fs.realpathSync(baseDir + '/' + relativePath) : path.join(baseDir, '/', relativePath);
 
-  if (visited.indexOf(realPath) >= 0) {
+  if (visited.has(realPath)) {
     return [];
   } else {
-    visited.push(realPath);
+    visited.add(realPath);
   }
 
   try {
@@ -196,8 +201,6 @@ async function _walkAsync(baseDir: string, options: Options, _relativePath: stri
 
     return flatten(results);
   } finally {
-    if (visited.indexOf(realPath)) {
-      visited.splice(visited.indexOf(realPath), 1);
-    }
+    // EOL
   }
 }

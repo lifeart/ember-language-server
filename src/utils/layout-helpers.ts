@@ -53,6 +53,7 @@ export interface PackageInfo {
 }
 
 let _supportSyncFS = true;
+let _requireSupport = true;
 
 export function setSyncFSSupport(value: boolean) {
   _supportSyncFS = value;
@@ -60,6 +61,14 @@ export function setSyncFSSupport(value: boolean) {
 
 export function getSyncFSSupport() {
   return _supportSyncFS;
+}
+
+export function setRequireSupport(value: boolean) {
+  _requireSupport = value;
+}
+
+export function getRequireSupport() {
+  return _requireSupport;
 }
 
 export async function safeWalkAsync(filePath: string | false, opts: any) {
@@ -79,6 +88,10 @@ export function getPodModulePrefix(root: string): string | null {
 
   // log('listPodsComponents');
   try {
+    if (!getRequireSupport()) {
+      return null;
+    }
+
     // @ts-expect-error @todo - fix webpack imports
     const requireFunc = typeof __webpack_require__ === 'function' ? __non_webpack_require__ : require;
 
