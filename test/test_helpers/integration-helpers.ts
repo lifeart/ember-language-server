@@ -19,10 +19,16 @@ import {
   CompletionRequest,
 } from 'vscode-languageserver-protocol/node';
 
-export function startServer() {
-  return spawn('node_modules/.bin/nyc', ['--reporter', 'none', 'node', './inst/start-server.js', '--stdio', '--no-clean'], {
-    cwd: path.join(__dirname, '../..'),
-  });
+export function startServer(asyncFs = false) {
+  const options = ['--reporter', 'none', 'node', './inst/start-server.js', '--stdio', asyncFs ? '--async-fs' : undefined, '--no-clean'];
+
+  return spawn(
+    'node_modules/.bin/nyc',
+    options.filter((el) => el !== undefined),
+    {
+      cwd: path.join(__dirname, '../..'),
+    }
+  );
 }
 
 export type UnknownResult = Record<string, unknown>;
