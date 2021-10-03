@@ -339,13 +339,13 @@ export default class Server {
     this.connection = connection;
     this.fs = this.options.fs === 'sync' ? new FSProvider() : new AsyncFsProvider(this);
 
-    setFSImplementation(this.fs);
     setSyncFSSupport(this.options.fs === 'sync');
 
     // Make the text document manager listen on the connection
     // for open, change and close text document events
 
     setConsole(this.connection.console);
+    setFSImplementation(this.fs);
 
     this.templateLinter = new TemplateLinter(this);
     this.projectRoots = new ProjectRoots(this);
