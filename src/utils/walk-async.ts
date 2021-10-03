@@ -159,7 +159,13 @@ async function _walkAsync(baseDir: string, options: Options, _relativePath: stri
       globMatcher = new MatcherCollection(globs);
     }
 
-    const names = await fs.readDirectory(baseDir + '/' + relativePath);
+    let names: [string, FileType][] = [];
+
+    try {
+      names = await fs.readDirectory(baseDir + '/' + relativePath);
+    } catch (e) {
+      // EOL;
+    }
 
     const rawEntries = names.map(async ([name, fType]) => {
       const entryRelativePath = relativePath + name;

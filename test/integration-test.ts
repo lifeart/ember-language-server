@@ -31,7 +31,7 @@ import {
 import { ITemplateTokens } from '../src/utils/usages-api';
 
 describe('integration', function () {
-  const testCaseAsyncFsOptions = [false];
+  const testCaseAsyncFsOptions = [false, true];
 
   for (const asyncFsEnabled of testCaseAsyncFsOptions) {
     describe(`async fs enabled: ${asyncFsEnabled.toString()}`, function () {

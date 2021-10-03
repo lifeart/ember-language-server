@@ -120,7 +120,13 @@ export class AsyncFsProvider extends FSProvider {
 
     return result as string;
   }
-  async readDirectory(uri: DocumentUri | fs.PathLike): Promise<[string, FileType][]> {
+  async readDirectory(rawUri: string): Promise<[string, FileType][]> {
+    let uri = rawUri;
+
+    if (rawUri.endsWith('/') || rawUri.endsWith('\\')) {
+      uri = uri.slice(0, -1);
+    }
+
     const entry = this.getGetUri(uri);
 
     const data: [string, FileType][] = (await this.sendCommand('els.fs.readDirectory', entry)) as [string, FileType][];

@@ -65,10 +65,6 @@ export function asyncFSProvider() {
       data = null;
     }
 
-    if (data === null) {
-      console.log('els.fs.readFile', data, fsPath);
-    }
-
     return data;
   };
 
@@ -102,13 +98,10 @@ export function asyncFSProvider() {
     try {
       data = fs.readdirSync(fsPath);
     } catch (e) {
-      console.log(e);
       data = null;
     }
 
     if (data === null) {
-      console.log('els.fs.readDirectory', data, fsPath);
-
       return null;
     }
 
