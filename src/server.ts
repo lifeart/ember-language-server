@@ -120,10 +120,14 @@ export default class Server {
       this.projectRoots.setIgnoredProjects(config.ignoredProjects);
     }
 
-    if (config.useBuiltinLinting === false) {
+    if (this.options.type === 'node') {
+      if (config.useBuiltinLinting === false) {
+        this.templateLinter.disable();
+      } else if (config.useBuiltinLinting === true) {
+        this.templateLinter.enable();
+      }
+    } else {
       this.templateLinter.disable();
-    } else if (config.useBuiltinLinting === true) {
-      this.templateLinter.enable();
     }
 
     if (config.collectTemplateTokens === false) {
@@ -334,13 +338,13 @@ export default class Server {
     this.connection = connection;
     this.fs = this.options.fs === 'sync' ? new FSProvider() : new AsyncFsProvider(connection);
 
+    setFSImplementation(this.fs);
     setSyncFSSupport(this.options.fs === 'sync');
 
     // Make the text document manager listen on the connection
     // for open, change and close text document events
 
     setConsole(this.connection.console);
-    setFSImplementation(this.fs);
 
     this.documents.listen(this.connection);
 

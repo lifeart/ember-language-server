@@ -39,7 +39,11 @@ export default class TemplateLinter {
   private _linterCache = new Map<Project, any>();
   private _isEnabled = true;
 
-  constructor(private server: Server) {}
+  constructor(private server: Server) {
+    if (server.options.type === 'worker') {
+      this.disable();
+    }
+  }
 
   disable() {
     this._isEnabled = false;
