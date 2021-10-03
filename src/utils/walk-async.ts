@@ -2,12 +2,59 @@
 
 'use strict';
 
-import * as MatcherCollection from 'matcher-collection';
-import ensurePosix = require('ensure-posix-path');
 import path = require('path');
-import { IMinimatch, IOptions as MinimatchOptions, Minimatch } from 'minimatch';
+
+// likely we should replace minimatch with picomatch
+// https://github.com/micromatch/picomatch
+
+import type { IMinimatch, IOptions as MinimatchOptions } from 'minimatch';
+import { Minimatch } from 'minimatch';
 import FSProvider from '../fs-provider';
 import { flatten } from 'lodash';
+
+function ensurePosix(filepath: string) {
+  if (path.sep !== '/') {
+    return filepath.split(path.sep).join('/');
+  }
+
+  return filepath;
+}
+
+class MatcherCollection {
+  private matchers: IMinimatch[];
+
+  constructor(matchers: (IMinimatch | string)[]) {
+    this.matchers = matchers.map((matcher) => {
+      return typeof matcher === 'string' ? new Minimatch(matcher) : matcher;
+    });
+  }
+
+  match(value: string) {
+    for (let i = 0; i < this.matchers.length; i++) {
+      if (this.matchers[i].match(value)) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  mayContain(value: string) {
+    const parts = value.split(/\/|\\/g).filter(Boolean);
+
+    for (let i = 0; i < this.matchers.length; i++) {
+      const matcher = this.matchers[i];
+
+      for (let j = 0; j < matcher.set.length; j++) {
+        if (matcher.matchOne(parts, matcher.set[j], true)) {
+          return true;
+        }
+      }
+    }
+
+    return false;
+  }
+}
 
 export default async function walkAsync(baseDir: string, inputOptions?: Options | (string | IMinimatch)[]) {
   const options = handleOptions(inputOptions);

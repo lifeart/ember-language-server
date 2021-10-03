@@ -337,7 +337,7 @@ export default class Server {
 
     this.options = { ...defaultServerOptions, ...options };
     this.connection = connection;
-    this.fs = this.options.fs === 'sync' ? new FSProvider() : new AsyncFsProvider(connection);
+    this.fs = this.options.fs === 'sync' ? new FSProvider() : new AsyncFsProvider(this);
 
     setFSImplementation(this.fs);
     setSyncFSSupport(this.options.fs === 'sync');
