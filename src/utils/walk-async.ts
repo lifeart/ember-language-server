@@ -2,13 +2,8 @@
 
 'use strict';
 
-import path = require('path');
-
-// likely we should replace minimatch with picomatch
-// https://github.com/micromatch/picomatch
-
-import type { IMinimatch, IOptions as MinimatchOptions } from 'minimatch';
-import { Minimatch } from 'minimatch';
+import * as path from 'path';
+import * as pm from 'picomatch';
 import FSProvider from '../fs-provider';
 import { flatten } from 'lodash';
 
@@ -21,34 +16,16 @@ function ensurePosix(filepath: string) {
 }
 
 class MatcherCollection {
-  private matchers: IMinimatch[];
+  private matchers: pm.Matcher[];
 
-  constructor(matchers: (IMinimatch | string)[]) {
-    this.matchers = matchers.map((matcher) => {
-      return typeof matcher === 'string' ? new Minimatch(matcher) : matcher;
-    });
+  constructor(matchers: string[]) {
+    this.matchers = [pm(matchers)];
   }
 
   match(value: string) {
     for (let i = 0; i < this.matchers.length; i++) {
-      if (this.matchers[i].match(value)) {
+      if (this.matchers[i](value)) {
         return true;
-      }
-    }
-
-    return false;
-  }
-
-  mayContain(value: string) {
-    const parts = value.split(/\/|\\/g).filter(Boolean);
-
-    for (let i = 0; i < this.matchers.length; i++) {
-      const matcher = this.matchers[i];
-
-      for (let j = 0; j < matcher.set.length; j++) {
-        if (matcher.matchOne(parts, matcher.set[j], true)) {
-          return true;
-        }
       }
     }
 
@@ -56,7 +33,7 @@ class MatcherCollection {
   }
 }
 
-export default async function walkAsync(baseDir: string, inputOptions?: Options | (string | IMinimatch)[]) {
+export default async function walkAsync(baseDir: string, inputOptions?: Options | string[]) {
   const options = handleOptions(inputOptions);
 
   let mapFunct: (arg: Entry) => string;
@@ -90,7 +67,7 @@ async function getStat(path: string, fs: Options['fs']) {
   }
 }
 
-export function entries(baseDir: string, inputOptions?: Options | (string | IMinimatch)[]) {
+export function entries(baseDir: string, inputOptions?: Options | string[]) {
   const options = handleOptions(inputOptions);
 
   return _walkAsync(ensurePosix(baseDir), options, null, []);
@@ -98,11 +75,10 @@ export function entries(baseDir: string, inputOptions?: Options | (string | IMin
 
 export interface Options {
   includeBasePath?: boolean;
-  globs?: (string | IMinimatch)[];
-  ignore?: (string | IMinimatch)[];
+  globs?: string[];
+  ignore?: string[];
   directories?: boolean;
   fs: FSProvider;
-  globOptions?: MinimatchOptions;
 }
 
 export class Entry {
@@ -129,7 +105,7 @@ function isDefined<T>(val: T | undefined): val is T {
   return typeof val !== 'undefined';
 }
 
-function handleOptions(_options?: Options | (string | IMinimatch)[]): Options {
+function handleOptions(_options?: Options | string[]): Options {
   // @ts-expect-error empty options
   let options: Options = {};
 
@@ -140,16 +116,6 @@ function handleOptions(_options?: Options | (string | IMinimatch)[]): Options {
   }
 
   return options;
-}
-
-function applyGlobOptions(globs: (string | IMinimatch)[] | undefined, options: MinimatchOptions) {
-  return globs?.map((glob) => {
-    if (typeof glob === 'string') {
-      return new Minimatch(glob, options);
-    }
-
-    return glob;
-  });
 }
 
 function handleRelativePath(_relativePath: string | null) {
@@ -188,9 +154,8 @@ async function _walkAsync(baseDir: string, options: Options, _relativePath: stri
   }
 
   try {
-    const globOptions = options.globOptions;
-    const ignorePatterns = isDefined(globOptions) ? applyGlobOptions(options.ignore, globOptions) : options.ignore;
-    const globs = isDefined(globOptions) ? applyGlobOptions(options.globs, globOptions) : options.globs;
+    const ignorePatterns = options.ignore;
+    const globs = options.globs;
     let globMatcher;
     let ignoreMatcher: undefined | InstanceType<typeof MatcherCollection>;
 
@@ -200,10 +165,6 @@ async function _walkAsync(baseDir: string, options: Options, _relativePath: stri
 
     if (globs) {
       globMatcher = new MatcherCollection(globs);
-    }
-
-    if (globMatcher && !globMatcher.mayContain(relativePath)) {
-      return [];
     }
 
     const names = await fs.readDirectory(baseDir + '/' + relativePath);

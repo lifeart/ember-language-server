@@ -417,7 +417,7 @@ export async function listPodsComponents(project: BaseProject): Promise<void> {
 
   const jsPaths = await safeWalkAsync(entryPath, {
     directories: false,
-    globs: ['**/*.{js,ts,hbs,css,less,scss}'],
+    globs: ['**/*.js', '**/*.ts', '**/*.hbs', '**/*.css', '**/*.less', '**/*.scss'],
   });
 
   jsPaths.forEach((filePath: string) => {
@@ -456,15 +456,15 @@ export async function listComponents(project: BaseProject): Promise<void> {
   const [addonComponentsPaths, addonTemplatesPaths, jsPaths, hbsPaths] = await Promise.all([
     safeWalkAsync(addonComponents, {
       directories: false,
-      globs: ['**/*.{js,ts,hbs}'],
+      globs: ['**/*.js', '**/*.ts', '**/*.hbs'],
     }),
     safeWalkAsync(addonTemplates, {
       directories: false,
-      globs: ['**/*.{js,ts,hbs}'],
+      globs: ['**/*.js', '**/*.ts', '**/*.hbs'],
     }),
     safeWalkAsync(scriptEntry, {
       directories: false,
-      globs: ['**/*.{js,ts,hbs,css,less,scss}'],
+      globs: ['**/*.js', '**/*.ts', '**/*.hbs', '**/*.css', '**/*.less', '**/*.scss'],
     }),
     safeWalkAsync(templateEntry, {
       directories: false,
@@ -528,15 +528,15 @@ async function findRegistryItemsForProject(project: BaseProject, prefix: string,
 }
 
 export async function findTestsForProject(project: BaseProject) {
-  await findRegistryItemsForProject(project, 'tests', ['**/*.{js,ts}']);
+  await findRegistryItemsForProject(project, 'tests', ['**/*.js', '**/*.ts']);
 }
 
 export async function findAppItemsForProject(project: BaseProject) {
-  await findRegistryItemsForProject(project, 'app', ['**/*.{js,ts,css,less,sass,hbs}']);
+  await findRegistryItemsForProject(project, 'app', ['**/*.js', '**/*.ts', '**/*.css', '**/*.less', '**/*.sass', '**/*.hbs']);
 }
 
 export async function findAddonItemsForProject(project: BaseProject) {
-  await findRegistryItemsForProject(project, 'addon', ['**/*.{js,ts,css,less,sass,hbs}']);
+  await findRegistryItemsForProject(project, 'addon', ['**/*.js', '**/*.ts', '**/*.css', '**/*.less', '**/*.sass', '**/*.hbs']);
 }
 
 async function listCollection(
@@ -548,7 +548,7 @@ async function listCollection(
   const entry = path.resolve(path.join(project.root, prefix, collectionName));
   const paths = await safeWalkAsync(entry, {
     directories: false,
-    globs: ['**/*.{js,ts}'],
+    globs: ['**/*.js', '**/*.ts'],
   });
 
   paths.forEach((filePath: string) => {
@@ -588,7 +588,7 @@ export async function listRoutes(project: BaseProject): Promise<void> {
   const controllersEntry = path.join(root, 'app', 'controllers');
   const paths = await safeWalkAsync(scriptEntry, {
     directories: false,
-    globs: ['**/*.{js,ts}'],
+    globs: ['**/*.js', '**/*.ts'],
   });
 
   const templatePaths = (
@@ -604,7 +604,7 @@ export async function listRoutes(project: BaseProject): Promise<void> {
 
   const controllers = await safeWalkAsync(controllersEntry, {
     directories: false,
-    globs: ['**/*.{js,ts}'],
+    globs: ['**/*.js', '**/*.ts'],
   });
 
   templatePaths.forEach((filePath) => {
