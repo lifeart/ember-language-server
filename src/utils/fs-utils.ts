@@ -14,6 +14,20 @@ export interface FileStat {
   type: FileType;
 }
 
+export function fileTypeFromFsStat(item: fs.Stats): FileType {
+  let fType: FileType = FileType.Unknown;
+
+  if (item.isDirectory()) {
+    fType = FileType.Directory;
+  } else if (item.isSymbolicLink()) {
+    fType = FileType.SymbolicLink;
+  } else if (item.isFile()) {
+    fType = FileType.File;
+  }
+
+  return fType;
+}
+
 export function convertToFsStat(item: FileStat): fs.Stats {
   const data: fs.Stats = {
     isFile() {

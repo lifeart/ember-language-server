@@ -1,8 +1,9 @@
 import * as fs from 'fs';
 import { DocumentUri } from 'vscode-languageserver-protocol';
 import { URI } from 'vscode-uri';
-import { convertToFsStat, FileStat } from './utils/fs-utils';
+import { convertToFsStat, FileStat, FileType, fileTypeFromFsStat } from './utils/fs-utils';
 import Server from './server';
+import * as path from 'path';
 
 let currentFSImplementation!: FSProvider;
 
@@ -54,9 +55,13 @@ export default class FSProvider {
   statSync(filePath: fs.PathLike) {
     return fs.statSync(filePath);
   }
-  readDirectory(filePath: string): string[] {
-    return fs.readdirSync(filePath).map((el) => {
+  async readDirectory(filePath: string): Promise<[string, FileType][]> {
+    const files: string[] = fs.readdirSync(filePath).map((el) => {
       return el;
+    });
+
+    return files.map((fName) => {
+      return [fName, fileTypeFromFsStat(fs.statSync(path.join(filePath, '/', fName)))];
     });
   }
   realpathSync(filePath: fs.PathLike, options?: { encoding?: BufferEncoding | null } | BufferEncoding | null) {
@@ -90,6 +95,10 @@ export class AsyncFsProvider extends FSProvider {
 
     const data: FileStat = (await this.sendCommand('els.fs.stat', entry)) as FileStat;
 
+    if (data === null) {
+      throw null;
+    }
+
     return convertToFsStat(data);
   }
   async readFile(uri: DocumentUri | fs.PathLike): Promise<string> {
@@ -102,6 +111,17 @@ export class AsyncFsProvider extends FSProvider {
     }
 
     return result as string;
+  }
+  async readDirectory(uri: DocumentUri | fs.PathLike): Promise<[string, FileType][]> {
+    const entry = URI.isUri(uri) ? URI.parse(uri as DocumentUri).fsPath : uri;
+
+    const data: [string, FileType][] = (await this.sendCommand('els.fs.readDirectory', entry)) as [string, FileType][];
+
+    if (data === null) {
+      throw null;
+    }
+
+    return data;
   }
   async exists(uri: DocumentUri | fs.PathLike): Promise<boolean> {
     const entry = this.getGetUri(uri);

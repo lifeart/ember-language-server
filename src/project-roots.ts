@@ -175,7 +175,7 @@ export default class ProjectRoots {
       logError(e);
 
       return {
-        initIssues: [e.toString()],
+        initIssues: [e.toString(), e.stack],
         providers: {
           definitionProviders: [],
           referencesProviders: [],

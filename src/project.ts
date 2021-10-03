@@ -200,6 +200,7 @@ export class Project extends BaseProject {
       } catch (e) {
         logError(e);
         this.initIssues.push(e.toString());
+        this.initIssues.push(e.stack);
       }
     });
 
@@ -213,6 +214,7 @@ export class Project extends BaseProject {
       } catch (e) {
         logError(e);
         this.initIssues.push(e.toString());
+        this.initIssues.push(e.stack);
       }
     });
 

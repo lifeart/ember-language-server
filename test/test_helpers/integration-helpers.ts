@@ -3,7 +3,7 @@ import * as path from 'path';
 import * as fs from 'fs';
 import { createTempDir, Tree } from 'broccoli-test-helper';
 import { URI } from 'vscode-uri';
-import { Message, MessageConnection } from 'vscode-jsonrpc/node';
+import { MessageConnection } from 'vscode-jsonrpc/node';
 import * as spawn from 'cross-spawn';
 import { set, merge, get } from 'lodash';
 import { AddonMeta } from '../../src/utils/addon-api';
@@ -18,7 +18,7 @@ import {
   DidOpenTextDocumentParams,
   CompletionRequest,
 } from 'vscode-languageserver-protocol/node';
-import { FileStat, FileType } from '../../src/utils/fs-utils';
+import { FileStat, FileType, fileTypeFromFsStat } from '../../src/utils/fs-utils';
 
 export function startServer(asyncFs = false) {
   const options: Array<string | undefined> = [
@@ -48,10 +48,15 @@ export type Registry = {
 };
 
 export function asyncFSProvider() {
+  // likely we should emit special error objects instead of nulls
+  // if (error !== null && typeof error === 'object' && (error.code === 'ENOENT' || error.code === 'ENOTDIR' || error.code === 'EPERM')) {
+  //   return;
+  // }
+
   const commands: Record<string, unknown> = {};
 
   commands['els.fs.readFile'] = async (uri: URI) => {
-    const fsPath = uri.fsPath;
+    const fsPath = URI.from(uri).fsPath;
     let data: unknown;
 
     try {
@@ -64,21 +69,13 @@ export function asyncFSProvider() {
   };
 
   commands['els.fs.stat'] = async (uri: URI): Promise<FileStat | null> => {
-    const fsPath = uri.fsPath;
+    const fsPath = URI.from(uri).fsPath;
     let data: fs.Stats = null;
 
     try {
       data = fs.statSync(fsPath);
 
-      let fType: FileType = FileType.Unknown;
-
-      if (data.isDirectory()) {
-        fType = FileType.Directory;
-      } else if (data.isSymbolicLink()) {
-        fType = FileType.SymbolicLink;
-      } else if (data.isFile()) {
-        fType = FileType.File;
-      }
+      const fType = fileTypeFromFsStat(data);
 
       return {
         mtime: data.mtimeMs,
@@ -94,7 +91,7 @@ export function asyncFSProvider() {
   };
 
   commands['els.fs.readDirectory'] = async (uri: URI) => {
-    const fsPath = uri.fsPath;
+    const fsPath = URI.from(uri).fsPath;
     let data: unknown;
 
     try {

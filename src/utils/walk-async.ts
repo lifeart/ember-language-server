@@ -6,6 +6,7 @@ import * as path from 'path';
 import * as pm from 'picomatch';
 import FSProvider from '../fs-provider';
 import { flatten } from 'lodash';
+import { FileType } from './fs-utils';
 
 function ensurePosix(filepath: string) {
   if (path.sep !== '/') {
@@ -51,20 +52,6 @@ export default async function walkAsync(baseDir: string, inputOptions?: Options 
   const data = await _walkAsync(baseDir, options, null, []);
 
   return data.map(mapFunct);
-}
-
-async function getStat(path: string, fs: Options['fs']) {
-  try {
-    const data = await fs.stat(path);
-
-    return data;
-  } catch (error) {
-    if (error !== null && typeof error === 'object' && (error.code === 'ENOENT' || error.code === 'ENOTDIR' || error.code === 'EPERM')) {
-      return;
-    }
-
-    throw error;
-  }
 }
 
 export function entries(baseDir: string, inputOptions?: Options | string[]) {
@@ -169,19 +156,16 @@ async function _walkAsync(baseDir: string, options: Options, _relativePath: stri
 
     const names = await fs.readDirectory(baseDir + '/' + relativePath);
 
-    const rawEntries = names.map(async (name) => {
+    const rawEntries = names.map(async ([name, fType]) => {
       const entryRelativePath = relativePath + name;
 
       if (ignoreMatcher && ignoreMatcher.match(entryRelativePath)) {
         return;
       }
 
-      const fullPath = baseDir + '/' + entryRelativePath;
-      const stats = await getStat(fullPath, fs);
-
-      if (stats && stats.isDirectory()) {
+      if (fType === FileType.Directory) {
         return new Entry(entryRelativePath + '/', baseDir, true);
-      } else {
+      } else if (fType === FileType.File || fType === FileType.SymbolicLink) {
         return new Entry(entryRelativePath, baseDir, false);
       }
     });
