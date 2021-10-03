@@ -2,6 +2,8 @@ import * as fs from 'fs';
 import { Connection } from 'vscode-languageserver';
 import { DocumentUri, ExecuteCommandRequest } from 'vscode-languageserver-protocol';
 import { URI } from 'vscode-uri';
+import { convertToFsStat, FileStat } from './utils/fs-utils';
+import * as path from 'path';
 
 let currentFSImplementation!: FSProvider;
 
@@ -30,6 +32,11 @@ export default class FSProvider {
       return false;
     }
   }
+  async stat(uri: DocumentUri | fs.PathLike): Promise<fs.Stats> {
+    const entry = URI.isUri(uri) ? URI.parse(uri as DocumentUri).fsPath : uri;
+
+    return fs.statSync(entry);
+  }
   // expected VSCode api, replacement of readFileSync
   async readFile(uri: DocumentUri | fs.PathLike): Promise<string> {
     const entry = URI.isUri(uri) ? URI.parse(uri as DocumentUri).fsPath : uri;
@@ -45,12 +52,17 @@ export default class FSProvider {
   statSync(filePath: fs.PathLike) {
     return fs.statSync(filePath);
   }
-  realpathSync(filePath: fs.PathLike, options?: { encoding?: BufferEncoding | null } | BufferEncoding | null) {
-    return fs.realpathSync(filePath, options);
+  readDirectory(filePath: string): string[] {
+    return fs.readdirSync(filePath).map((el) => {
+      return el;
+    });
   }
-  readdirSync(filePath: fs.PathLike, options?: BufferEncoding | { encoding: BufferEncoding | null; withFileTypes?: false | undefined } | null | undefined) {
-    return fs.readdirSync(filePath, options);
-  }
+  // realpathSync(filePath: fs.PathLike, options?: { encoding?: BufferEncoding | null } | BufferEncoding | null) {
+  //   return fs.realpathSync(filePath, options);
+  // }
+  // readdirSync(filePath: fs.PathLike, options?: BufferEncoding | { encoding: BufferEncoding | null; withFileTypes?: false | undefined } | null | undefined) {
+  //   return fs.readdirSync(filePath, options);
+  // }
 }
 
 export class AsyncFsProvider extends FSProvider {
@@ -69,6 +81,13 @@ export class AsyncFsProvider extends FSProvider {
       command,
       arguments: options,
     });
+  }
+  async stat(uri: DocumentUri | fs.PathLike): Promise<fs.Stats> {
+    const entry = URI.isUri(uri) ? URI.parse(uri as DocumentUri).fsPath : uri;
+
+    const data: FileStat = (await this._sendCommand('els.fs.stat', entry)) as FileStat;
+
+    return convertToFsStat(data);
   }
   async readFile(uri: DocumentUri | fs.PathLike): Promise<string> {
     const entry = this._getGetUri(uri);

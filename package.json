@@ -41,8 +41,7 @@
     "vscode-languageserver": "^7.0.0",
     "vscode-languageserver-protocol": "^3.16.0",
     "vscode-languageserver-textdocument": "^1.0.1",
-    "vscode-uri": "^3.0.2",
-    "walk-sync": "^2.2.0"
+    "vscode-uri": "^3.0.2"
   },
   "devDependencies": {
     "rimraf": "^3.0.2",
