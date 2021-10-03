@@ -76,8 +76,6 @@ export function asyncFSProvider() {
     const fsPath = URI.from(uri).fsPath;
     let data: fs.Stats = null;
 
-    console.log('els.fs.stat', fsPath);
-
     try {
       data = fs.statSync(fsPath);
 
@@ -98,6 +96,7 @@ export function asyncFSProvider() {
 
   commands['els.fs.readDirectory'] = async (uri: URI) => {
     const fsPath = URI.from(uri).fsPath;
+
     let data: unknown;
 
     try {

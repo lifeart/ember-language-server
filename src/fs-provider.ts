@@ -99,7 +99,7 @@ export class AsyncFsProvider extends FSProvider {
     return this.server.sendCommand(command, ...options);
   }
   async stat(uri: DocumentUri | fs.PathLike): Promise<fs.Stats> {
-    const entry = URI.isUri(uri) ? URI.parse(uri as DocumentUri).fsPath : uri;
+    const entry = this.getGetUri(uri);
 
     const data: FileStat = (await this.sendCommand('els.fs.stat', entry)) as FileStat;
 
@@ -121,7 +121,7 @@ export class AsyncFsProvider extends FSProvider {
     return result as string;
   }
   async readDirectory(uri: DocumentUri | fs.PathLike): Promise<[string, FileType][]> {
-    const entry = URI.isUri(uri) ? URI.parse(uri as DocumentUri).fsPath : uri;
+    const entry = this.getGetUri(uri);
 
     const data: [string, FileType][] = (await this.sendCommand('els.fs.readDirectory', entry)) as [string, FileType][];
 
