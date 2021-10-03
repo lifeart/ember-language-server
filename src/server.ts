@@ -87,8 +87,8 @@ export default class Server {
   connection!: Connection;
   // Create a simple text document manager. The text document manager
   // supports full document sync only
-  documents: TextDocuments<TextDocument> = new TextDocuments(TextDocument);
-  projectRoots: ProjectRoots = new ProjectRoots(this);
+  documents!: TextDocuments<TextDocument>;
+  projectRoots!: ProjectRoots;
   addToRegistry(normalizedName: string, kind: REGISTRY_KIND, fullPath: string | string[]) {
     const rawPaths = Array.isArray(fullPath) ? fullPath : [fullPath];
     const purePaths = rawPaths.filter((p) => path.isAbsolute(p));
@@ -138,17 +138,17 @@ export default class Server {
     }
   }
 
-  documentSymbolProviders: DocumentSymbolProvider[] = [new JSDocumentSymbolProvider(), new HBSDocumentSymbolProvider()];
+  documentSymbolProviders!: DocumentSymbolProvider[];
 
-  templateCompletionProvider: TemplateCompletionProvider = new TemplateCompletionProvider(this);
-  scriptCompletionProvider: ScriptCompletionProvider = new ScriptCompletionProvider(this);
+  templateCompletionProvider!: TemplateCompletionProvider;
+  scriptCompletionProvider!: ScriptCompletionProvider;
 
-  definitionProvider: DefinitionProvider = new DefinitionProvider(this);
+  definitionProvider!: DefinitionProvider;
 
-  templateLinter: TemplateLinter = new TemplateLinter(this);
+  templateLinter!: TemplateLinter;
 
-  referenceProvider: ReferenceProvider = new ReferenceProvider(this);
-  codeActionProvider: CodeActionProvider = new CodeActionProvider(this);
+  referenceProvider!: ReferenceProvider;
+  codeActionProvider!: CodeActionProvider;
   async executeInitializers() {
     for (const initializer of this.initializers) {
       await initializer();
@@ -346,6 +346,18 @@ export default class Server {
     // for open, change and close text document events
 
     setConsole(this.connection.console);
+
+    this.templateLinter = new TemplateLinter(this);
+    this.projectRoots = new ProjectRoots(this);
+    this.documents = new TextDocuments(TextDocument);
+
+    this.documentSymbolProviders = [new JSDocumentSymbolProvider(), new HBSDocumentSymbolProvider()];
+
+    this.templateCompletionProvider = new TemplateCompletionProvider(this);
+    this.scriptCompletionProvider = new ScriptCompletionProvider(this);
+    this.definitionProvider = new DefinitionProvider(this);
+    this.referenceProvider = new ReferenceProvider(this);
+    this.codeActionProvider = new CodeActionProvider(this);
 
     this.documents.listen(this.connection);
 

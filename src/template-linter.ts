@@ -40,7 +40,7 @@ export default class TemplateLinter {
   private _isEnabled = true;
 
   constructor(private server: Server) {
-    if (server.options.type === 'worker') {
+    if (this.server.options.type === 'worker') {
       this.disable();
     }
   }
@@ -117,13 +117,13 @@ export default class TemplateLinter {
       return;
     }
 
-    const TemplateLinter = await this.getLinter(project);
+    const TemplateLinterKlass = await this.getLinter(project);
 
-    let linter: typeof TemplateLinter | null = null;
+    let linter: typeof TemplateLinterKlass | null = null;
 
     try {
       setCwd(project.root);
-      linter = new TemplateLinter();
+      linter = new TemplateLinterKlass();
     } catch (e) {
       setCwd(cwd);
 
