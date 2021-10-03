@@ -51,10 +51,6 @@ export default class FSProvider {
   createWriteStream(filePath: fs.PathLike, flags: { flags: string }) {
     return fs.createWriteStream(filePath, flags);
   }
-  // walk-sync api
-  statSync(filePath: fs.PathLike) {
-    return fs.statSync(filePath);
-  }
   async readDirectory(filePath: string): Promise<[string, FileType][]> {
     const files: string[] = fs.readdirSync(filePath).map((el) => {
       return el;
