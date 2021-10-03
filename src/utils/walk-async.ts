@@ -135,9 +135,8 @@ function lexicographically(a: walkAsync.Entry, b: walkAsync.Entry) {
 async function _walkAsync(baseDir: string, options: walkAsync.Options, _relativePath: string | null, visited: string[]): Promise<walkAsync.Entry[]> {
   const fs = options.fs;
   const relativePath = handleRelativePath(_relativePath);
-  const realPath = path.join(baseDir, '/', relativePath);
 
-  // fs.realpathSync(baseDir + '/' + relativePath);
+  const realPath = fs.hasRealFsAccess ? fs.realpathSync(baseDir + '/' + relativePath) : path.join(baseDir, '/', relativePath);
 
   if (visited.indexOf(realPath) >= 0) {
     return [];

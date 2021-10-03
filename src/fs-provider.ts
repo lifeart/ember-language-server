@@ -20,6 +20,9 @@ export function fsProvider(): FSProvider {
 
 export default class FSProvider {
   // expected VSCode api, replacement of existsSync
+  get hasRealFsAccess() {
+    return true;
+  }
   async exists(uri: DocumentUri | fs.PathLike): Promise<boolean> {
     const entry = URI.isUri(uri) ? URI.parse(uri as DocumentUri).fsPath : uri;
 
@@ -56,12 +59,13 @@ export default class FSProvider {
       return el;
     });
   }
-  // realpathSync(filePath: fs.PathLike, options?: { encoding?: BufferEncoding | null } | BufferEncoding | null) {
-  //   return fs.realpathSync(filePath, options);
-  // }
-  // readdirSync(filePath: fs.PathLike, options?: BufferEncoding | { encoding: BufferEncoding | null; withFileTypes?: false | undefined } | null | undefined) {
-  //   return fs.readdirSync(filePath, options);
-  // }
+  realpathSync(filePath: fs.PathLike, options?: { encoding?: BufferEncoding | null } | BufferEncoding | null) {
+    if (!this.hasRealFsAccess) {
+      throw new Error('RealpathSync supported only in real FS environments');
+    }
+
+    return fs.realpathSync(filePath, options);
+  }
 }
 
 export class AsyncFsProvider extends FSProvider {
@@ -69,6 +73,9 @@ export class AsyncFsProvider extends FSProvider {
   constructor(connection: Connection) {
     super();
     this.connection = connection;
+  }
+  get hasRealFsAccess() {
+    return false;
   }
   _getGetUri(uri: DocumentUri | fs.PathLike): URI {
     const entry = URI.file(uri as string);
