@@ -32,6 +32,49 @@ export type Registry = {
   };
 };
 
+export function asyncFSProvider() {
+  const commands: Record<string, any> = {};
+
+  commands['els.fs.readFile'] = async (uri: URI) => {
+    const fsPath = uri.fsPath;
+    let data: any;
+
+    try {
+      data = fs.readFileSync(fsPath, 'utf8');
+    } catch (e) {
+      data = null;
+    }
+
+    return data;
+  };
+
+  commands['els.fs.stat'] = async (uri: URI) => {
+    const fsPath = uri.fsPath;
+    let data: any;
+
+    try {
+      data = fs.statSync(fsPath);
+    } catch (e) {
+      data = null;
+    }
+
+    return data;
+  };
+
+  commands['els.fs.readDirectory'] = async (uri: URI) => {
+    const fsPath = uri.fsPath;
+    let data: any;
+
+    try {
+      data = fs.readdirSync(fsPath);
+    } catch (e) {
+      data = null;
+    }
+
+    return data;
+  };
+}
+
 export async function registerCommandExecutor(connection: MessageConnection, handlers) {
   const disposable = connection.onRequest(ExecuteCommandRequest.type, async ({ command, arguments: args }) => {
     if (command in handlers) {

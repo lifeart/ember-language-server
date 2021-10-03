@@ -46,9 +46,9 @@ describe('integration', function () {
     await new Promise((resolve) => setTimeout(resolve, 1000));
   });
 
-  afterAll(() => {
-    connection.dispose();
-    serverProcess.kill();
+  afterAll(async () => {
+    await connection.dispose();
+    await serverProcess.kill();
   });
 
   describe('Initialize request', () => {
