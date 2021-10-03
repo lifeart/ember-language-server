@@ -1,8 +1,8 @@
 import * as fs from 'fs';
-import { Connection } from 'vscode-languageserver';
-import { DocumentUri, ExecuteCommandRequest } from 'vscode-languageserver-protocol';
+import { DocumentUri } from 'vscode-languageserver-protocol';
 import { URI } from 'vscode-uri';
 import { convertToFsStat, FileStat } from './utils/fs-utils';
+import Server from './server';
 
 let currentFSImplementation!: FSProvider;
 
@@ -69,36 +69,33 @@ export default class FSProvider {
 }
 
 export class AsyncFsProvider extends FSProvider {
-  connection!: Connection;
-  constructor(connection: Connection) {
+  server!: Server;
+  constructor(server: Server) {
     super();
-    this.connection = connection;
+    this.server = server;
   }
   get hasRealFsAccess() {
     return false;
   }
-  _getGetUri(uri: DocumentUri | fs.PathLike): URI {
+  private getGetUri(uri: DocumentUri | fs.PathLike): URI {
     const entry = URI.file(uri as string);
 
     return entry;
   }
-  _sendCommand(command: string, ...options: unknown[]) {
-    return this.connection.sendRequest(ExecuteCommandRequest.type.method, {
-      command,
-      arguments: options,
-    });
+  private sendCommand(command: string, ...options: unknown[]) {
+    return this.server.sendCommand(command, ...options);
   }
   async stat(uri: DocumentUri | fs.PathLike): Promise<fs.Stats> {
     const entry = URI.isUri(uri) ? URI.parse(uri as DocumentUri).fsPath : uri;
 
-    const data: FileStat = (await this._sendCommand('els.fs.stat', entry)) as FileStat;
+    const data: FileStat = (await this.sendCommand('els.fs.stat', entry)) as FileStat;
 
     return convertToFsStat(data);
   }
   async readFile(uri: DocumentUri | fs.PathLike): Promise<string> {
-    const entry = this._getGetUri(uri);
+    const entry = this.getGetUri(uri);
 
-    const result = await this._sendCommand('els.fs.readFile', entry);
+    const result = await this.sendCommand('els.fs.readFile', entry);
 
     if (typeof result !== 'string') {
       return '';
@@ -107,9 +104,9 @@ export class AsyncFsProvider extends FSProvider {
     return result as string;
   }
   async exists(uri: DocumentUri | fs.PathLike): Promise<boolean> {
-    const entry = this._getGetUri(uri);
+    const entry = this.getGetUri(uri);
 
-    const result = await this._sendCommand('els.fs.stat', entry);
+    const result = await this.sendCommand('els.fs.stat', entry);
 
     if (result === null) {
       return false;

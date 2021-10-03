@@ -29,6 +29,7 @@ import {
   Location,
   ExecuteCommandParams,
   TextDocumentChangeEvent,
+  ExecuteCommandRequest,
 } from 'vscode-languageserver';
 
 import ProjectRoots from './project-roots';
@@ -508,6 +509,13 @@ export default class Server {
   }
 
   executors: Executors = {};
+
+  sendCommand(command: string, ...options: unknown[]) {
+    return this.connection.sendRequest(ExecuteCommandRequest.type.method, {
+      command,
+      arguments: options,
+    });
+  }
 
   private async runAddonLinters(document: TextDocument) {
     const results: Diagnostic[] = [];
