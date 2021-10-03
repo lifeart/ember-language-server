@@ -118,10 +118,6 @@ export async function registerCommandExecutor(connection: MessageConnection, han
     }
   });
 
-  connection.onError(([el, msg, n]: [Error, Message, number]) => {
-    console.error(el, msg, n);
-  });
-
   return disposable;
 }
 
