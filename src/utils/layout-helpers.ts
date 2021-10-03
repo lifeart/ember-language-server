@@ -58,11 +58,11 @@ export function setSyncFSSupport(value: boolean) {
   _supportSyncFS = value;
 }
 
-export async function safeWalkAsync(filePath: string | false, opts: any) {
-  if (!_supportSyncFS) {
-    return [];
-  }
+export function getSyncFSSupport() {
+  return _supportSyncFS;
+}
 
+export async function safeWalkAsync(filePath: string | false, opts: any) {
   if (!filePath) {
     return [];
   }
