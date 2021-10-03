@@ -7,6 +7,7 @@ const connection: Connection = createConnection(new BrowserMessageReader(self), 
 
 const server = new Server(connection, {
   type: 'worker',
+  fs: 'async',
 });
 
 server.listen();
