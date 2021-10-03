@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`integration API:Chain support addon ordering 1`] = `
+exports[`integration async fs enabled: false API:Chain support addon ordering 1`] = `
 Object {
   "addonsMeta": Array [
     Object {
@@ -54,7 +54,7 @@ Object {
 }
 `;
 
-exports[`integration Able to load API from project itself project custom completion:template 1`] = `
+exports[`integration async fs enabled: false Able to load API from project itself project custom completion:template 1`] = `
 Object {
   "addonsMeta": Array [],
   "registry": Object {
@@ -85,7 +85,7 @@ Object {
 }
 `;
 
-exports[`integration Able to provide API:Completion support dummy addon completion:script 1`] = `
+exports[`integration async fs enabled: false Able to provide API:Completion support dummy addon completion:script 1`] = `
 Object {
   "addonsMeta": Array [
     Object {
@@ -109,7 +109,7 @@ Object {
 }
 `;
 
-exports[`integration Able to provide API:Completion support dummy addon completion:template 1`] = `
+exports[`integration async fs enabled: false Able to provide API:Completion support dummy addon completion:template 1`] = `
 Object {
   "addonsMeta": Array [
     Object {
@@ -146,7 +146,7 @@ Object {
 }
 `;
 
-exports[`integration Able to provide API:Definition support dummy addon definition:script 1`] = `
+exports[`integration async fs enabled: false Able to provide API:Definition support dummy addon definition:script 1`] = `
 Object {
   "addonsMeta": Array [
     Object {
@@ -180,7 +180,7 @@ Object {
 }
 `;
 
-exports[`integration Able to provide API:Definition support dummy addon definition:template 1`] = `
+exports[`integration async fs enabled: false Able to provide API:Definition support dummy addon definition:template 1`] = `
 Object {
   "addonsMeta": Array [
     Object {
@@ -214,7 +214,7 @@ Object {
 }
 `;
 
-exports[`integration Able to provide API:Reference support dummy addon reference:template 1`] = `
+exports[`integration async fs enabled: false Able to provide API:Reference support dummy addon reference:template 1`] = `
 Object {
   "addonsMeta": Array [
     Object {
@@ -248,7 +248,7 @@ Object {
 }
 `;
 
-exports[`integration Able to provide autocomplete information for angle component arguments names support template-only collocated components arguments extraction 1`] = `
+exports[`integration async fs enabled: false Able to provide autocomplete information for angle component arguments names support template-only collocated components arguments extraction 1`] = `
 Object {
   "addonsMeta": Array [],
   "registry": Object {
@@ -320,7 +320,7 @@ Object {
 }
 `;
 
-exports[`integration Able to provide autocomplete information for local context access support child project addon calling parent project addon 1`] = `
+exports[`integration async fs enabled: false Able to provide autocomplete information for local context access support child project addon calling parent project addon 1`] = `
 Object {
   "addonsMeta": Array [
     Object {
@@ -371,7 +371,7 @@ Object {
 }
 `;
 
-exports[`integration Able to provide autocomplete information for local context access support collocated components 1`] = `
+exports[`integration async fs enabled: false Able to provide autocomplete information for local context access support collocated components 1`] = `
 Object {
   "addonsMeta": Array [],
   "registry": Object {
@@ -423,7 +423,7 @@ Object {
 }
 `;
 
-exports[`integration Able to provide autocomplete information for local context access support collocated components in mustache arguments 1`] = `
+exports[`integration async fs enabled: false Able to provide autocomplete information for local context access support collocated components in mustache arguments 1`] = `
 Object {
   "addonsMeta": Array [],
   "registry": Object {
@@ -475,7 +475,7 @@ Object {
 }
 `;
 
-exports[`integration Able to provide autocomplete information for local context access support collocated components in node attributes 1`] = `
+exports[`integration async fs enabled: false Able to provide autocomplete information for local context access support collocated components in node attributes 1`] = `
 Object {
   "addonsMeta": Array [],
   "registry": Object {
@@ -527,7 +527,7 @@ Object {
 }
 `;
 
-exports[`integration Able to provide autocomplete information for local scoped params support component name autocomplete from block params 1`] = `
+exports[`integration async fs enabled: false Able to provide autocomplete information for local scoped params support component name autocomplete from block params 1`] = `
 Object {
   "addonsMeta": Array [],
   "registry": Object {
@@ -596,7 +596,7 @@ Object {
 }
 `;
 
-exports[`integration Able to provide autocomplete information for local scoped params support mustache blocks 1`] = `
+exports[`integration async fs enabled: false Able to provide autocomplete information for local scoped params support mustache blocks 1`] = `
 Object {
   "addonsMeta": Array [],
   "registry": Object {
@@ -672,7 +672,7 @@ Object {
 }
 `;
 
-exports[`integration Able to provide autocomplete information for local scoped params support tag blocks 1`] = `
+exports[`integration async fs enabled: false Able to provide autocomplete information for local scoped params support tag blocks 1`] = `
 Object {
   "addonsMeta": Array [],
   "registry": Object {
@@ -748,7 +748,7 @@ Object {
 }
 `;
 
-exports[`integration Able to use classes for API support dummy class-based addon definition:template 1`] = `
+exports[`integration async fs enabled: false Able to use classes for API support dummy class-based addon definition:template 1`] = `
 Object {
   "addonsMeta": Array [
     Object {
@@ -782,7 +782,7 @@ Object {
 }
 `;
 
-exports[`integration Able to use classes for API support dummy class-based addon definition:template with correctly binded context 1`] = `
+exports[`integration async fs enabled: false Able to use classes for API support dummy class-based addon definition:template with correctly binded context 1`] = `
 Object {
   "addonsMeta": Array [
     Object {
@@ -816,7 +816,7 @@ Object {
 }
 `;
 
-exports[`integration Autocomplete works for broken templates autocomplete information for component #1 {{ 1`] = `
+exports[`integration async fs enabled: false Autocomplete works for broken templates autocomplete information for component #1 {{ 1`] = `
 Array [
   Object {
     "detail": "component",
@@ -920,7 +920,7 @@ Array [
 ]
 `;
 
-exports[`integration Autocomplete works for broken templates autocomplete information for component #1 {{ 2`] = `
+exports[`integration async fs enabled: false Autocomplete works for broken templates autocomplete information for component #1 {{ 2`] = `
 Object {
   "component": Object {
     "darling": Array [
@@ -933,7 +933,7 @@ Object {
 }
 `;
 
-exports[`integration Autocomplete works for broken templates autocomplete information for component #2 < 1`] = `
+exports[`integration async fs enabled: false Autocomplete works for broken templates autocomplete information for component #2 < 1`] = `
 Array [
   Object {
     "detail": "component",
@@ -974,7 +974,7 @@ Array [
 ]
 `;
 
-exports[`integration Autocomplete works for broken templates autocomplete information for component #2 < 2`] = `
+exports[`integration async fs enabled: false Autocomplete works for broken templates autocomplete information for component #2 < 2`] = `
 Object {
   "component": Object {
     "darling": Array [
@@ -987,7 +987,7 @@ Object {
 }
 `;
 
-exports[`integration Autocomplete works for broken templates autocomplete information for component #3 {{# 1`] = `
+exports[`integration async fs enabled: false Autocomplete works for broken templates autocomplete information for component #3 {{# 1`] = `
 Object {
   "addonsMeta": Array [],
   "registry": Object {
@@ -1237,7 +1237,7 @@ Object {
 }
 `;
 
-exports[`integration Autocomplete works for broken templates autocomplete information for helper #5 {{name ( 1`] = `
+exports[`integration async fs enabled: false Autocomplete works for broken templates autocomplete information for helper #5 {{name ( 1`] = `
 Array [
   Object {
     "detail": "helper",
@@ -1617,7 +1617,7 @@ Array [
 ]
 `;
 
-exports[`integration Autocomplete works for broken templates autocomplete information for helper #5 {{name ( 2`] = `
+exports[`integration async fs enabled: false Autocomplete works for broken templates autocomplete information for helper #5 {{name ( 2`] = `
 Object {
   "component": Object {
     "hello": Array [
@@ -1632,7 +1632,7 @@ Object {
 }
 `;
 
-exports[`integration Autocomplete works for broken templates autocomplete information for helper #6 {{name (foo ( 1`] = `
+exports[`integration async fs enabled: false Autocomplete works for broken templates autocomplete information for helper #6 {{name (foo ( 1`] = `
 Array [
   Object {
     "detail": "helper",
@@ -2012,7 +2012,7 @@ Array [
 ]
 `;
 
-exports[`integration Autocomplete works for broken templates autocomplete information for helper #6 {{name (foo ( 2`] = `
+exports[`integration async fs enabled: false Autocomplete works for broken templates autocomplete information for helper #6 {{name (foo ( 2`] = `
 Object {
   "component": Object {
     "hello": Array [
@@ -2027,7 +2027,7 @@ Object {
 }
 `;
 
-exports[`integration Autocomplete works for broken templates autocomplete information for modifier #4 <Foo {{ 1`] = `
+exports[`integration async fs enabled: false Autocomplete works for broken templates autocomplete information for modifier #4 <Foo {{ 1`] = `
 Object {
   "addonsMeta": Array [],
   "registry": Object {
@@ -2128,7 +2128,7 @@ Object {
 }
 `;
 
-exports[`integration Autocomplete works in LinkTo components for @route argument able to autocomplete basic routes 1`] = `
+exports[`integration async fs enabled: false Autocomplete works in LinkTo components for @route argument able to autocomplete basic routes 1`] = `
 Object {
   "addonsMeta": Array [],
   "registry": Object {
@@ -2166,7 +2166,7 @@ Object {
 }
 `;
 
-exports[`integration Diffent commands handle "els.getLegacyTemplateTokens" command 1`] = `
+exports[`integration async fs enabled: false Diffent commands handle "els.getLegacyTemplateTokens" command 1`] = `
 Object {
   "component": Object {
     "hello": Object {
@@ -2182,7 +2182,7 @@ Object {
 }
 `;
 
-exports[`integration Diffent commands handle "els.getProjectRegistry" command 1`] = `
+exports[`integration async fs enabled: false Diffent commands handle "els.getProjectRegistry" command 1`] = `
 Object {
   "component": Object {
     "hello": Array [
@@ -2194,7 +2194,7 @@ Object {
 }
 `;
 
-exports[`integration Diffent commands handle "els.getRelatedFiles" command 1`] = `
+exports[`integration async fs enabled: false Diffent commands handle "els.getRelatedFiles" command 1`] = `
 Object {
   "component": Object {
     "hello": Array [
@@ -2206,7 +2206,7 @@ Object {
 }
 `;
 
-exports[`integration Diffent commands handle "els.getRelatedFiles" command 2`] = `
+exports[`integration async fs enabled: false Diffent commands handle "els.getRelatedFiles" command 2`] = `
 Array [
   "app/components/hello/component.js",
   "app/components/hello/template.hbs",
@@ -2214,7 +2214,7 @@ Array [
 ]
 `;
 
-exports[`integration Diffent commands handle "els.getRelatedFiles" command with meta flag 1`] = `
+exports[`integration async fs enabled: false Diffent commands handle "els.getRelatedFiles" command with meta flag 1`] = `
 Object {
   "component": Object {
     "hello": Array [
@@ -2226,7 +2226,7 @@ Object {
 }
 `;
 
-exports[`integration Diffent commands handle "els.getRelatedFiles" command with meta flag 2`] = `
+exports[`integration async fs enabled: false Diffent commands handle "els.getRelatedFiles" command with meta flag 2`] = `
 Array [
   Object {
     "meta": Object {
@@ -2258,7 +2258,7 @@ Array [
 ]
 `;
 
-exports[`integration DocumentSymbolProvider able to provide symbols for script document 1`] = `
+exports[`integration async fs enabled: false DocumentSymbolProvider able to provide symbols for script document 1`] = `
 Object {
   "addonsMeta": Array [],
   "registry": Object {
@@ -2272,7 +2272,7 @@ Object {
 }
 `;
 
-exports[`integration DocumentSymbolProvider able to provide symbols for template document 1`] = `
+exports[`integration async fs enabled: false DocumentSymbolProvider able to provide symbols for template document 1`] = `
 Object {
   "addonsMeta": Array [],
   "registry": Object {
@@ -2286,7 +2286,7 @@ Object {
 }
 `;
 
-exports[`integration DocumentSymbolProvider stable if ast broken in script document 1`] = `
+exports[`integration async fs enabled: false DocumentSymbolProvider stable if ast broken in script document 1`] = `
 Object {
   "addonsMeta": Array [],
   "registry": Object {
@@ -2300,7 +2300,7 @@ Object {
 }
 `;
 
-exports[`integration DocumentSymbolProvider stable if ast broken in template document 1`] = `
+exports[`integration async fs enabled: false DocumentSymbolProvider stable if ast broken in template document 1`] = `
 Object {
   "addonsMeta": Array [],
   "registry": Object {
@@ -2314,7 +2314,7 @@ Object {
 }
 `;
 
-exports[`integration Go to definition works for all supported cases go to component from typescripted inline template 1`] = `
+exports[`integration async fs enabled: false Go to definition works for all supported cases go to component from typescripted inline template 1`] = `
 Object {
   "addonsMeta": Array [],
   "registry": Object {
@@ -2345,7 +2345,7 @@ Object {
 }
 `;
 
-exports[`integration Go to definition works for all supported cases go to definition from app to in repo addon 1`] = `
+exports[`integration async fs enabled: false Go to definition works for all supported cases go to definition from app to in repo addon 1`] = `
 Object {
   "addonsMeta": Array [
     Object {
@@ -2385,7 +2385,7 @@ Object {
 }
 `;
 
-exports[`integration Go to definition works for all supported cases go to definition from app to nested utils location of in repo addon 1`] = `
+exports[`integration async fs enabled: false Go to definition works for all supported cases go to definition from app to nested utils location of in repo addon 1`] = `
 Object {
   "addonsMeta": Array [
     Object {
@@ -2422,7 +2422,7 @@ Object {
 }
 `;
 
-exports[`integration Go to definition works for all supported cases go to definition from handlebars template working if we have test for component 1`] = `
+exports[`integration async fs enabled: false Go to definition works for all supported cases go to definition from handlebars template working if we have test for component 1`] = `
 Object {
   "addonsMeta": Array [],
   "registry": Object {
@@ -2454,7 +2454,7 @@ Object {
 }
 `;
 
-exports[`integration Go to definition works for all supported cases go to definition from script template working if we have test for component 1`] = `
+exports[`integration async fs enabled: false Go to definition works for all supported cases go to definition from script template working if we have test for component 1`] = `
 Object {
   "addonsMeta": Array [],
   "registry": Object {
@@ -2486,7 +2486,7 @@ Object {
 }
 `;
 
-exports[`integration Go to definition works for all supported cases go to local template-only component 1`] = `
+exports[`integration async fs enabled: false Go to definition works for all supported cases go to local template-only component 1`] = `
 Object {
   "addonsMeta": Array [],
   "registry": Object {
@@ -2517,7 +2517,7 @@ Object {
 }
 `;
 
-exports[`integration Go to definition works for all supported cases go to local template-only component in module 1`] = `
+exports[`integration async fs enabled: false Go to definition works for all supported cases go to local template-only component in module 1`] = `
 Object {
   "addonsMeta": Array [],
   "registry": Object {
@@ -2548,7 +2548,7 @@ Object {
 }
 `;
 
-exports[`integration Go to definition works for all supported cases go to local template-only component in pod-like 1`] = `
+exports[`integration async fs enabled: false Go to definition works for all supported cases go to local template-only component in pod-like 1`] = `
 Object {
   "addonsMeta": Array [],
   "registry": Object {
@@ -2579,7 +2579,7 @@ Object {
 }
 `;
 
-exports[`integration Go to definition works for all supported cases go to local template-only component in templates dir 1`] = `
+exports[`integration async fs enabled: false Go to definition works for all supported cases go to local template-only component in templates dir 1`] = `
 Object {
   "addonsMeta": Array [],
   "registry": Object {
@@ -2610,7 +2610,7 @@ Object {
 }
 `;
 
-exports[`integration Go to definition works for all supported cases to children route from application outlet 1`] = `
+exports[`integration async fs enabled: false Go to definition works for all supported cases to children route from application outlet 1`] = `
 Object {
   "addonsMeta": Array [],
   "registry": Object {
@@ -2641,7 +2641,7 @@ Object {
 }
 `;
 
-exports[`integration Go to definition works for all supported cases to children route from meaningful outlet 1`] = `
+exports[`integration async fs enabled: false Go to definition works for all supported cases to children route from meaningful outlet 1`] = `
 Object {
   "addonsMeta": Array [],
   "registry": Object {
@@ -2691,7 +2691,7 @@ Object {
 }
 `;
 
-exports[`integration Go to definition works for all supported cases to to route defintion from LinkTo component 1`] = `
+exports[`integration async fs enabled: false Go to definition works for all supported cases to to route defintion from LinkTo component 1`] = `
 Object {
   "addonsMeta": Array [],
   "registry": Object {
@@ -2724,7 +2724,7 @@ Object {
 }
 `;
 
-exports[`integration Initialize request returns an initialize request 1`] = `
+exports[`integration async fs enabled: false Initialize request returns an initialize request 1`] = `
 Object {
   "capabilities": Object {
     "codeActionProvider": true,
@@ -2773,7 +2773,7 @@ Object {
 }
 `;
 
-exports[`integration Project class resolution, based on fs path and file structure support parent project addon calling child project 1`] = `
+exports[`integration async fs enabled: false Project class resolution, based on fs path and file structure support parent project addon calling child project 1`] = `
 Object {
   "addonsMeta": Array [
     Object {
@@ -2823,7 +2823,7 @@ Object {
 }
 `;
 
-exports[`integration Project class resolution, based on fs path and file structure without ignoring main project returns one only top level result 1`] = `
+exports[`integration async fs enabled: false Project class resolution, based on fs path and file structure without ignoring main project returns one only top level result 1`] = `
 Array [
   Object {
     "addonsMeta": Array [],
@@ -2900,7 +2900,7 @@ Array [
 ]
 `;
 
-exports[`integration autocomplete works for angle component slots 1`] = `
+exports[`integration async fs enabled: false autocomplete works for angle component slots 1`] = `
 Array [
   Object {
     "detail": "Named block (Slot) for <Darling>",
@@ -2923,7 +2923,7 @@ Array [
 ]
 `;
 
-exports[`integration autocomplete works for multiple angle component slots 1`] = `
+exports[`integration async fs enabled: false autocomplete works for multiple angle component slots 1`] = `
 Array [
   Object {
     "detail": "Named block (Slot) for <Darling>",

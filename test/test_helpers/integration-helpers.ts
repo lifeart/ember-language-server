@@ -1,9 +1,9 @@
 /* eslint-disable semi */
 import * as path from 'path';
 import * as fs from 'fs';
-import { createTempDir } from 'broccoli-test-helper';
+import { createTempDir, Tree } from 'broccoli-test-helper';
 import { URI } from 'vscode-uri';
-import { MessageConnection } from 'vscode-jsonrpc/node';
+import { Message, MessageConnection } from 'vscode-jsonrpc/node';
 import * as spawn from 'cross-spawn';
 import { set, merge, get } from 'lodash';
 import { AddonMeta } from '../../src/utils/addon-api';
@@ -18,9 +18,18 @@ import {
   DidOpenTextDocumentParams,
   CompletionRequest,
 } from 'vscode-languageserver-protocol/node';
+import { FileStat, FileType } from '../../src/utils/fs-utils';
 
 export function startServer(asyncFs = false) {
-  const options = ['--reporter', 'none', 'node', './inst/start-server.js', '--stdio', asyncFs ? '--async-fs' : undefined, '--no-clean'];
+  const options: Array<string | undefined> = [
+    '--reporter',
+    'none',
+    'node',
+    './inst/start-server.js',
+    '--stdio',
+    asyncFs ? '--async-fs' : undefined,
+    '--no-clean',
+  ];
 
   return spawn(
     'node_modules/.bin/nyc',
@@ -39,11 +48,11 @@ export type Registry = {
 };
 
 export function asyncFSProvider() {
-  const commands: Record<string, any> = {};
+  const commands: Record<string, unknown> = {};
 
   commands['els.fs.readFile'] = async (uri: URI) => {
     const fsPath = uri.fsPath;
-    let data: any;
+    let data: unknown;
 
     try {
       data = fs.readFileSync(fsPath, 'utf8');
@@ -54,22 +63,39 @@ export function asyncFSProvider() {
     return data;
   };
 
-  commands['els.fs.stat'] = async (uri: URI) => {
+  commands['els.fs.stat'] = async (uri: URI): Promise<FileStat | null> => {
     const fsPath = uri.fsPath;
-    let data: any;
+    let data: fs.Stats = null;
 
     try {
       data = fs.statSync(fsPath);
+
+      let fType: FileType = FileType.Unknown;
+
+      if (data.isDirectory()) {
+        fType = FileType.Directory;
+      } else if (data.isSymbolicLink()) {
+        fType = FileType.SymbolicLink;
+      } else if (data.isFile()) {
+        fType = FileType.File;
+      }
+
+      return {
+        mtime: data.mtimeMs,
+        ctime: data.ctimeMs,
+        size: data.size,
+        type: fType,
+      };
     } catch (e) {
       data = null;
     }
 
-    return data;
+    return data as null;
   };
 
   commands['els.fs.readDirectory'] = async (uri: URI) => {
     const fsPath = uri.fsPath;
-    let data: any;
+    let data: unknown;
 
     try {
       data = fs.readdirSync(fsPath);
@@ -79,15 +105,21 @@ export function asyncFSProvider() {
 
     return data;
   };
+
+  return commands;
 }
 
-export async function registerCommandExecutor(connection: MessageConnection, handlers) {
+export async function registerCommandExecutor(connection: MessageConnection, handlers: Record<string, (...args: unknown[]) => unknown>) {
   const disposable = connection.onRequest(ExecuteCommandRequest.type, async ({ command, arguments: args }) => {
     if (command in handlers) {
       return handlers[command](...args);
     } else {
       throw new Error(`Unhandled command: "${command}"`);
     }
+  });
+
+  connection.onError(([el, msg, n]: [Error, Message, number]) => {
+    console.error(el, msg, n);
   });
 
   return disposable;
@@ -102,7 +134,7 @@ export async function reloadProjects(connection: MessageConnection, project = un
   return result;
 }
 
-export async function initFileStructure(files) {
+export async function initFileStructure(files: Tree) {
   const dir = await createTempDir();
 
   dir.write(files);
@@ -241,6 +273,7 @@ export async function setServerConfig(connection: MessageConnection, config = { 
   await connection.sendRequest(ExecuteCommandRequest.type, configParams);
 }
 
+// @ts-expect-error overload signature
 export async function createProject(
   files: unknown,
   connection: MessageConnection,
@@ -257,7 +290,7 @@ export async function createProject(
 ): Promise<{ normalizedPath: string; originalPath: string; result: UnknownResult; destroy(): Promise<void> }>;
 
 export async function createProject(
-  files,
+  files: RecursiveRecord<string | RecursiveRecord<string>>,
   connection: MessageConnection,
   projectName?: string | string[]
 ): Promise<{ normalizedPath: unknown; originalPath: string; result: UnknownResult | UnknownResult[]; destroy(): Promise<void> }> {
@@ -312,7 +345,7 @@ export async function createProject(
   }
 }
 
-export function textDocument(modelPath, position = { line: 0, character: 0 }) {
+export function textDocument(modelPath: string, position = { line: 0, character: 0 }) {
   const params = {
     textDocument: {
       uri: URI.file(modelPath).toString(),
@@ -349,74 +382,75 @@ export async function getResult(
   reqType: typeof CompletionRequest.method,
   connection: MessageConnection,
   files,
-  fileToInspect,
-  position,
+  fileToInspect: string,
+  position: { line: number; character: number },
   projectName: string[]
 ): Promise<IResponse<CompletionItem[]>[]>;
 export async function getResult(
   reqType: typeof CompletionRequest.method,
   connection: MessageConnection,
   files,
-  fileToInspect,
-  position,
+  fileToInspect: string,
+  position: { line: number; character: number },
   projectName: string
 ): Promise<IResponse<CompletionItem[]>>;
 export async function getResult(
   reqType: typeof CompletionRequest.method,
   connection: MessageConnection,
   files,
-  fileToInspect,
-  position
+  fileToInspect: string,
+  position: { line: number; character: number }
 ): Promise<IResponse<CompletionItem[]>>;
 
 export async function getResult(
   reqType: typeof DefinitionRequest.method,
   connection: MessageConnection,
   files,
-  fileToInspect,
-  position,
+  fileToInspect: string,
+  position: { line: number; character: number },
   projectName?: string[]
 ): Promise<IResponse<Definition[]>[]>;
 export async function getResult(
   reqType: typeof DefinitionRequest.method,
   connection: MessageConnection,
   files,
-  fileToInspect,
-  position,
+  fileToInspect: string,
+  position: { line: number; character: number },
   projectName?: string
 ): Promise<IResponse<Definition>>;
 export async function getResult(
   reqType: typeof DefinitionRequest.method,
   connection: MessageConnection,
   files,
-  fileToInspect,
-  position
+  fileToInspect: string,
+  position: { line: number; character: number }
 ): Promise<IResponse<Definition[]>>;
 
 export async function getResult(
   reqType: typeof DocumentSymbolRequest.type,
   connection: MessageConnection,
   files,
-  fileToInspect,
-  position
+  fileToInspect: string,
+  position: { line: number; character: number }
 ): Promise<IResponse<DocumentSymbol[]>>;
 
 export async function getResult(
   reqType: typeof ReferencesRequest.type,
   connection: MessageConnection,
   files,
-  fileToInspect,
-  position
+  fileToInspect: string,
+  position: { line: number; character: number }
 ): Promise<IResponse<Location[]>>;
 
 export async function getResult(
   reqType: unknown,
   connection: MessageConnection,
-  files,
-  fileToInspect,
-  position,
+  files: unknown,
+  fileToInspect: string,
+  position: { line: number; character: number },
   projectName?: string[] | string
 ): Promise<IResponse<unknown> | IResponse<unknown>[]> {
+  // @ts-expect-error overload
   const { normalizedPath, originalPath, destroy, result } = await createProject(files, connection, projectName);
 
   const modelPath = path.join(originalPath, fileToInspect);
@@ -534,7 +568,7 @@ export function makeProject(appFiles = {}, addons = {}) {
   return fileStructure;
 }
 
-export function makeAddonPackage(name, config, addonConfig = undefined) {
+export function makeAddonPackage(name: string, config: { entry: string }, addonConfig = undefined) {
   const pack = {
     name,
     'ember-language-server': config,
