@@ -32,6 +32,18 @@ export type Registry = {
   };
 };
 
+export async function registerCommandExecutor(connection: MessageConnection, handlers) {
+  const disposable = connection.onRequest(ExecuteCommandRequest.type, async ({ command, arguments: args }) => {
+    if (command in handlers) {
+      return handlers[command](...args);
+    } else {
+      throw new Error(`Unhandled command: "${command}"`);
+    }
+  });
+
+  return disposable;
+}
+
 export async function reloadProjects(connection: MessageConnection, project = undefined) {
   const result = await connection.sendRequest(ExecuteCommandRequest.type, {
     command: 'els.reloadProject',
