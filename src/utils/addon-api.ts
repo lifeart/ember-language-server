@@ -292,6 +292,19 @@ export async function collectProjectProviders(root: string, addons: string[]): P
 
 export type AddonMeta = { root: string; name: string; version: null | 1 | 2 };
 export type DependencyMeta = { name: string; version: string };
+
+export function emptyProjectProviders(): ProjectProviders {
+  return {
+    definitionProviders: [],
+    referencesProviders: [],
+    completionProviders: [],
+    codeActionProviders: [],
+    initFunctions: [],
+    info: [],
+    addonsMeta: [],
+  };
+}
+
 export interface ProjectProviders {
   definitionProviders: DefinitionResolveFunction[];
   referencesProviders: ReferenceResolveFunction[];

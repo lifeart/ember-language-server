@@ -158,7 +158,7 @@ export default class ProjectRoots {
 
       const project = new Project(projectPath, this.localAddons, info);
 
-      await project.initialize();
+      await project.initialize(this.server);
 
       this.projects.set(projectPath, project);
       logInfo(`Ember CLI project added at ${projectPath}`);

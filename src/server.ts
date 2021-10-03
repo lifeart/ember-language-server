@@ -66,7 +66,18 @@ export interface IServerConfig {
   local: Config;
 }
 
+export interface ServerOptions {
+  type: 'node' | 'worker';
+  fs: 'sync' | 'async';
+}
+
+const defaultServerOptions: ServerOptions = { type: 'node', fs: 'sync' };
+
 export default class Server {
+  flags = {
+    hasExternalFileWatcher: false,
+  };
+  options!: ServerOptions;
   fs!: FSProvider;
   initializers: Initializer[] = [];
   lazyInit = false;
@@ -314,19 +325,17 @@ export default class Server {
     }
   }
   clientCapabilities!: ClientCapabilities;
-  constructor(connection: Connection, options: { type: 'node' | 'worker' } = { type: 'node' }) {
+  constructor(connection: Connection, options: ServerOptions = defaultServerOptions) {
     if (!connection) {
       throw new Error('uELS constructor accept connection instance as first argument');
     }
 
+    this.options = { ...defaultServerOptions, ...options };
     this.connection = connection;
-    this.fs = options?.type === 'node' ? new FSProvider() : new AsyncFsProvider(connection);
+    this.fs = this.options.fs === 'sync' ? new FSProvider() : new AsyncFsProvider(connection);
 
-    if (options.type === 'worker') {
-      setSyncFSSupport(false);
-    }
+    setSyncFSSupport(this.options.fs === 'sync');
 
-    this.fs = new AsyncFsProvider(connection);
     // Make the text document manager listen on the connection
     // for open, change and close text document events
 
@@ -411,9 +420,7 @@ export default class Server {
       });
     }
   }
-  flags = {
-    hasExternalFileWatcher: false,
-  };
+
   // After the server has started the client sends an initilize request. The server receives
   // in the passed params the rootPath of the workspace plus the client capabilites.
   private async onInitialize({ rootUri, rootPath, workspaceFolders, initializationOptions, capabilities }: InitializeParams): Promise<InitializeResult> {
