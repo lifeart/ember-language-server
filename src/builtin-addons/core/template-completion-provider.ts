@@ -177,7 +177,7 @@ export default class TemplateCompletionProvider {
       logInfo('EagerRegistryInitialization is disabled for "' + project.name + '" (template-completion-provider)');
     }
   }
-  async getAllAngleBracketComponents(root: string, uri: string) {
+  async getAllAngleBracketComponents(root: string) {
     const items: CompletionItem[] = [];
 
     if (!this.meta.projectAddonsInfoInitialized) {
@@ -399,7 +399,7 @@ export default class TemplateCompletionProvider {
       } else if (isAngleComponentPath(focusPath) && !isNamedBlockName(focusPath)) {
         log('isAngleComponentPath');
         // <Foo>
-        const candidates = await this.getAllAngleBracketComponents(root, uri);
+        const candidates = await this.getAllAngleBracketComponents(root);
         const scopedValues = this.getScopedValues(focusPath);
 
         log(candidates, scopedValues);
