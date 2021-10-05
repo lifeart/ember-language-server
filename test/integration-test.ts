@@ -567,6 +567,10 @@ describe('integration', function () {
           expect(project.result.name).toEqual('my-project');
           expect(project.result.registry.component.hello.length).toEqual(3);
 
+          if (asyncFsEnabled) {
+            await new Promise((resolve) => setTimeout(resolve, 1000)); // @to-do - figure out fails
+          }
+
           const data: { tokens: ITemplateTokens } = await connection.sendRequest((ExecuteCommandRequest.type as unknown) as string, {
             command: 'els.getLegacyTemplateTokens',
             arguments: [project.normalizedPath],
