@@ -115,17 +115,6 @@ export function generateNamespacedComponentsHashMap(addonsMeta: Array<AddonMeta>
   return resultMap;
 }
 
-function mListMURouteLevelComponents(projectRoot: string, fileURI: string) {
-  // /**/routes/**/-components/**/*.{js,ts,hbs}
-  // we need to get current nesting level and resolve related components
-  // only if we have -components under current fileURI template path
-  if (!projectRoot || !fileURI) {
-    return [];
-  }
-
-  return [];
-}
-
 function isArgumentName(name: string) {
   return name.startsWith('@');
 }
@@ -212,7 +201,6 @@ export default class TemplateCompletionProvider {
     return uniqBy(
       items
         .concat(
-          mListMURouteLevelComponents(root, uri),
           Object.keys(registry.component).map((rawName) => {
             return {
               label: rawName,
@@ -267,7 +255,7 @@ export default class TemplateCompletionProvider {
     }
 
     if (!this.meta.helpersRegistryInitialized) {
-      mListHelpers(this.project);
+      await mListHelpers(this.project);
       this.enableRegistryCache('helpersRegistryInitialized');
     }
 
@@ -321,7 +309,7 @@ export default class TemplateCompletionProvider {
   }
   async getSubExpressionPathCandidates() {
     if (!this.meta.helpersRegistryInitialized) {
-      mListHelpers(this.project);
+      await mListHelpers(this.project);
       this.enableRegistryCache('helpersRegistryInitialized');
     }
 
@@ -529,7 +517,7 @@ export default class TemplateCompletionProvider {
         log('isLinkToTarget');
 
         if (!this.meta.routesRegistryInitialized) {
-          mListRoutes(this.project);
+          await mListRoutes(this.project);
           this.enableRegistryCache('routesRegistryInitialized');
         }
 
@@ -549,7 +537,7 @@ export default class TemplateCompletionProvider {
         log('isLinkComponentRouteTarget');
 
         if (!this.meta.routesRegistryInitialized) {
-          mListRoutes(this.project);
+          await mListRoutes(this.project);
           this.enableRegistryCache('routesRegistryInitialized');
         }
 
@@ -568,7 +556,7 @@ export default class TemplateCompletionProvider {
         log('isModifierPath');
 
         if (!this.meta.modifiersRegistryInitialized) {
-          mListModifiers(this.project);
+          await mListModifiers(this.project);
           this.enableRegistryCache('modifiersRegistryInitialized');
         }
 

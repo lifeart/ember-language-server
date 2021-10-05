@@ -52,9 +52,9 @@ export default class ScriptCompletionProvider {
       try {
         const initStartTime = Date.now();
 
-        mListModels(project);
+        await mListModels(project);
         this.enableRegistryCache('modelsRegistryInitialized');
-        mListServices(project);
+        await mListServices(project);
         this.enableRegistryCache('servicesRegistryInitialized');
         logInfo(project.root + ': script registry initialized in ' + (Date.now() - initStartTime) + 'ms');
       } catch (e) {
@@ -79,7 +79,7 @@ export default class ScriptCompletionProvider {
         log('isStoreModelLookup || isModelReference');
 
         if (!this.meta.modelsRegistryInitialized) {
-          mListModels(this.project);
+          await mListModels(this.project);
           this.enableRegistryCache('modelsRegistryInitialized');
         }
 
@@ -125,7 +125,7 @@ export default class ScriptCompletionProvider {
         log('isNamedServiceInjection');
 
         if (!this.meta.servicesRegistryInitialized) {
-          mListServices(this.project);
+          await mListServices(this.project);
           this.enableRegistryCache('servicesRegistryInitialized');
         }
 
@@ -180,7 +180,7 @@ export default class ScriptCompletionProvider {
         log('isTransformReference');
 
         if (!this.meta.transformsRegistryInitialized) {
-          mListTransforms(this.project);
+          await mListTransforms(this.project);
           this.enableRegistryCache('transformsRegistryInitialized');
         }
 
