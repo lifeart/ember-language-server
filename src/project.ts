@@ -173,15 +173,23 @@ export class Project extends BaseProject {
       }
     });
   }
-  unload() {
+  async unload() {
     this.initIssues = [];
-    this.destructors.forEach((fn) => {
+
+    for (const fn of this.destructors) {
       try {
-        fn(this);
+        await fn(this);
       } catch (e) {
         logError(e);
       }
-    });
+    }
+
+    this.files.clear();
+    this.destructors = [];
+    this.linters = [];
+    this.watchers = [];
+    this.executors = {};
+
     logInfo('--------------------');
     logInfo(`Ember CLI project: ${this.root} unloaded`);
     logInfo('--------------------');
