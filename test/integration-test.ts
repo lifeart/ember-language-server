@@ -29,7 +29,6 @@ import {
   Disposable,
 } from 'vscode-languageserver-protocol/node';
 import { ITemplateTokens } from '../src/utils/usages-api';
-import { assert } from 'console';
 
 describe('integration', function () {
   const testCaseAsyncFsOptions = [false, true];
