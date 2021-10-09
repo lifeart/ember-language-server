@@ -65,9 +65,11 @@ export class Project extends BaseProject {
   get registry(): IRegistry {
     if (this._registryVersion !== this.registryVersion) {
       logInfo(`${this.name} registry version mismatch [${this._registryVersion}, ${this.registryVersion}], regenerating...`);
+      const start = Date.now();
+
       this._registry = getRegistryForRoots(this.roots);
       this._registryVersion = this.registryVersion;
-      logInfo(`${this.name} registry generated, new version: ${this._registryVersion}`);
+      logInfo(`${this.name} registry generated in ${Date.now() - start}ms, new version: ${this._registryVersion}`);
     }
 
     return this._registry;
