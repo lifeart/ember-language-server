@@ -139,7 +139,7 @@ export class Project extends BaseProject {
     return this._packageJSON;
   }
   get name() {
-    return this.packageJSON.name;
+    return this.packageJSON.name ?? '[Unknown Project]';
   }
   async initialize(server: Server) {
     if (server.options.type === 'worker') {

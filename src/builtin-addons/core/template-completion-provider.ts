@@ -6,7 +6,7 @@ import * as memoize from 'memoizee';
 import { emberBlockItems, emberMustacheItems, emberSubExpressionItems, emberModifierItems } from './ember-helpers';
 import { getPathsFromRegistry, provideComponentTemplatePaths } from './template-definition-provider';
 
-import { log, logInfo, logError } from '../../utils/logger';
+import { logInfo, logDebugInfo, logError } from '../../utils/logger';
 import ASTPath, { getLocalScope } from '../../glimmer-utils';
 import Server from '../../server';
 import { Project } from '../../project';
@@ -378,7 +378,7 @@ export default class TemplateCompletionProvider {
     });
   }
   async onComplete(root: string, params: CompletionFunctionParams): Promise<CompletionItem[]> {
-    log('provideCompletions');
+    logDebugInfo('provideCompletions');
 
     if (params.type !== 'template') {
       return params.results;
@@ -391,18 +391,18 @@ export default class TemplateCompletionProvider {
 
     try {
       if (isNamedBlockName(focusPath)) {
-        log('isNamedBlockName');
+        logDebugInfo('isNamedBlockName');
         // <:main>
         const yields = await this.getParentComponentYields(focusPath.parent);
 
         completions.push(...yields);
       } else if (isAngleComponentPath(focusPath) && !isNamedBlockName(focusPath)) {
-        log('isAngleComponentPath');
+        logDebugInfo('isAngleComponentPath');
         // <Foo>
         const candidates = await this.getAllAngleBracketComponents(root);
         const scopedValues = this.getScopedValues(focusPath);
 
-        log(candidates, scopedValues);
+        logDebugInfo(candidates, scopedValues);
         completions.push(...uniqBy([...candidates, ...scopedValues], 'label'));
       } else if (isComponentArgumentName(focusPath)) {
         // <Foo @name.. />
@@ -452,7 +452,7 @@ export default class TemplateCompletionProvider {
         }
       } else if (isLocalPathExpression(focusPath)) {
         // {{foo-bar this.na?}}
-        log('isLocalPathExpression');
+        logDebugInfo('isLocalPathExpression');
         const rawCandidates = await this.getLocalPathExpressionCandidates(uri, originalText);
         const candidates = rawCandidates.filter((el) => {
           return el.label.startsWith('this.');
@@ -469,7 +469,7 @@ export default class TemplateCompletionProvider {
         completions.push(...uniqBy(candidates, 'label'));
       } else if (isMustachePath(focusPath)) {
         // {{foo-bar?}}
-        log('isMustachePath');
+        logDebugInfo('isMustachePath');
         const candidates = await this.getMustachePathCandidates(root);
         const localCandidates = await this.getLocalPathExpressionCandidates(uri, originalText);
 
@@ -484,7 +484,7 @@ export default class TemplateCompletionProvider {
         completions.push(...emberMustacheItems);
       } else if (isBlockPath(focusPath)) {
         // {{#foo-bar?}} {{/foo-bar}}
-        log('isBlockPath');
+        logDebugInfo('isBlockPath');
         const candidates = await this.getBlockPathCandidates(root);
 
         if (isScopedPathExpression(focusPath)) {
@@ -497,7 +497,7 @@ export default class TemplateCompletionProvider {
         completions.push(...uniqBy(candidates, 'label'));
       } else if (isSubExpressionPath(focusPath)) {
         // {{foo-bar name=(subexpr? )}}
-        log('isSubExpressionPath');
+        logDebugInfo('isSubExpressionPath');
         const candidates = await this.getSubExpressionPathCandidates();
 
         completions.push(...uniqBy(candidates, 'label'));
@@ -514,7 +514,7 @@ export default class TemplateCompletionProvider {
         completions.push(...uniqBy(candidates, 'label'));
       } else if (isLinkToTarget(focusPath)) {
         // {{link-to "name" "target?"}}, {{#link-to "target?"}} {{/link-to}}
-        log('isLinkToTarget');
+        logDebugInfo('isLinkToTarget');
 
         if (!this.meta.routesRegistryInitialized) {
           await mListRoutes(this.project);
@@ -534,7 +534,7 @@ export default class TemplateCompletionProvider {
         completions.push(...results);
       } else if (isLinkComponentRouteTarget(focusPath)) {
         // <LinkTo @route="foo.." />
-        log('isLinkComponentRouteTarget');
+        logDebugInfo('isLinkComponentRouteTarget');
 
         if (!this.meta.routesRegistryInitialized) {
           await mListRoutes(this.project);
@@ -553,7 +553,7 @@ export default class TemplateCompletionProvider {
 
         completions.push(...results);
       } else if (isModifierPath(focusPath)) {
-        log('isModifierPath');
+        logDebugInfo('isModifierPath');
 
         if (!this.meta.modifiersRegistryInitialized) {
           await mListModifiers(this.project);
@@ -579,7 +579,7 @@ export default class TemplateCompletionProvider {
         completions.push(...uniqBy([...emberModifierItems, ...resolvedModifiers, ...builtinModifiers()], 'label'));
       }
     } catch (e) {
-      log('error', e);
+      logError(e);
     }
 
     if (this.hasNamespaceSupport) {
