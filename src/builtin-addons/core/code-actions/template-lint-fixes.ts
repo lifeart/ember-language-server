@@ -9,12 +9,16 @@ function setCwd(cwd: string) {
   try {
     process.chdir(cwd);
   } catch (err) {
-    logError(`chdir: ${err.toString()}`);
+    logError(err);
   }
 }
 
 export default class TemplateLintFixesCodeAction extends BaseCodeActionProvider {
   async fixTemplateLintIssues(issues: Diagnostic[], params: CodeActionFunctionParams, meta: INodeSelectionInfo): Promise<Array<CodeAction | null>> {
+    if (!this.server.templateLinter.isEnabled) {
+      return [];
+    }
+
     const linterKlass = await this.server.templateLinter.linterForProject(this.project);
 
     if (!linterKlass) {

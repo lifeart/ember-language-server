@@ -78,7 +78,7 @@ export class Project extends BaseProject {
     // prevent leaks
     if (this.files.size > 10000) {
       this.registryVersion++;
-      logError('too many files for project ' + this.root);
+      logError(new Error('too many files for project ' + this.root) as Error & { stack: string });
       this.files.clear();
     }
 

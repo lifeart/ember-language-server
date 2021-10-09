@@ -13,12 +13,13 @@ function getEnv() {
 }
 
 // Log debugging to the ELS package root, if possible
-const debug = getEnv().CI ? true : getEnv().ELS_DEBUG || false;
+// eslint-disable-next-line no-extra-boolean-cast
+const debug = !!getEnv().CI ? true : getEnv().ELS_DEBUG || false;
 const log_file = debug ? fsProvider().createWriteStream(resolve(__dirname, `../../debug.${process.pid}.log`), { flags: 'w' }) : null;
 
 let remoteConsole: RemoteConsole | null = null;
 
-export function logError(err: any) {
+export function logError(err: Error & { stack: string }) {
   if (remoteConsole) {
     remoteConsole.error(err.stack);
   } else {
