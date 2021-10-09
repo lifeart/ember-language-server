@@ -95,7 +95,8 @@
   "scripts": {
     "changelog": "lerna-changelog",
     "clean": "rimraf lib/",
-    "build": "webpack --mode production",
+    "build:bundle:node": "webpack --mode production",
+    "build:bundle:worker": "webpack --mode production",
     "compile": "tsc --skipLibCheck -p .",
     "lint": "eslint ./{src,test}/**/*.ts",
     "prepublish": "yarn clean && yarn compile",
