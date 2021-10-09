@@ -15,8 +15,8 @@ const nodeBundleConfig = {
   entry: './src/server.ts', // the entry point of this extension, 📖 -> https://webpack.js.org/configuration/entry-context/
   output: {
     // the bundle is stored in the 'dist' folder (check package.json), 📖 -> https://webpack.js.org/configuration/output/
-    path: path.join(__dirname, 'dist', 'bundled',  'node', 'server'),
-    filename: '[name].js',
+    path: path.join(__dirname, 'dist', 'bundled'),
+    filename: 'node-server.js',
     libraryTarget: 'commonjs2',
     devtoolModuleFilenameTemplate: '../[resource-path]',
   },
@@ -61,8 +61,8 @@ const workerBundleConfig = /** @type WebpackConfig */ {
 		'start-worker-server': './src/start-worker-server.ts',
 	},
 	output: {
-		filename: '[name].js',
-		path: path.join(__dirname, 'dist', 'bundled', 'web', 'server'),
+		filename: 'start-worker-server.js',
+		path: path.join(__dirname, 'dist', 'bundled'),
 		libraryTarget: 'var',
 		library: 'serverExportVar',
 	},
