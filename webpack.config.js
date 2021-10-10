@@ -67,15 +67,15 @@ const workerBundleConfig = /** @type WebpackConfig */ {
     extensions: ['.ts', '.js'], // support ts-files and js-files
     alias: {},
     fallback: {
-      path: require.resolve("path-browserify"),
-      util: false,
-      os: false,
+    //   path: require.resolve("path-browserify"),
+    //   util: false,
+    //   os: false,
       fs: false,
-      tty: false,
-      assert: false,
+    //   tty: false,
+    //   assert: false,
       debug: false,
       net: false,
-      stream: false,
+    //   stream: false,
     },
   },
   module: {

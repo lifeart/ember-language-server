@@ -111,7 +111,7 @@ export default class ProjectRoots {
   }
 
   async onProjectAdd(rawPath: string) {
-    const projectPath = path.resolve(URI.parse(rawPath).fsPath);
+    const projectPath = path.resolve(URI.parse(rawPath).fsPath).replace('/\\', '/');
 
     if (this.projects.has(projectPath)) {
       const project = this.projects.get(projectPath) as Project;
