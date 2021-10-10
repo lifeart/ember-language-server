@@ -204,6 +204,9 @@ export default class ProjectRoots {
 
   projectForPath(rawPath: string): Project | undefined {
     const filePath = path.resolve(rawPath).toLowerCase();
+
+    logInfo('projectForPath: ' + filePath);
+    logInfo(JSON.stringify(Array.from(this.projects.keys())));
     /*
       to fix C:\\Users\\lifeart\\AppData\\Local\\Temp\\tmp-30396kTX1RpAxCCyc
       and c:\\Users\\lifeart\\AppData\\Local\\Temp\\tmp-30396kTX1RpAxCCyc\\app\\components\\hello.hbs
