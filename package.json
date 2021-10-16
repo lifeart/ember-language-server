@@ -102,7 +102,11 @@
     "lint": "eslint ./{src,test}/**/*.ts",
     "prepublish": "yarn clean && yarn compile",
     "test": "jest",
-    "test:coverage": "rimraf inst/ && nyc instrument lib inst && nyc --no-clean --reporter=clover --reporter=json --reporter=lcov yarn run jest --no-coverage",
+    "cover:report": "nyc report --reporter=lcov --reporter=text",
+    "cover:test": "nyc --no-clean --reporter=clover --reporter=json --reporter=lcov yarn run jest --no-coverage",
+    "clean:instrumentation": "rimraf inst/",
+    "add:instrumentation": "nyc instrument lib inst",
+    "test:coverage": "yarn clean:instrumentation && add:instrumentation && yarn cover:test && yarn cover:report",
     "watch": "tsc --watch -p .",
     "prepare": "husky install"
   },
