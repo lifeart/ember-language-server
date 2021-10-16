@@ -20,6 +20,7 @@ export function initBuiltinProviders(): ProjectProviders {
   return {
     definitionProviders: [scriptDefinition.onDefinition.bind(scriptDefinition), templateDefinition.onDefinition.bind(templateDefinition)],
     referencesProviders: [],
+    hoverProviders: [],
     codeActionProviders: [
       templateLintFixesCodeAction.onCodeAction.bind(templateLintFixesCodeAction),
       templateLintCommentsCodeAction.onCodeAction.bind(templateLintCommentsCodeAction),

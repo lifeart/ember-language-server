@@ -235,17 +235,7 @@ export async function collectProjectProviders(root: string, addons: string[]): P
     initFunctions: InitFunction[];
     info: string[];
     addonsMeta: AddonMeta[];
-  } = {
-    definitionProviders: [],
-    referencesProviders: [],
-    completionProviders: [],
-    hoverProviders: [],
-    codeActionProviders: [],
-    initFunctions: [],
-    info: [],
-    addonsMeta,
-  };
-
+  } = emptyProjectProviders();
   // onReference, onComplete, onDefinition
 
   dagMap.each((_, handlerObject) => {
