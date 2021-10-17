@@ -391,6 +391,7 @@ export default class Server {
     this.scriptCompletionProvider = new ScriptCompletionProvider(this);
     this.definitionProvider = new DefinitionProvider(this);
     this.referenceProvider = new ReferenceProvider(this);
+    this.hoverProvider = new HoverProvider(this);
     this.codeActionProvider = new CodeActionProvider(this);
 
     this.documents.listen(this.connection);

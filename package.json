@@ -106,7 +106,8 @@
     "cover:test": "nyc --no-clean --reporter=clover --reporter=json --reporter=lcov yarn run jest --no-coverage",
     "clean:instrumentation": "rimraf inst/",
     "add:instrumentation": "nyc instrument lib inst",
-    "test:coverage": "yarn clean:instrumentation && add:instrumentation && yarn cover:test && yarn cover:report",
+    "rebuild:instrumentation": "yarn clean && yarn compile && yarn clean:instrumentation && yarn add:instrumentation",
+    "test:coverage": "yarn rebuild:instrumentation && yarn cover:test && yarn cover:report",
     "watch": "tsc --watch -p .",
     "prepare": "husky install"
   },
