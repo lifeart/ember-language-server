@@ -235,7 +235,9 @@ export async function collectProjectProviders(root: string, addons: string[]): P
     initFunctions: InitFunction[];
     info: string[];
     addonsMeta: AddonMeta[];
-  } = emptyProjectProviders();
+  } = emptyProjectProviders({
+    addonsMeta,
+  });
   // onReference, onComplete, onDefinition
 
   dagMap.each((_, handlerObject) => {
@@ -336,7 +338,7 @@ export async function collectProjectProviders(root: string, addons: string[]): P
 export type AddonMeta = { root: string; name: string; version: null | 1 | 2 };
 export type DependencyMeta = { name: string; version: string };
 
-export function emptyProjectProviders(providers?: ProjectProviders): ProjectProviders {
+export function emptyProjectProviders(providers?: Partial<ProjectProviders>): ProjectProviders {
   return {
     definitionProviders: providers?.definitionProviders ?? [],
     hoverProviders: providers?.hoverProviders ?? [],
