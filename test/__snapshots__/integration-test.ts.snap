@@ -216,7 +216,13 @@ Object {
 
 exports[`integration async fs enabled: false Able to provide API:Hover support dummy addon hover:template 1`] = `
 Object {
-  "addonsMeta": Array [],
+  "addonsMeta": Array [
+    Object {
+      "name": "provider",
+      "root": "node_modules/provider",
+      "version": null,
+    },
+  ],
   "registry": Object {
     "component": Object {
       "hello": Array [
@@ -1035,7 +1041,7 @@ Object {
       "label": "component",
       "textEdit": Object {
         "newText": "component}}
-
+  
 {{/component}}",
         "range": Object {
           "end": Object {
@@ -1061,7 +1067,7 @@ Object {
       "label": "each",
       "textEdit": Object {
         "newText": "each}}
-
+  
 {{/each}}",
         "range": Object {
           "end": Object {
@@ -1084,7 +1090,7 @@ Object {
       "label": "each-in",
       "textEdit": Object {
         "newText": "each-in}}
-
+  
 {{/each-in}}",
         "range": Object {
           "end": Object {
@@ -1108,7 +1114,7 @@ Object {
       "label": "in-element",
       "textEdit": Object {
         "newText": "in-element}}
-
+  
 {{/in-element}}",
         "range": Object {
           "end": Object {
@@ -1131,7 +1137,7 @@ Object {
       "label": "let",
       "textEdit": Object {
         "newText": "let}}
-
+  
 {{/let}}",
         "range": Object {
           "end": Object {
@@ -1154,7 +1160,7 @@ Object {
       "label": "if",
       "textEdit": Object {
         "newText": "if}}
-
+  
 {{/if}}",
         "range": Object {
           "end": Object {
@@ -1179,7 +1185,7 @@ Object {
       "label": "unless",
       "textEdit": Object {
         "newText": "unless}}
-
+  
 {{/unless}}",
         "range": Object {
           "end": Object {
@@ -1204,7 +1210,7 @@ Object {
       "label": "with",
       "textEdit": Object {
         "newText": "with}}
-
+  
 {{/with}}",
         "range": Object {
           "end": Object {
@@ -1227,7 +1233,7 @@ Object {
       "label": "hello",
       "textEdit": Object {
         "newText": "hello}}
-
+  
 {{/hello}}",
         "range": Object {
           "end": Object {
@@ -1247,7 +1253,7 @@ Object {
       "label": "darling",
       "textEdit": Object {
         "newText": "darling}}
-
+  
 {{/darling}}",
         "range": Object {
           "end": Object {
@@ -2786,8 +2792,8 @@ Object {
         "els.reloadProject",
       ],
     },
-    "referencesProvider": true,
     "hoverProvider": true,
+    "referencesProvider": true,
     "textDocumentSync": 1,
     "workspace": Object {
       "workspaceFolders": Object {
@@ -3227,7 +3233,13 @@ Object {
 
 exports[`integration async fs enabled: true Able to provide API:Hover support dummy addon hover:template 1`] = `
 Object {
-  "addonsMeta": Array [],
+  "addonsMeta": Array [
+    Object {
+      "name": "provider",
+      "root": "node_modules/provider",
+      "version": null,
+    },
+  ],
   "registry": Object {
     "component": Object {
       "hello": Array [
@@ -4046,7 +4058,7 @@ Object {
       "label": "component",
       "textEdit": Object {
         "newText": "component}}
-
+  
 {{/component}}",
         "range": Object {
           "end": Object {
@@ -4072,7 +4084,7 @@ Object {
       "label": "each",
       "textEdit": Object {
         "newText": "each}}
-
+  
 {{/each}}",
         "range": Object {
           "end": Object {
@@ -4095,7 +4107,7 @@ Object {
       "label": "each-in",
       "textEdit": Object {
         "newText": "each-in}}
-
+  
 {{/each-in}}",
         "range": Object {
           "end": Object {
@@ -4119,7 +4131,7 @@ Object {
       "label": "in-element",
       "textEdit": Object {
         "newText": "in-element}}
-
+  
 {{/in-element}}",
         "range": Object {
           "end": Object {
@@ -4142,7 +4154,7 @@ Object {
       "label": "let",
       "textEdit": Object {
         "newText": "let}}
-
+  
 {{/let}}",
         "range": Object {
           "end": Object {
@@ -4165,7 +4177,7 @@ Object {
       "label": "if",
       "textEdit": Object {
         "newText": "if}}
-
+  
 {{/if}}",
         "range": Object {
           "end": Object {
@@ -4190,7 +4202,7 @@ Object {
       "label": "unless",
       "textEdit": Object {
         "newText": "unless}}
-
+  
 {{/unless}}",
         "range": Object {
           "end": Object {
@@ -4215,7 +4227,7 @@ Object {
       "label": "with",
       "textEdit": Object {
         "newText": "with}}
-
+  
 {{/with}}",
         "range": Object {
           "end": Object {
@@ -4238,7 +4250,7 @@ Object {
       "label": "hello",
       "textEdit": Object {
         "newText": "hello}}
-
+  
 {{/hello}}",
         "range": Object {
           "end": Object {
@@ -4258,7 +4270,7 @@ Object {
       "label": "darling",
       "textEdit": Object {
         "newText": "darling}}
-
+  
 {{/darling}}",
         "range": Object {
           "end": Object {
@@ -5797,8 +5809,8 @@ Object {
         "els.reloadProject",
       ],
     },
-    "referencesProvider": true,
     "hoverProvider": true,
+    "referencesProvider": true,
     "textDocumentSync": 1,
     "workspace": Object {
       "workspaceFolders": Object {
