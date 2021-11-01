@@ -336,16 +336,16 @@ export async function collectProjectProviders(root: string, addons: string[]): P
 export type AddonMeta = { root: string; name: string; version: null | 1 | 2 };
 export type DependencyMeta = { name: string; version: string };
 
-export function emptyProjectProviders(): ProjectProviders {
+export function emptyProjectProviders(providers?: ProjectProviders): ProjectProviders {
   return {
-    definitionProviders: [],
-    hoverProviders: [],
-    referencesProviders: [],
-    completionProviders: [],
-    codeActionProviders: [],
-    initFunctions: [],
-    info: [],
-    addonsMeta: [],
+    definitionProviders: providers?.definitionProviders ?? [],
+    hoverProviders: providers?.hoverProviders ?? [],
+    referencesProviders: providers?.referencesProviders ?? [],
+    completionProviders: providers?.completionProviders ?? [],
+    codeActionProviders: providers?.codeActionProviders ?? [],
+    initFunctions: providers?.initFunctions ?? [],
+    info: providers?.info ?? [],
+    addonsMeta: providers?.addonsMeta ?? [],
   };
 }
 
