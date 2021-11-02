@@ -136,7 +136,7 @@ export default class TemplateCompletionProvider {
       return [];
     }
 
-    const position = { ...params.position };
+    const position = Object.freeze({ ...params.position });
     const { project, document } = this.getRoots(params.textDocument);
 
     if (!project || !document) {
