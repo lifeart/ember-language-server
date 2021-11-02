@@ -175,11 +175,12 @@ export default class TemplateCompletionProvider {
       type: 'template',
     });
     const textPrefix = getTextPrefix(focusPath, normalPlaceholder);
+    const alignedPosition = { ...position };
     const endCharacterPosition = position.character;
 
     if (textPrefix.length) {
       // eslint-disable-next-line
-      position.character -= textPrefix.length;
+      alignedPosition.character -= textPrefix.length;
     }
 
     return filter(addonResults, textPrefix, {
@@ -193,7 +194,7 @@ export default class TemplateCompletionProvider {
       }
 
       const endPosition = {
-        line: position.line,
+        line: alignedPosition.line,
         character: endCharacterPosition,
       };
       const shouldFixContent = normalPlaceholder.includes('}}{{');
@@ -201,7 +202,7 @@ export default class TemplateCompletionProvider {
       el.textEdit = {
         newText: shouldFixContent ? normalPlaceholder.split(PLACEHOLDER).join(el.label).replace('}}{{', '}}\n  \n{{') : el.label,
         range: {
-          start: position,
+          start: alignedPosition,
           end: endPosition,
         },
       };
