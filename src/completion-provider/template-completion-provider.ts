@@ -136,7 +136,7 @@ export default class TemplateCompletionProvider {
       return [];
     }
 
-    const position = params.position;
+    const position = { ...params.position };
     const { project, document } = this.getRoots(params.textDocument);
 
     if (!project || !document) {
@@ -159,7 +159,7 @@ export default class TemplateCompletionProvider {
     const completions: CompletionItem[] = await queryELSAddonsAPIChain(project.builtinProviders.completionProviders, root, {
       focusPath,
       textDocument: params.textDocument,
-      position: params.position,
+      position,
       results: [],
       server: this.server,
       type: 'template',
@@ -169,7 +169,7 @@ export default class TemplateCompletionProvider {
     const addonResults = await queryELSAddonsAPIChain(project.providers.completionProviders, root, {
       focusPath,
       textDocument: params.textDocument,
-      position: params.position,
+      position,
       results: completions,
       server: this.server,
       type: 'template',
