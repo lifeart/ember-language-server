@@ -2,7 +2,7 @@ import * as path from 'path';
 import * as t from '@babel/types';
 import { Definition, Location } from 'vscode-languageserver/node';
 import { DefinitionFunctionParams } from './../../utils/addon-api';
-import { pathsToLocations, getAddonPathsForType, getAddonImport } from '../../utils/definition-helpers';
+import { pathsToLocations, getAddonPathsForType, getAddonImport, pathsToLocationsWithPosition } from '../../utils/definition-helpers';
 import {
   isRouteLookup,
   isTransformReference,
@@ -12,6 +12,7 @@ import {
   isNamedServiceInjection,
   isTemplateElement,
   isImportSpecifier,
+  isImportDefaultSpecifier,
 } from './../../utils/ast-helpers';
 import { normalizeServiceName } from '../../utils/normalizers';
 import { asyncFilter, podModulePrefixForRoot } from './../../utils/layout-helpers';
@@ -109,7 +110,7 @@ export default class CoreScriptDefinitionProvider {
     this.server = server;
     this.project = project;
   }
-  async guessPathForImport(root: string, uri: string, importPath: string) {
+  async guessPathForImport(root: string, uri: string, importPath: string, name: string) {
     if (!uri) {
       return null;
     }
@@ -129,7 +130,11 @@ export default class CoreScriptDefinitionProvider {
 
     const existingPaths = await asyncFilter(guessedPaths, this.server.fs.exists);
 
-    return pathsToLocations(...existingPaths);
+    if (name) {
+      return await pathsToLocationsWithPosition(existingPaths, name);
+    } else {
+      return pathsToLocations(...existingPaths);
+    }
   }
   async guessPathsForType(root: string, fnName: ItemType, typeName: string) {
     const guessedPaths: string[] = [];
@@ -195,10 +200,14 @@ export default class CoreScriptDefinitionProvider {
 
       definitions = await this.guessPathsForType(root, 'Transform', transformName);
     } else if (isImportPathDeclaration(astPath)) {
-      definitions = (await this.guessPathForImport(root, uri, ((astPath.node as unknown) as t.StringLiteral).value)) || [];
-    } else if (isImportSpecifier(astPath)) {
+      definitions = (await this.guessPathForImport(root, uri, ((astPath.node as unknown) as t.StringLiteral).value, '')) || [];
+    } else if (isImportSpecifier(astPath) || isImportDefaultSpecifier(astPath)) {
       logInfo(`Handle script import for Project "${project.name}"`);
-      const pathName: string = ((astPath.parentFromLevel(2) as unknown) as t.ImportDeclaration).source.value;
+      const importDeclaration: t.ImportDeclaration = astPath.parentFromLevel(2);
+      const pathName: string = importDeclaration.source.value;
+      const isNamedImport = isImportDefaultSpecifier(astPath);
+      const node = (astPath.node as unknown) as t.ImportSpecifier;
+      const importName = isNamedImport ? (node.imported as t.Identifier)?.name : ''; // should be default? (may not work for .hbs import..)
       const pathParts = pathName.split('/');
       let maybeAppName = pathParts.shift();
 
@@ -214,14 +223,22 @@ export default class CoreScriptDefinitionProvider {
         const importPaths = this.resolvers.resolveTestScopeImport(project.root, pathParts.join(path.sep));
         const existingPaths = await asyncFilter(importPaths, this.server.fs.exists);
 
-        potentialPaths = pathsToLocations(...existingPaths);
+        if (importName) {
+          potentialPaths = await pathsToLocationsWithPosition(existingPaths, importName);
+        } else {
+          potentialPaths = pathsToLocations(...existingPaths);
+        }
       } else if (addonInfo) {
         const importPaths = this.resolvers.resolveTestScopeImport(addonInfo.root, pathName);
         const existingPaths = await asyncFilter(importPaths, this.server.fs.exists);
 
-        potentialPaths = pathsToLocations(...existingPaths);
+        if (importName) {
+          potentialPaths = await pathsToLocationsWithPosition(existingPaths, importName);
+        } else {
+          potentialPaths = pathsToLocations(...existingPaths);
+        }
       } else {
-        potentialPaths = (await this.guessPathForImport(project.root, uri, pathName)) || [];
+        potentialPaths = (await this.guessPathForImport(project.root, uri, pathName, importName)) || [];
       }
 
       definitions = definitions.concat(potentialPaths);

@@ -341,12 +341,12 @@ export function isImportPathDeclaration(path: ASTPath): boolean {
   return true;
 }
 
-export function isImportSpecifier(path: ASTPath): boolean {
-  if (!hasNodeType(path.parent, 'ImportDefaultSpecifier') && !hasNodeType(path.parent, 'ImportSpecifier')) {
-    return false;
-  }
+export function isImportDefaultSpecifier(path: ASTPath): boolean {
+  return hasNodeType(path.parent, 'ImportDefaultSpecifier');
+}
 
-  return true;
+export function isImportSpecifier(path: ASTPath): boolean {
+  return hasNodeType(path.parent, 'ImportSpecifier');
 }
 
 export function isServiceInjection(path: ASTPath): boolean {

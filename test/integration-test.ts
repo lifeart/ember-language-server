@@ -28,6 +28,7 @@ import {
   ReferencesRequest,
   Disposable,
   HoverRequest,
+  Definition,
 } from 'vscode-languageserver-protocol/node';
 import { ITemplateTokens } from '../src/utils/usages-api';
 
@@ -230,6 +231,60 @@ describe('integration', function () {
           );
 
           expect(result).toMatchSnapshot();
+        });
+        it('named go to definition from app to in repo addon', async () => {
+          const result = await getResult(
+            DefinitionRequest.method,
+            connection,
+            {
+              app: {
+                components: {
+                  'hello.js': 'import { Baz } from "biz/components/bar"',
+                  darling: {
+                    'index.js': '',
+                  },
+                },
+              },
+              lib: {
+                biz: {
+                  addon: {
+                    components: {
+                      'bar.js': `
+                        export const Baz from "unknown";
+                        export const Bar from "unknown";
+                      `,
+                    },
+                  },
+                  'package.json': JSON.stringify({
+                    name: 'biz',
+                    keywords: ['ember-addon'],
+                    dependencies: {},
+                  }),
+                  'index.js': `/* eslint-env node */
+                  'use strict';
+
+                  module.exports = {
+                    name: 'biz',
+
+                    isDevelopingAddon() {
+                      return true;
+                    }
+                  };`,
+                },
+              },
+              'package.json': JSON.stringify({
+                'ember-addon': {
+                  paths: ['lib/biz'],
+                },
+              }),
+            },
+            'app/components/hello.js',
+            { line: 0, character: 10 }
+          );
+
+          const info = result.response[0] as Definition;
+
+          expect(info.range.start.line).toBe(1);
         });
         it('go to definition from app to nested utils location of in repo addon', async () => {
           const result = await getResult(
