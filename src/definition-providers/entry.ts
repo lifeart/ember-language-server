@@ -3,7 +3,6 @@ import Server from './../server';
 import { getExtension } from './../utils/file-extension';
 import TemplateDefinitionProvider from './template';
 import ScriptDefinitionProvider from './script';
-import { logError } from '../utils/logger';
 
 export default class DefinitionProvider {
   public template!: TemplateDefinitionProvider;
