@@ -1,4 +1,4 @@
-import { getFileRanges, RangeWalker } from './../../src/utils/glimmer-script';
+import { getFileRanges, RangeWalker, TemplateData } from './../../src/utils/glimmer-script';
 
 function rw(tpl: string) {
   return new RangeWalker(getFileRanges(tpl));
@@ -139,6 +139,39 @@ describe('glimmer-scripts', function () {
           expect(template.loc.end.character).toBe(11);
         });
       });
+    });
+  });
+
+  describe('TemplateData', function () {
+    it('return expected list of locals', function () {
+      const tpl = `<div>{{this.foo}}</div>`;
+      const data = new TemplateData(tpl);
+
+      expect(data.locals).toStrictEqual([]);
+    });
+    it('return expected list of locals for helpers', function () {
+      const tpl = `<div>{{foo 42}}</div>`;
+      const data = new TemplateData(tpl);
+
+      expect(data.locals).toStrictEqual(['foo']);
+    });
+    it('return expected list of locals for helpers composition', function () {
+      const tpl = `<div>{{foo (bar 42)}}</div>`;
+      const data = new TemplateData(tpl);
+
+      expect(data.locals).toStrictEqual(['foo', 'bar']);
+    });
+    it('return expected list of locals for modifiers', function () {
+      const tpl = `<div {{foo 42}}></div>`;
+      const data = new TemplateData(tpl);
+
+      expect(data.locals).toStrictEqual(['foo']);
+    });
+    it('return expected list of locals for components', function () {
+      const tpl = `<MyComponent />`;
+      const data = new TemplateData(tpl);
+
+      expect(data.locals).toStrictEqual(['MyComponent']);
     });
   });
 });

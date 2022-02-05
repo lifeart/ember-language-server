@@ -1,10 +1,10 @@
 import { getTemplateLocals, preprocess, ASTv1 } from '@glimmer/syntax';
 import { Range as LSRange } from 'vscode-languageserver/node';
 
-class TemplateData {
+export class TemplateData {
   loc: LSRange;
   content: string;
-  constructor(loc: LSRange, content: string) {
+  constructor(content: string, loc: LSRange = { start: { line: 0, character: 0 }, end: { line: 0, character: 0 } }) {
     this.loc = loc;
     this.content = content;
   }
@@ -96,13 +96,10 @@ export class RangeWalker {
     const completeTemplate = (line: FileRange, offset: number) => {
       params.end = new TPosition(line.line, offset);
       results.push(
-        new TemplateData(
-          {
-            start: params.start,
-            end: params.end,
-          },
-          buffer.join('')
-        )
+        new TemplateData(buffer.join(''), {
+          start: params.start,
+          end: params.end,
+        })
       );
       buffer = [];
     };
