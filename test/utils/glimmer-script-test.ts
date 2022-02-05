@@ -245,6 +245,13 @@ describe('glimmer-scripts', function () {
   });
 
   describe('TemplateData', function () {
+    it('return correct absolute content', function () {
+      const tpl = `123\n1\n\n <template>123\n </template>`;
+      const r = rw(tpl);
+      const [template] = r.templates(true);
+
+      expect(template.absoluteContent.split('\n')).toStrictEqual(['', '', '', '', ' <template>123', ' </template>']);
+    });
     it('return expected list of locals', function () {
       const tpl = `<div>{{this.foo}}</div>`;
       const data = new TemplateData(tpl);

@@ -64,6 +64,11 @@ export class TemplateData {
     this.loc = loc;
     this.content = content;
   }
+  get absoluteContent() {
+    const tpl = new Array(this.loc.start.line).fill('\n').join('') + new Array(this.loc.start.character).fill(' ').join('') + this.content;
+
+    return tpl;
+  }
   get key() {
     const pos = `${this.loc.start.line}${this.loc.start.character}${this.loc.end.line}${this.loc.end.character}`;
 
@@ -132,8 +137,6 @@ export function getFileRanges(file = '') {
 
 const STATE = {
   OPEN: 0,
-  HTML_COMMENT_OPEN: 2,
-  HTML_COMMENT_CLOSE: 3,
   CLOSE: 1,
 };
 
