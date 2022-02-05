@@ -1,6 +1,27 @@
 import { getTemplateLocals, preprocess, ASTv1 } from '@glimmer/syntax';
 import { Range as LSRange } from 'vscode-languageserver/node';
 
+interface IBabelScope {
+  bindings: string[];
+  parent?: IBabelScope;
+}
+
+// getScope(path.scope);
+export function getScope(scope: IBabelScope) {
+  const names = new Set();
+  let resolvedScope: undefined | IBabelScope = scope;
+
+  while (resolvedScope) {
+    for (const binding in scope.bindings) {
+      names.add(binding);
+    }
+
+    resolvedScope = resolvedScope.parent;
+  }
+
+  return Array.from(names);
+}
+
 export class TemplateData {
   loc: LSRange;
   content: string;

@@ -51,6 +51,7 @@ export default class GlimmerScriptDefinitionProvider {
 
     if (templateForPosition) {
       // do logic to get more meta from js scope for template position
+      // here we need glimmer logic to collect all available tokens from scope for autocomplete
     } else {
       // looks like we could "fix" template and continue in script branch;
     }
