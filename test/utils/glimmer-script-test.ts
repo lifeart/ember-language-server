@@ -44,6 +44,52 @@ describe('glimmer-scripts', function () {
   });
 
   describe('RangeWalker', function () {
+    describe('content getter', function () {
+      it('works just fine', function () {
+        const tpl = `<template>\n<template>\n</template>`;
+        const r = rw(tpl);
+
+        expect(r.content).toBe(tpl);
+      });
+    });
+    describe('subtract', function () {
+      describe('one-line', function () {
+        it('able to remove single line template content from source [with bounds]', function () {
+          const tpl = `<template>42</template>`;
+          const r = rw(tpl);
+
+          expect(r.subtract(r.templates()).content).toStrictEqual('<template>  </template>');
+        });
+        it('able to remove single line template content from source [without bounds]', function () {
+          const tpl = `<template>42</template>`;
+          const r = rw(tpl);
+
+          expect(r.subtract(r.templates(true)).content).toStrictEqual(new Array(tpl.length).fill(' ').join(''));
+        });
+      });
+      describe('multi-line', function () {
+        it('able to remove single line template content from source [with bounds]', function () {
+          const tpl = `<template>\n4\n2\n</template>`;
+          const r = rw(tpl);
+
+          expect(r.subtract(r.templates()).content).toStrictEqual('<template>\n \n \n</template>');
+        });
+        it('able to remove single line template content from source [without bounds]', function () {
+          const tpl = `\n<template>\n4\n2\n</template>\n`;
+          const r = rw(tpl);
+
+          expect(r.subtract(r.templates(true)).content).toStrictEqual('\n          \n \n \n           \n');
+        });
+      });
+      describe('can subtract multiple types', function () {
+        it('able to remove style and template content', function () {
+          const tpl = `<template>42</template><style>42</style>`;
+          const r = rw(tpl);
+
+          expect(r.subtract([...r.templates(), ...r.styles()]).content).toStrictEqual('<template>  </template><style>  </style>');
+        });
+      });
+    });
     describe('<template></template>', function () {
       describe('corner cases', function () {
         it('support open template tag inside open template tag', function () {

@@ -34,6 +34,16 @@ class FileRange {
   get content() {
     return this.characters.join('');
   }
+  clone() {
+    const fRange = new FileRange(this.start);
+
+    this.characters.forEach((char) => {
+      fRange.addColumn(char);
+    });
+    fRange.line = this.line;
+
+    return fRange;
+  }
 }
 
 export function getFileRanges(file = '') {
@@ -78,6 +88,9 @@ export class RangeWalker {
     this.lines = lines;
   }
   lines: FileRange[] = [];
+  get content() {
+    return this.lines.map((l) => l.content).join('\n');
+  }
   extractDocumentPart(includeBounds = false, openTag = '', closeTag = '') {
     const results: TemplateData[] = [];
     let state = STATE.CLOSE;
@@ -159,6 +172,49 @@ export class RangeWalker {
     });
 
     return results;
+  }
+  subtract(parts: TemplateData[]): RangeWalker {
+    const ranges = this.lines.map((e) => e.clone());
+
+    ranges.forEach((rangeLine) => {
+      const lineNumber = rangeLine.line;
+      const filteredParts = parts.filter((p) => p.loc.start.line <= lineNumber && p.loc.end.line >= lineNumber);
+
+      filteredParts.forEach((part) => {
+        if (part.loc.start.line !== lineNumber && part.loc.end.line !== lineNumber) {
+          // replace in-range characters with blank lines (dont have better idea for now)
+          rangeLine.characters = rangeLine.characters.map(() => ' ');
+        } else if (part.loc.start.line === lineNumber && part.loc.end.line === lineNumber) {
+          rangeLine.characters = rangeLine.characters.map((char, index) => {
+            if (index >= part.loc.start.character && index < part.loc.end.character) {
+              return ' ';
+            } else {
+              return char;
+            }
+          });
+        } else if (part.loc.start.line === lineNumber) {
+          rangeLine.characters = rangeLine.characters.map((char, index) => {
+            if (index >= part.loc.start.character) {
+              return ' ';
+            } else {
+              return char;
+            }
+          });
+        } else if (part.loc.end.line === lineNumber) {
+          rangeLine.characters = rangeLine.characters.map((char, index) => {
+            if (index < part.loc.end.character) {
+              return ' ';
+            } else {
+              return char;
+            }
+          });
+        } else {
+          // Oops
+        }
+      });
+    });
+
+    return new RangeWalker(ranges);
   }
   templates(includeBounds = false) {
     return this.extractDocumentPart(includeBounds, '<template>', '</template>');
