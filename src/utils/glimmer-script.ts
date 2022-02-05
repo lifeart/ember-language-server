@@ -163,19 +163,19 @@ export class RangeWalker {
 
     return results;
   }
-  templates() {
-    return this.extractDocumentPart(false, '<template>', '</template>');
+  templates(includeBounds = false) {
+    return this.extractDocumentPart(includeBounds, '<template>', '</template>');
   }
-  htmlComments() {
-    return this.extractDocumentPart(false, '<!--', '-->');
+  htmlComments(includeBounds = false) {
+    return this.extractDocumentPart(includeBounds, '<!--', '-->');
   }
-  hbsComments() {
-    return this.extractDocumentPart(false, '{{!--', '--}}');
+  hbsComments(includeBounds = false) {
+    return this.extractDocumentPart(includeBounds, '{{!--', '--}}');
   }
-  hbsInlineComments() {
-    return this.extractDocumentPart(false, '{{!', '}}');
+  hbsInlineComments(includeBounds = false) {
+    return this.extractDocumentPart(includeBounds, '{{!', '}}');
   }
-  styles() {
-    return this.extractDocumentPart(false, '<style>', '</style>');
+  styles(includeBounds = false) {
+    return this.extractDocumentPart(includeBounds, '<style>', '</style>');
   }
 }
