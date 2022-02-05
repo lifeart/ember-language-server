@@ -1,4 +1,4 @@
-import { CompletionItem, TextDocumentPositionParams, Position } from 'vscode-languageserver/node';
+import { CompletionItem, TextDocumentPositionParams } from 'vscode-languageserver/node';
 import Server from '../server';
 import { getFileRanges, RangeWalker, getPlaceholderPathFromAst, getScope } from '../utils/glimmer-script';
 import { parseScriptFile as parse } from 'ember-meta-explorer';
