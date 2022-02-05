@@ -6,7 +6,7 @@ function rw(tpl: string) {
 
 describe('glimmer-scripts', function () {
   describe('getScope()', function () {
-    it('able to extract scope symbols from js file by given path', function () {
+    it('able to extract scope symbols from js class file by given path', function () {
       const tpl = `
         import foo from 'bar';
         import { case } from 'ace';
@@ -24,6 +24,22 @@ describe('glimmer-scripts', function () {
       const scope = getScope(p.scope);
 
       expect(scope).toStrictEqual(['foo', 'case', 'hello', 'Boo']);
+    });
+    it('able to extract scope from js variable notation by given path', function () {
+      const tpl = `
+        import boo from 'boo';
+        var n = 12;
+        const tpl = GL
+        const tpl1 = 42;
+        let oop = 'pups';
+      `;
+      const p = getPlaceholderPath(tpl, 'GL');
+
+      expect(p.node.type).toBe('Identifier');
+
+      const scope = getScope(p.scope);
+
+      expect(scope).toStrictEqual(['boo', 'n', 'tpl', 'tpl1', 'oop']);
     });
   });
 
