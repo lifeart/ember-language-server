@@ -107,7 +107,8 @@ export default class TemplateLinter {
       const ranges = getFileRanges(documentContent);
 
       const rangeWalker = new RangeWalker(ranges);
-      const templates = rangeWalker.templates();
+      // @to-do fix absoluteContent without boundaries
+      const templates = rangeWalker.templates(true);
 
       return templates.map((t) => t.absoluteContent);
     } else {
