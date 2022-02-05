@@ -25,23 +25,9 @@ export default class GlimmerScriptDefinitionProvider {
 
     const rangeWalker = new RangeWalker(ranges);
 
-    const templates = rangeWalker.templates();
+    const templates = rangeWalker.templates(true);
 
-    // __GLIMMER_TEMPLATE/*<template></template>*/
-    console.log(templates);
-
-    let script = content;
-
-    templates.forEach((t) => {
-      const start = ranges[t.loc.start.line].start + t.loc.start.character;
-      const end = ranges[t.loc.end.line].start + t.loc.end.character;
-      const newLines = new Array(t.loc.end.line - t.loc.start.line).fill('\n');
-      const tail = new Array(t.loc.end.character).fill(' ');
-      const tokens = t.locals.join(',');
-      // keep original template size
-
-      script = script.substring(0, start) + `${t.placeholder} = [${tokens}]${newLines}${tail}` + script.substring(end);
-    });
+    const cleanScript = rangeWalker.subtract(templates);
 
     const templateForPosition = templates.find((el) => {
       return containsPosition(
@@ -67,7 +53,7 @@ export default class GlimmerScriptDefinitionProvider {
     // @to-do - figure out how to patch babel ast with hbs
     // or don't patch it, and just have 2 refs from hbs ast to scope of js ast
 
-    const ast = parse(script, {
+    const ast = parse(cleanScript.content, {
       sourceType: 'module',
     });
 
