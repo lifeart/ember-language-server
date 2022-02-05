@@ -3,12 +3,13 @@ import { MessageConnection } from 'vscode-jsonrpc/node';
 import { CompletionRequest } from 'vscode-languageserver-protocol/node';
 
 function createPointer(tpl = '') {
+  const findMe = '⚡';
   const parts = tpl.split('\n');
-  const line = parts.findIndex((e) => e.includes('$'));
-  const character = parts[line].indexOf('$') - 1;
+  const line = parts.findIndex((e) => e.includes(findMe));
+  const character = parts[line].indexOf(findMe) - 1;
 
   return {
-    content: tpl.replace('$', ''),
+    content: tpl.replace(findMe, ''),
     position: {
       line,
       character,
@@ -37,7 +38,7 @@ describe('has basic template imports support', function () {
           export default class Foo extends Bar {
             firstName = "a";
             lastName = "b";
-            <template><$</template>
+            <template><⚡</template>
           }
         `;
         const { content, position } = createPointer(tpl);
