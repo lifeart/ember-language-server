@@ -13,6 +13,7 @@ import { pathToFileURL } from 'url';
 import Server from './server';
 import { Project } from './project';
 import { getRequireSupport } from './utils/layout-helpers';
+import { getFileRanges, RangeWalker } from './utils/glimmer-script';
 
 type LinterVerifyArgs = { source: string; moduleId: string; filePath: string };
 class Linter {
@@ -102,6 +103,13 @@ export default class TemplateLinter {
       } else {
         return [documentContent];
       }
+    } else if (ext === '.gjs' || ext === '.gts') {
+      const ranges = getFileRanges(documentContent);
+
+      const rangeWalker = new RangeWalker(ranges);
+      const templates = rangeWalker.templates();
+
+      return templates.map((t) => t.absoluteContent);
     } else {
       const nodes = getTemplateNodes(documentContent, {
         parse(source: string) {
