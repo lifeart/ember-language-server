@@ -1,10 +1,32 @@
-import { getFileRanges, RangeWalker, TemplateData } from './../../src/utils/glimmer-script';
+import { getFileRanges, RangeWalker, TemplateData, getScope, getPlaceholderPath } from './../../src/utils/glimmer-script';
 
 function rw(tpl: string) {
   return new RangeWalker(getFileRanges(tpl));
 }
 
 describe('glimmer-scripts', function () {
+  describe('getScope()', function () {
+    it('able to extract scope symbols from js file by given path', function () {
+      const tpl = `
+        import foo from 'bar';
+        import { case } from 'ace';
+        var hello = 42;
+        class Boo {
+          n = class Foo {
+            GL
+          }
+        }
+      `;
+      const p = getPlaceholderPath(tpl, 'GL');
+
+      expect(p.node.type).toBe('Identifier');
+
+      const scope = getScope(p.scope);
+
+      expect(scope).toStrictEqual(['foo', 'case', 'hello', 'Boo']);
+    });
+  });
+
   describe('getFileRanges()', function () {
     it('support single line file', function () {
       const tpl = `<template></template>`;

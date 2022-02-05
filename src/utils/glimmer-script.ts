@@ -1,9 +1,39 @@
 import { getTemplateLocals, preprocess, ASTv1 } from '@glimmer/syntax';
 import { Range as LSRange } from 'vscode-languageserver/node';
+import { parseScriptFile as parse } from 'ember-meta-explorer';
+import { visit } from 'ast-types';
 
 interface IBabelScope {
-  bindings: string[];
+  getBindings(): Record<string, unknown>;
   parent?: IBabelScope;
+}
+
+export function getPlaceholderPath(content: string, key: string) {
+  const ast = parse(content, {
+    sourceType: 'module',
+  });
+  let keyPath = null;
+
+  visit(ast, {
+    visitIdentifier(path: {
+      node: { name: string };
+      scope: {
+        bindings: Record<string, unknown>;
+      };
+    }) {
+      const node = path.node;
+
+      if (node.name === key) {
+        keyPath = path;
+
+        return false;
+      }
+
+      this.traverse(path);
+    },
+  });
+
+  return keyPath;
 }
 
 // getScope(path.scope);
@@ -12,7 +42,7 @@ export function getScope(scope: IBabelScope) {
   let resolvedScope: undefined | IBabelScope = scope;
 
   while (resolvedScope) {
-    for (const binding in scope.bindings) {
+    for (const binding in scope.getBindings()) {
       names.add(binding);
     }
 
