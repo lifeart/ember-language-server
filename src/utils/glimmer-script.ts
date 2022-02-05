@@ -8,10 +8,7 @@ interface IBabelScope {
   parent?: IBabelScope;
 }
 
-export function getPlaceholderPath(content: string, key: string) {
-  const ast = parse(content, {
-    sourceType: 'module',
-  });
+export function getPlaceholderPathFromAst(ast: any, key: string): null | { scope: IBabelScope } {
   let keyPath = null;
 
   visit(ast, {
@@ -36,9 +33,17 @@ export function getPlaceholderPath(content: string, key: string) {
   return keyPath;
 }
 
+export function getPlaceholderPath(content: string, key: string) {
+  const ast = parse(content, {
+    sourceType: 'module',
+  });
+
+  return getPlaceholderPathFromAst(ast, key);
+}
+
 // getScope(path.scope);
-export function getScope(scope: IBabelScope) {
-  const names = new Set();
+export function getScope(scope: IBabelScope): string[] {
+  const names: Set<string> = new Set();
   let resolvedScope: undefined | IBabelScope = scope;
 
   while (resolvedScope) {
