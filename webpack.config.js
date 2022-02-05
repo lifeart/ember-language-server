@@ -80,6 +80,8 @@ const workerBundleConfig = /** @type WebpackConfig */ {
       'dag-map': false,
       'ember-template-recast': false,
       'caniuse-lite': false,
+      assert: false,
+      buffer: false,
       '@babel/generator': false,
       '@babel/highlight': false,
       '@babel/types': false,
