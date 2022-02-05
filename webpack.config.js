@@ -47,7 +47,7 @@ const nodeBundleConfig = {
 };
 
 const workerBundleConfig = /** @type WebpackConfig */ {
-  mode: 'none',
+  mode: 'development',
   target: 'webworker', // web extensions run in a webworker context
   entry: {
     'start-worker-server': './src/start-worker-server.ts',
@@ -82,9 +82,10 @@ const workerBundleConfig = /** @type WebpackConfig */ {
       'caniuse-lite': false,
       assert: false,
       buffer: false,
+      browserlist: false,
       '@babel/generator': false,
       '@babel/highlight': false,
-      '@babel/types': false,
+      // '@babel/types': false,
       'babel-types': false,
     },
     fallback: {

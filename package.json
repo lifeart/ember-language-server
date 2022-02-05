@@ -27,8 +27,7 @@
   "resolutions": {
     "@babel/parser": "^7.17.0",
     "@babel/traverse": "^7.17.0",
-    "@babel/core": "^7.17.0",
-    "semver": "^7.3.5"
+    "@babel/core": "^7.17.0"
   },
   "dependencies": {
     "@glimmer/syntax": "^0.83.1",
