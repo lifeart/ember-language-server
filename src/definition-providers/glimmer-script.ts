@@ -23,7 +23,11 @@ export default class GlimmerScriptDefinitionProvider {
 
     const ranges = getFileRanges(content);
 
-    const rangeWalker = new RangeWalker(ranges);
+    let rangeWalker = new RangeWalker(ranges);
+
+    // strip not needed scopes example
+    rangeWalker = rangeWalker.subtract([...rangeWalker.hbsInlineComments(true), ...rangeWalker.hbsComments(true)]);
+    rangeWalker = rangeWalker.subtract(rangeWalker.htmlComments(true));
 
     const templates = rangeWalker.templates(true);
 
