@@ -1,4 +1,4 @@
-import kebabCase from 'lodash/kebabCase';
+import * as kebabCase from 'lodash/kebabCase';
 
 // https://github.com/ember-codemods/ember-angle-brackets-codemod/blob/master/transforms/angle-brackets/transform.js#L40
 export function normalizeToAngleBracketComponent(name: string) {
