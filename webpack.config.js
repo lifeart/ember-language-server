@@ -6,7 +6,7 @@ const path = require('path');
 const NodePolyfillPlugin = require('node-polyfill-webpack-plugin');
 const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 
-const isCI = path.env.CI;
+const isCI = process.env.CI;
 
 const buildName = process.env.npm_lifecycle_event;
 // build:bundle:node
@@ -79,6 +79,8 @@ const workerBundleConfig = /** @type WebpackConfig */ {
       'find-up': false,
       'dag-map': false,
       'ember-template-recast': false,
+      '@babel/types': false,
+      'babel-types': false,
     },
     fallback: {
       //   path: require.resolve("path-browserify"),

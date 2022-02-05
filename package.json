@@ -24,9 +24,12 @@
   "bin": "bin/ember-language-server.js",
   "main": "lib/index.js",
   "typings": "lib/index.d.ts",
+  "resolutions": {
+    "@babel/parser": "^7.17.0"
+  },
   "dependencies": {
     "@glimmer/syntax": "^0.83.1",
-    "@lifeart/ember-extract-inline-templates": "2.1.0",
+    "@lifeart/ember-extract-inline-templates": "2.2.0",
     "ast-types": "^0.14.2",
     "dag-map": "^2.0.2",
     "ember-meta-explorer": "1.2.0",
