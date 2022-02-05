@@ -82,9 +82,9 @@ const workerBundleConfig = /** @type WebpackConfig */ {
       'caniuse-lite': false,
       assert: false,
       buffer: false,
-      '@babel/generator': false,
+      // '@babel/generator': false,
       '@babel/highlight': false,
-      '@babel/types': false,
+      // '@babel/types': false,
       'babel-types': false,
     },
     fallback: {
