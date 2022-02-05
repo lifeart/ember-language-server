@@ -1,4 +1,8 @@
-import { getFileRanges } from './../../src/utils/glimmer-script';
+import { getFileRanges, RangeWalker } from './../../src/utils/glimmer-script';
+
+function rw(tpl: string) {
+  return new RangeWalker(getFileRanges(tpl));
+}
 
 describe('glimmer-scripts', function () {
   describe('getFileRanges()', function () {
@@ -36,6 +40,40 @@ describe('glimmer-scripts', function () {
       expect(results[2].content).toBe('</template>');
       expect(results[2].start).toBe('<template>\n\n'.length);
       expect(results[2].line).toBe(3);
+    });
+  });
+
+  describe('RangeWalker', function () {
+    describe('<template></template>', function () {
+      it('able to extract template content from single line file', function () {
+        const tpl = `<template>42</template>`;
+        const r = rw(tpl);
+        const templates = r.templates();
+        const [template] = templates;
+
+        expect(templates.length).toBe(1);
+        expect(template.content).toBe('42');
+        expect(template.loc.start.line).toBe(1);
+        expect(template.loc.start.character).toBe(10);
+        expect(template.loc.end.line).toBe(1);
+        expect(template.loc.end.character).toBe(12);
+      });
+
+      it('able to extract template content from multi line file', function () {
+        const content = '\n4\n2\n';
+        const tpl = `<template>${content}</template>`;
+        const r = rw(tpl);
+        const templates = r.templates();
+        const [template] = templates;
+
+        expect(templates.length).toBe(1);
+        expect(template.content.split('\n')).toStrictEqual(content.split('\n'));
+        expect(template.content).toEqual(content);
+        expect(template.loc.start.line).toBe(1);
+        expect(template.loc.start.character).toBe(10);
+        expect(template.loc.end.line).toBe(4);
+        expect(template.loc.end.character).toBe(0);
+      });
     });
   });
 });

@@ -90,11 +90,11 @@ export class RangeWalker {
     };
 
     const openTemplate = (line: FileRange, offset: number) => {
-      params.start = new TPosition(this.lines.indexOf(line), offset);
+      params.start = new TPosition(line.line, offset);
     };
 
     const completeTemplate = (line: FileRange, offset: number) => {
-      params.end = new TPosition(this.lines.indexOf(line), offset);
+      params.end = new TPosition(line.line, offset);
       results.push(
         new TemplateData(
           {
@@ -110,6 +110,10 @@ export class RangeWalker {
     this.lines.forEach((fileRange) => {
       let line = fileRange.content;
       let offset = 0;
+
+      if (state === STATE.OPEN) {
+        buffer.push('\n');
+      }
 
       while (line.length) {
         if (state === STATE.CLOSE) {
@@ -134,7 +138,7 @@ export class RangeWalker {
 
           if (index === -1) {
             buffer.push(line);
-            buffer.push('\n');
+            // buffer.push('\n');
 
             return;
           } else {
