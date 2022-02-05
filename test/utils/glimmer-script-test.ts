@@ -89,6 +89,24 @@ describe('glimmer-scripts', function () {
           expect(r.subtract([...r.templates(), ...r.styles()]).content).toStrictEqual('<template>  </template><style>  </style>');
         });
       });
+      describe('can subtract templates with placeholders', function () {
+        it('able to remove style and template content', function () {
+          const hTpl = `<template>42</template>`;
+          const tpl = `class MyGlimmerComponent {
+            ${hTpl}
+            <style>42</style>
+          }`.trim();
+          const r = rw(tpl);
+          const [template] = r.templates(true);
+          const expectedTpl = `class MyGlimmerComponent {
+            ${template.key}${new Array(hTpl.length - template.key.length).fill(' ').join('')}
+            <style>42</style>
+          }
+          `.trim();
+
+          expect(r.subtract([template], true).content.split('\n')).toStrictEqual(expectedTpl.split('\n'));
+        });
+      });
     });
     describe('<template></template>', function () {
       describe('corner cases', function () {

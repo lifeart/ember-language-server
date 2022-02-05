@@ -29,8 +29,15 @@ export class TemplateData {
     this.loc = loc;
     this.content = content;
   }
-  get placeholder() {
-    return `__GLIMMER_TEMPLATE__`;
+  get key() {
+    const pos = `${this.loc.start.line}${this.loc.start.character}${this.loc.end.line}${this.loc.end.character}`;
+
+    const key = parseFloat(`0.${pos}1`).toString(32).split('.')[1];
+
+    return `${this.prefix}${key}`;
+  }
+  get prefix() {
+    return `_GT_`;
   }
   get locals() {
     return getTemplateLocals(this.content);
@@ -194,7 +201,7 @@ export class RangeWalker {
 
     return results;
   }
-  subtract(parts: TemplateData[]): RangeWalker {
+  subtract(parts: TemplateData[], addPlaceholders = false): RangeWalker {
     const ranges = this.lines.map((e) => e.clone());
 
     ranges.forEach((rangeLine) => {
@@ -203,6 +210,23 @@ export class RangeWalker {
 
       filteredParts.forEach((part) => {
         const charPlaceholder = ' ';
+        let key = part.key;
+
+        const charForPosition = () => {
+          if (!addPlaceholders) {
+            return charPlaceholder;
+          } else {
+            if (key.length) {
+              try {
+                return key.charAt(0);
+              } finally {
+                key = key.slice(1);
+              }
+            } else {
+              return charPlaceholder;
+            }
+          }
+        };
 
         if (part.loc.start.line !== lineNumber && part.loc.end.line !== lineNumber) {
           // replace in-range characters with blank lines (dont have better idea for now)
@@ -210,7 +234,7 @@ export class RangeWalker {
         } else if (part.loc.start.line === lineNumber && part.loc.end.line === lineNumber) {
           rangeLine.characters = rangeLine.characters.map((char, index) => {
             if (index >= part.loc.start.character && index < part.loc.end.character) {
-              return charPlaceholder;
+              return charForPosition();
             } else {
               return char;
             }
@@ -218,7 +242,7 @@ export class RangeWalker {
         } else if (part.loc.start.line === lineNumber) {
           rangeLine.characters = rangeLine.characters.map((char, index) => {
             if (index >= part.loc.start.character) {
-              return charPlaceholder;
+              return charForPosition();
             } else {
               return char;
             }
