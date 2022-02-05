@@ -181,13 +181,15 @@ export class RangeWalker {
       const filteredParts = parts.filter((p) => p.loc.start.line <= lineNumber && p.loc.end.line >= lineNumber);
 
       filteredParts.forEach((part) => {
+        const charPlaceholder = ' ';
+
         if (part.loc.start.line !== lineNumber && part.loc.end.line !== lineNumber) {
           // replace in-range characters with blank lines (dont have better idea for now)
-          rangeLine.characters = rangeLine.characters.map(() => ' ');
+          rangeLine.characters = rangeLine.characters.map(() => charPlaceholder);
         } else if (part.loc.start.line === lineNumber && part.loc.end.line === lineNumber) {
           rangeLine.characters = rangeLine.characters.map((char, index) => {
             if (index >= part.loc.start.character && index < part.loc.end.character) {
-              return ' ';
+              return charPlaceholder;
             } else {
               return char;
             }
@@ -195,7 +197,7 @@ export class RangeWalker {
         } else if (part.loc.start.line === lineNumber) {
           rangeLine.characters = rangeLine.characters.map((char, index) => {
             if (index >= part.loc.start.character) {
-              return ' ';
+              return charPlaceholder;
             } else {
               return char;
             }
@@ -203,7 +205,7 @@ export class RangeWalker {
         } else if (part.loc.end.line === lineNumber) {
           rangeLine.characters = rangeLine.characters.map((char, index) => {
             if (index < part.loc.end.character) {
-              return ' ';
+              return charPlaceholder;
             } else {
               return char;
             }
