@@ -107,10 +107,17 @@ export default class TemplateLinter {
       const ranges = getFileRanges(documentContent);
 
       const rangeWalker = new RangeWalker(ranges);
-      // @to-do fix absoluteContent without boundaries
-      const templates = rangeWalker.templates(true);
+      const templates = rangeWalker.templates();
 
-      return templates.map((t) => t.absoluteContent);
+      return templates.map((t) => {
+        return toHbsSource({
+          startLine: t.loc.start.line,
+          startColumn: t.loc.start.character,
+          endColumn: t.loc.end.character,
+          endLine: t.loc.end.line,
+          template: t.content,
+        });
+      });
     } else {
       const nodes = getTemplateNodes(documentContent, {
         parse(source: string) {
