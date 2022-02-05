@@ -32,7 +32,7 @@ describe('has basic template imports support', function () {
     });
 
     describe('template imports completion requests working fine', () => {
-      it('support collocated components', async () => {
+      it('support component autocomplete from scope for .gjs files', async () => {
         const tpl = `
           import FooBar from './../foo';
           export default class Foo extends Bar {
@@ -55,6 +55,65 @@ describe('has basic template imports support', function () {
             },
           },
           'app/components/hello/index.gjs',
+          position
+        );
+
+        expect(result).toMatchSnapshot();
+      });
+      it('support component autocomplete from scope for .gts files', async () => {
+        const tpl = `
+          import FooBar from './../foo';
+          export default class Foo extends Bar {
+            firstName = "a";
+            lastName = "b";
+            <template><⚡</template>
+          }
+        `;
+        const { content, position } = createPointer(tpl);
+        const result = await getResult(
+          CompletionRequest.method,
+          connection,
+          {
+            app: {
+              components: {
+                hello: {
+                  'index.gts': content,
+                },
+              },
+            },
+          },
+          'app/components/hello/index.gts',
+          position
+        );
+
+        expect(result).toMatchSnapshot();
+      });
+      it('support component autocomplete from scope and layout for .gts files', async () => {
+        const tpl = `
+          import FooBar from './../foo';
+          export default class Foo extends Bar {
+            firstName = "a";
+            lastName = "b";
+            <template><⚡</template>
+          }
+        `;
+        const { content, position } = createPointer(tpl);
+        const result = await getResult(
+          CompletionRequest.method,
+          connection,
+          {
+            app: {
+              components: {
+                hello: {
+                  'index.gts': content,
+                },
+                world: {
+                  'index.hbs': '',
+                },
+              },
+            },
+          },
+          'app/components/hello/index.gts',
           position
         );
 
