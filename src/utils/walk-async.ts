@@ -5,7 +5,7 @@
 import * as path from 'path';
 import * as pm from 'picomatch';
 import FSProvider from '../fs-provider';
-import { flatten } from 'lodash';
+import flatten from 'lodash/flatten';
 import { FileType } from './fs-utils';
 
 function ensurePosix(filepath: string) {

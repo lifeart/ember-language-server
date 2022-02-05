@@ -25,7 +25,8 @@
   "main": "lib/index.js",
   "typings": "lib/index.d.ts",
   "resolutions": {
-    "@babel/parser": "^7.17.0"
+    "@babel/parser": "^7.17.0",
+    "@babel/traverse": "^7.17.0"
   },
   "dependencies": {
     "@glimmer/syntax": "^0.83.1",

@@ -1,6 +1,6 @@
 import { CompletionItem, CompletionItemKind } from 'vscode-languageserver/node';
 import { AddonMeta, CompletionFunctionParams } from './../../utils/addon-api';
-import { uniqBy } from 'lodash';
+import uniqBy from 'lodash/uniqBy';
 
 import * as memoize from 'memoizee';
 import { emberBlockItems, emberMustacheItems, emberSubExpressionItems, emberModifierItems } from './ember-helpers';

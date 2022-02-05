@@ -5,7 +5,7 @@ import { logDebugInfo, logError } from '../../utils/logger';
 
 import { extractComponentInformationFromMeta, IComponentMetaInformation, IJsMeta, processJSFile, processTemplate } from 'ember-meta-explorer';
 
-import { uniqBy } from 'lodash';
+import uniqBy from 'lodash/uniqBy';
 import FSProvider from '../../fs-provider';
 import { asyncFilter } from '../../utils/layout-helpers';
 
