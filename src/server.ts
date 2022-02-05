@@ -369,6 +369,10 @@ export default class Server {
       throw new Error('uELS constructor accept connection instance as first argument');
     }
 
+    if (globalThis.process) {
+      globalThis.process.title = 'unstable_ember_language_server';
+    }
+
     this.options = { ...defaultServerOptions, ...options };
     this.connection = connection;
     this.fs = this.options.fs === 'sync' ? new FSProvider() : new AsyncFsProvider(this);
