@@ -1,8 +1,10 @@
-import { CompletionItem, TextDocumentPositionParams } from 'vscode-languageserver/node';
+import { CompletionItem, TextDocumentPositionParams, Position } from 'vscode-languageserver/node';
 import Server from '../server';
 import { getFileRanges, RangeWalker, getPlaceholderPathFromAst, getScope } from '../utils/glimmer-script';
 import { parseScriptFile as parse } from 'ember-meta-explorer';
 import { containsPosition, toPosition } from '../estree-utils';
+import { getFocusPath } from '../utils/glimmer-template';
+import { TextDocument } from 'vscode-languageserver-textdocument';
 
 export default class GlimmerScriptCompletionProvider {
   constructor(private server: Server) {}
@@ -55,13 +57,35 @@ export default class GlimmerScriptCompletionProvider {
         return [];
       }
 
+      const results: CompletionItem[] = [];
       const scopes = getScope(placeholder.scope);
 
-      return scopes.map((name) => {
-        return {
+      scopes.forEach((name) => {
+        results.push({
           label: name,
-        };
+        });
       });
+
+      const synthDoc = TextDocument.create(document.uri, 'handlebars', document.version, templateForPosition.absoluteContent);
+      const info = getFocusPath(synthDoc, params.position);
+
+      if (!info) {
+        return results;
+      }
+
+      const project = this.server.projectRoots.projectForUri(params.textDocument.uri);
+
+      if (!project) {
+        return results;
+      }
+
+      const legacyResults = await this.server.templateCompletionProvider.provideCompletionsForFocusPath(info, params.textDocument, params.position, project);
+
+      legacyResults.forEach((result) => {
+        results.push(result);
+      });
+
+      return results;
       // do logic to get more meta from js scope for template position
       // here we need glimmer logic to collect all available tokens from scope for autocomplete
     } else {
