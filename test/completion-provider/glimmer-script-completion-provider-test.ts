@@ -29,9 +29,9 @@ describe('GlimmerScriptCompletionProvider', function () {
       textDocument: {
         uri: '',
       },
-      position: Position.create(2, 12),
+      position: Position.create(1, 12),
     });
 
-    expect(results.length).toBe(1);
+    expect(results).toStrictEqual([{ label: 'n' }, { label: 'Component' }]);
   });
 });

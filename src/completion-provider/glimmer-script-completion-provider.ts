@@ -44,8 +44,6 @@ export default class GlimmerScriptCompletionProvider {
       );
     });
 
-    console.log({ templateForPosition });
-
     const ast = parse(cleanScriptWalker.content, {
       sourceType: 'module',
     });
