@@ -45,6 +45,37 @@ describe('glimmer-scripts', function () {
 
   describe('RangeWalker', function () {
     describe('<template></template>', function () {
+      describe('corner cases', function () {
+        it('support open template tag inside open template tag', function () {
+          const tpl = `<template><template></template>`;
+          const r = rw(tpl);
+          const templates = r.templates();
+          const [template] = templates;
+
+          expect(templates.length).toBe(1);
+          expect(template.content).toBe('<template>');
+        });
+        it('support close template tag after close template tag', function () {
+          const tpl = `<template></template></template>`;
+          const r = rw(tpl);
+          const templates = r.templates();
+          const [template] = templates;
+
+          expect(templates.length).toBe(1);
+          expect(template.content).toBe('');
+        });
+        it('support multiple templates', function () {
+          const tpl = `<template>\n1\n</template><template>\n2\n</template>`;
+          const r = rw(tpl);
+          const templates = r.templates();
+          const [templ1, templ2] = templates;
+
+          expect(templates.length).toBe(2);
+          expect(templ1.content).toBe('\n1\n');
+          expect(templ2.content).toBe('\n2\n');
+        });
+      });
+
       describe('without bounds', function () {
         it('able to extract template content from single line file', function () {
           const tpl = `<template>42</template>`;
