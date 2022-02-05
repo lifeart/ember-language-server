@@ -46,7 +46,7 @@ export interface TemplateLinterError {
   source?: string;
 }
 
-const extensionsToLint: string[] = ['.hbs', '.js', '.ts'];
+const extensionsToLint: string[] = ['.hbs', '.js', '.ts', '.gts', '.gjs'];
 
 function setCwd(cwd: string) {
   try {
