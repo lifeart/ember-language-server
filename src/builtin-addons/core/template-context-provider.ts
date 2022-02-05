@@ -1,10 +1,8 @@
 import { CompletionItemKind } from 'vscode-languageserver';
 import type { CompletionItem } from 'vscode-languageserver';
-
 import { logDebugInfo, logError } from '../../utils/logger';
-
 import { extractComponentInformationFromMeta, IComponentMetaInformation, IJsMeta, processJSFile, processTemplate } from 'ember-meta-explorer';
-
+// @ts-expect-error esmodule
 import * as uniqBy from 'lodash/uniqBy';
 import FSProvider from '../../fs-provider';
 import { asyncFilter } from '../../utils/layout-helpers';

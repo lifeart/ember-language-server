@@ -5,6 +5,7 @@ import ASTPath from '../glimmer-utils';
 import { toPosition } from '../estree-utils';
 import { filter } from 'fuzzaldrin';
 import { parseScriptFile as parse } from 'ember-meta-explorer';
+// @ts-expect-error esmodule
 import * as uniqBy from 'lodash/uniqBy';
 import { getExtension } from '../utils/file-extension';
 import { logDebugInfo } from '../utils/logger';

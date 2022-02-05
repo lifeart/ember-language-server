@@ -5,6 +5,7 @@
 import * as path from 'path';
 import * as pm from 'picomatch';
 import FSProvider from '../fs-provider';
+// @ts-expect-error esmodule
 import * as flatten from 'lodash/flatten';
 import { FileType } from './fs-utils';
 

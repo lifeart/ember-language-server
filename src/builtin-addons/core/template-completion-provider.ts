@@ -1,5 +1,6 @@
 import { CompletionItem, CompletionItemKind } from 'vscode-languageserver/node';
 import { AddonMeta, CompletionFunctionParams } from './../../utils/addon-api';
+// @ts-expect-error esmodule
 import * as uniqBy from 'lodash/uniqBy';
 
 import * as memoize from 'memoizee';
