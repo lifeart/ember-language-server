@@ -539,10 +539,18 @@ export async function getResult(
 
   if (Array.isArray(projectName)) {
     const resultsArr: IResponse<unknown>[] = [];
+    const roots = result.reduce(
+      (acc, el) => {
+        acc.push(...el.addonsMeta.map((e) => e.root));
+
+        return acc;
+      },
+      [...originalPath]
+    );
 
     for (let i = 0; i < projectName.length; i++) {
       if (reqType === CompletionRequest.method) {
-        resultsArr.push(_buildResponse(normalizeCompletionRequest(response, originalPath), normalizedPath[i], result[i]));
+        resultsArr.push(_buildResponse(normalizeCompletionRequest(response, roots), normalizedPath[i], result[i]));
       } else {
         resultsArr.push(_buildResponse(response, normalizedPath[i], result[i]));
       }
