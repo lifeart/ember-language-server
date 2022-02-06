@@ -62,8 +62,8 @@ export type Registry = {
   };
 };
 
-export function normalizeCompletionRequest(results: CompletionItem[], root: string) {
-  return results.map((r) => {
+export function normalizeCompletionRequest(results: CompletionItem[] | unknown, root: string) {
+  return (results as CompletionItem[]).map((r) => {
     if (r.data) {
       if (r.data.files) {
         r.data.files = r.data.files.map((f) => normalizePath(path.relative(root, f)));
@@ -516,7 +516,13 @@ export async function getResult(
   const params = textDocument(modelPath, position);
 
   openFile(connection, modelPath);
-  const response = await connection.sendRequest(reqType as never, params);
+  let response = await connection.sendRequest(reqType as never, params);
+
+  if (reqType === CompletionRequest.method) {
+    if (Array.isArray(response)) {
+      response = normalizeCompletionRequest(response, originalPath);
+    }
+  }
 
   await destroy();
 
@@ -524,7 +530,11 @@ export async function getResult(
     const resultsArr: IResponse<unknown>[] = [];
 
     for (let i = 0; i < projectName.length; i++) {
-      resultsArr.push(_buildResponse(response, normalizedPath[i], result[i]));
+      if (reqType === CompletionRequest.method) {
+        resultsArr.push(_buildResponse(normalizeCompletionRequest(response, normalizePath[i]), normalizedPath[i], result[i]));
+      } else {
+        resultsArr.push(_buildResponse(response, normalizedPath[i], result[i]));
+      }
     }
 
     return resultsArr;
