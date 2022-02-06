@@ -77,7 +77,7 @@ export function normalizeCompletionRequest(results: CompletionItem[] | unknown, 
   return (results as CompletionItem[]).map((r) => {
     if (r.data) {
       if (r.data.files) {
-        r.data.files = r.data.files.map((f) => normalizePath(path.relative(bestRootForPath(f), f)));
+        r.data.files = r.data.files.map((f) => normalizePath(path.relative(bestRootForPath(f), f))).sort();
       }
 
       if (r.data.resolvedFile) {
