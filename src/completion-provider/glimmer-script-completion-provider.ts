@@ -9,6 +9,7 @@ import { TextDocument } from 'vscode-languageserver-textdocument';
 // @ts-expect-error es module import
 import * as camelCase from 'lodash/camelCase';
 import * as path from 'path';
+import { MatchResult } from '../utils/path-matcher';
 export default class GlimmerScriptCompletionProvider {
   constructor(private server: Server) {}
   async provideCompletions(params: TextDocumentPositionParams): Promise<CompletionItem[]> {
@@ -91,26 +92,33 @@ export default class GlimmerScriptCompletionProvider {
       return result;
     }
 
-    const scripts: string[] = result.data.files.filter((f: string) => {
-      const e = project.matchPathToType(f);
-
-      return e && e.kind === 'script';
+    const files = result.data.files;
+    const meta: MatchResult[] = files.map((f: string) => {
+      return project.matchPathToType(f);
     });
-    const script = scripts.find((e) => project.matchPathToType(e)?.scope === 'application');
 
-    if (!script) {
+    const appScript = meta.find((e) => e.kind === 'script' && e.scope === 'application');
+    const appTemplate = meta.find((e) => e.kind === 'template' && e.scope === 'application');
+    const addonScript = meta.find((e) => e.kind === 'script' && e.scope === 'addon');
+    const addonTemplate = meta.find((e) => e.kind === 'template' && e.scope === 'addon');
+
+    const fileRef = appScript || appTemplate || addonScript || addonTemplate;
+
+    if (!fileRef) {
       return result;
     }
 
-    let p = path
-      .relative(project.root, script)
-      .replace('app', project.name)
-      .replace('.js', '')
-      .replace('.ts', '')
-      .replace('.gjs', '')
-      .replace('.gts', '')
-      .split('\\')
-      .join('/');
+    const file = files[meta.indexOf(fileRef)];
+
+    const fileProject = project.addonForFile(file);
+    let p = '';
+
+    if (fileProject) {
+      p = `${fileProject.name}/${fileRef.type}s/${fileRef.name}`;
+    } else {
+      p = path.relative(project.root, file).split('\\').join('/').replace('app', project.name);
+      p = p.replace('.js', '').replace('.ts', '').replace('.gjs', '').replace('.gts', '').replace('.hbs', '');
+    }
 
     if (p.endsWith('/index')) {
       p = p.replace('/index', '');
@@ -126,10 +134,15 @@ export default class GlimmerScriptCompletionProvider {
       return result;
     }
 
+    const importPath = p;
+
     result.insertTextFormat = InsertTextFormat.Snippet;
     result.detail = `(${result.label}) ${result.detail || ''}`.trim();
+    result.documentation = `
+      import ${name} from '${importPath}';
+    `.trim();
     result.label = name;
-    result.additionalTextEdits = [TextEdit.insert(Position.create(0, 0), `import ${name} from '${p}';\n`)];
+    result.additionalTextEdits = [TextEdit.insert(Position.create(0, 0), `import ${name} from '${importPath}';\n`)];
 
     const loc = focusPath.node.loc.toJSON();
 
