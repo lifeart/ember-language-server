@@ -124,7 +124,19 @@ export default class GlimmerScriptCompletionProvider {
       p = p.replace('/index', '');
     }
 
-    const name = result.label.includes('::') ? result.label.split('::').pop() : camelCase(result.label);
+    let name = result.label;
+
+    if (name.charAt(0).toUpperCase() === name.charAt(0)) {
+      name = name.includes('::') ? (name.split('::').pop() as string) : name;
+
+      if (name.includes('$')) {
+        name = name.split('$').pop() as string;
+      }
+      // component
+    } else {
+      // helper, modifier
+      name = camelCase(name);
+    }
 
     if (!name) {
       return result;
