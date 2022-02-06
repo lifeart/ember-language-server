@@ -60,7 +60,7 @@ export class TemplateData {
     this.content = content;
   }
   get absoluteContent() {
-    const tpl = new Array(this.loc.start.line).fill('\n').join('') + new Array(this.loc.start.character).fill(' ').join('') + this.content;
+    const tpl = new Array(this.loc.start.line - 1).fill('\n').join('') + new Array(this.loc.start.character).fill(' ').join('') + this.content;
 
     return tpl;
   }
