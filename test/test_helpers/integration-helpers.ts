@@ -62,15 +62,26 @@ export type Registry = {
   };
 };
 
-export function normalizeCompletionRequest(results: CompletionItem[] | unknown, root: string) {
+export function normalizeCompletionRequest(results: CompletionItem[] | unknown, root: string | string[]) {
+  const roots = Array.isArray(root) ? root : [root];
+  const bestRootForPath = (fPath) => {
+    const looksLikeRoots = roots.filter((r) => fPath.startsWith(r)).sort((a, b) => b.length - a.length);
+
+    if (looksLikeRoots.length) {
+      return looksLikeRoots[0];
+    } else {
+      return roots[0];
+    }
+  };
+
   return (results as CompletionItem[]).map((r) => {
     if (r.data) {
       if (r.data.files) {
-        r.data.files = r.data.files.map((f) => normalizePath(path.relative(root, f)));
+        r.data.files = r.data.files.map((f) => normalizePath(path.relative(bestRootForPath(f), f)));
       }
 
       if (r.data.resolvedFile) {
-        r.data.resolvedFile = normalizePath(path.relative(root, r.data.resolvedFile));
+        r.data.resolvedFile = normalizePath(path.relative(bestRootForPath(r.data.resolvedFile), r.data.resolvedFile));
       }
     }
 
@@ -519,7 +530,7 @@ export async function getResult(
   let response = await connection.sendRequest(reqType as never, params);
 
   if (reqType === CompletionRequest.method) {
-    if (Array.isArray(response)) {
+    if (!Array.isArray(projectName) && Array.isArray(response)) {
       response = normalizeCompletionRequest(response, originalPath);
     }
   }
@@ -531,7 +542,7 @@ export async function getResult(
 
     for (let i = 0; i < projectName.length; i++) {
       if (reqType === CompletionRequest.method) {
-        resultsArr.push(_buildResponse(normalizeCompletionRequest(response, originalPath[i]), normalizedPath[i], result[i]));
+        resultsArr.push(_buildResponse(normalizeCompletionRequest(response, originalPath), normalizedPath[i], result[i]));
       } else {
         resultsArr.push(_buildResponse(response, normalizedPath[i], result[i]));
       }
