@@ -324,7 +324,7 @@ export async function createProject(
   files: unknown,
   connection: MessageConnection,
   projectName: string[]
-): Promise<{ normalizedPath: string[]; originalPath: string; result: UnknownResult[]; destroy(): Promise<void> }>;
+): Promise<{ normalizedPath: string[]; originalPath: string[]; result: UnknownResult[]; destroy(): Promise<void> }>;
 export async function createProject(
   files: unknown,
   connection: MessageConnection,
@@ -531,7 +531,7 @@ export async function getResult(
 
     for (let i = 0; i < projectName.length; i++) {
       if (reqType === CompletionRequest.method) {
-        resultsArr.push(_buildResponse(normalizeCompletionRequest(response, normalizePath[i]), normalizedPath[i], result[i]));
+        resultsArr.push(_buildResponse(normalizeCompletionRequest(response, originalPath[i]), normalizedPath[i], result[i]));
       } else {
         resultsArr.push(_buildResponse(response, normalizedPath[i], result[i]));
       }
