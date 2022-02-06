@@ -152,6 +152,8 @@ export default class GlimmerScriptCompletionProvider {
     result.detail = `(${result.label}) ${result.detail || ''}`.trim();
     result.documentation = `
       import ${name} from '${importPath}';
+
+      ${result.documentation || ''}
     `.trim();
     result.label = name;
     result.additionalTextEdits = [TextEdit.insert(Position.create(0, 0), `import ${name} from '${importPath}';\n`)];
