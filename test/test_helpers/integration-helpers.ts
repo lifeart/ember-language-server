@@ -62,6 +62,22 @@ export type Registry = {
   };
 };
 
+export function normalizeCompletionRequest(results: CompletionItem[], root: string) {
+  return results.map((r) => {
+    if (r.data) {
+      if (r.data.files) {
+        r.data.files = r.data.files.map((f) => normalizePath(path.relative(root, f)));
+      }
+
+      if (r.data.resolvedFile) {
+        r.data.resolvedFile = normalizePath(path.relative(root, r.data.resolvedFile));
+      }
+    }
+
+    return r;
+  });
+}
+
 export function asyncFSProvider() {
   // likely we should emit special error objects instead of nulls
   // if (error !== null && typeof error === 'object' && (error.code === 'ENOENT' || error.code === 'ENOTDIR' || error.code === 'EPERM')) {
