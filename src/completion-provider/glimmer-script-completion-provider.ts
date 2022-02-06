@@ -2,7 +2,6 @@ import { CompletionItem, TextDocumentPositionParams } from 'vscode-languageserve
 import Server from '../server';
 import { getFileRanges, RangeWalker, getPlaceholderPathFromAst, getScope, documentPartForPosition } from '../utils/glimmer-script';
 import { parseScriptFile as parse } from 'ember-meta-explorer';
-import { containsPosition, toPosition } from '../estree-utils';
 import { getFocusPath } from '../utils/glimmer-template';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 

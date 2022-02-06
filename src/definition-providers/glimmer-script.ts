@@ -2,10 +2,10 @@
 import Server from './../server';
 import ASTPath from './../glimmer-utils';
 import { TextDocumentPositionParams, Definition, Location } from 'vscode-languageserver/node';
-import { parseScriptFile as parse } from 'ember-meta-explorer';
-import { containsPosition, toPosition } from './../estree-utils';
+import { toPosition } from './../estree-utils';
 import { queryELSAddonsAPIChain } from './../utils/addon-api';
 import { Project } from '../project';
+import { preprocess } from '@glimmer/syntax';
 import { documentPartForPosition, getFileRanges, RangeWalker } from '../utils/glimmer-script';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 
@@ -27,7 +27,9 @@ export default class GlimmerScriptDefinitionProvider {
     let rangeWalker = new RangeWalker(ranges);
 
     // strip not needed scopes example
-    rangeWalker = rangeWalker.subtract([...rangeWalker.hbsInlineComments(true), ...rangeWalker.hbsComments(true)]);
+    // strip not needed scopes example
+    rangeWalker = rangeWalker.subtract(rangeWalker.hbsInlineComments(true));
+    rangeWalker = rangeWalker.subtract(rangeWalker.hbsComments(true));
     rangeWalker = rangeWalker.subtract(rangeWalker.htmlComments(true));
 
     const templates = rangeWalker.templates(true);
@@ -39,7 +41,7 @@ export default class GlimmerScriptDefinitionProvider {
       // here we need glimmer logic to collect all available tokens from scope for autocomplete
       const templateDocument = TextDocument.create(uri, 'handlebars', document.version, templateForPosition.absoluteContent);
 
-      const ast = templateForPosition.ast;
+      const ast = preprocess(templateDocument.getText());
       const focusPath = ASTPath.toPosition(ast, toPosition(params.position), templateDocument.getText());
 
       if (!focusPath) {
