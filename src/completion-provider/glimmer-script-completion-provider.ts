@@ -125,7 +125,31 @@ export default class GlimmerScriptCompletionProvider {
 
     const loc = focusPath.node.loc.toJSON();
 
-    result.textEdit = TextEdit.insert(Position.create(position.line, loc.start.column), name);
+    const startPosition = Position.create(position.line, loc.start.column);
+    let prefix = ``;
+
+    const source = focusPath.sourceForNode();
+
+    if (source?.startsWith('{{')) {
+      prefix = '{{';
+    } else if (source?.startsWith('(')) {
+      prefix = '(';
+    } else if (source?.startsWith('<')) {
+      prefix = '<';
+    } else if (source?.startsWith('@')) {
+      prefix = '@';
+    }
+
+    const txt = `${prefix}${name}`;
+    const endPosition = Position.create(position.line, loc.start.column + txt.length);
+
+    result.textEdit = TextEdit.replace(
+      {
+        start: startPosition,
+        end: endPosition,
+      },
+      txt
+    );
 
     return result;
   }
