@@ -63,7 +63,8 @@ export type Registry = {
 };
 
 export function normalizeCompletionRequest(results: CompletionItem[] | unknown, root: string | string[]) {
-  const roots = Array.isArray(root) ? root : [root];
+  const roots_ = Array.isArray(root) ? root : [root];
+  const roots = roots_.map((r) => path.normalize(r));
   const bestRootForPath = (fPath) => {
     const looksLikeRoots = roots.filter((r) => fPath.startsWith(r)).sort((a, b) => b.length - a.length);
 
