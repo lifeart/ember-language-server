@@ -6,7 +6,8 @@ import { parseScriptFile as parse } from 'ember-meta-explorer';
 import { containsPosition, toPosition } from './../estree-utils';
 import { queryELSAddonsAPIChain } from './../utils/addon-api';
 import { Project } from '../project';
-import { getFileRanges, RangeWalker } from '../utils/glimmer-script';
+import { documentPartForPosition, getFileRanges, RangeWalker } from '../utils/glimmer-script';
+import { TextDocument } from 'vscode-languageserver-textdocument';
 
 export default class GlimmerScriptDefinitionProvider {
   constructor(private server: Server) {}
@@ -31,61 +32,77 @@ export default class GlimmerScriptDefinitionProvider {
 
     const templates = rangeWalker.templates(true);
 
-    const cleanScript = rangeWalker.subtract(templates);
-
-    const templateForPosition = templates.find((el) => {
-      return containsPosition(
-        {
-          start: {
-            line: el.loc.start.line,
-            column: el.loc.start.character,
-          },
-          end: {
-            line: el.loc.end.line,
-            column: el.loc.end.character,
-          },
-        },
-        toPosition(params.position)
-      );
-    });
+    const templateForPosition = documentPartForPosition(templates, params.position);
 
     if (templateForPosition) {
       // do logic to get more meta from js scope for template position
       // here we need glimmer logic to collect all available tokens from scope for autocomplete
+      const templateDocument = TextDocument.create(uri, 'handlebars', document.version, templateForPosition.absoluteContent);
+
+      const ast = templateForPosition.ast;
+      const focusPath = ASTPath.toPosition(ast, toPosition(params.position), templateDocument.getText());
+
+      if (!focusPath) {
+        return null;
+      }
+
+      // @to-do likely we need to introduce one more type: "glimmerScript" to use scope values
+
+      const definitions: Location[] = await queryELSAddonsAPIChain(project.builtinProviders.definitionProviders, root, {
+        focusPath,
+        type: 'template',
+        textDocument: templateDocument,
+        position: params.position,
+        results: [],
+        server: this.server,
+      });
+
+      const addonResults = await queryELSAddonsAPIChain(project.providers.definitionProviders, root, {
+        focusPath,
+        type: 'template',
+        textDocument: templateDocument,
+        position: params.position,
+        results: definitions,
+        server: this.server,
+      });
+
+      return addonResults;
     } else {
       // looks like we could "fix" template and continue in script branch;
+
+      return null;
     }
     // @to-do - figure out how to patch babel ast with hbs
     // or don't patch it, and just have 2 refs from hbs ast to scope of js ast
 
-    const ast = parse(cleanScript.content, {
-      sourceType: 'module',
-    });
+    // const ast = parse(cleanScript.content, {
+    //   sourceType: 'module',
+    // });
 
-    const astPath = ASTPath.toPosition(ast, toPosition(params.position), content);
+    // const astPath = ASTPath.toPosition(ast, toPosition(params.position), content);
 
-    if (!astPath) {
-      return null;
-    }
+    // if (!astPath) {
+    //   return null;
+    // }
 
-    const results: Location[] = await queryELSAddonsAPIChain(project.builtinProviders.definitionProviders, root, {
-      focusPath: astPath,
-      type: 'glimmerScript',
-      textDocument: params.textDocument,
-      position: params.position,
-      results: [],
-      server: this.server,
-    });
+    // const results: Location[] = await queryELSAddonsAPIChain(project.builtinProviders.definitionProviders, root, {
+    //   focusPath: astPath,
+    //   type: 'glimmerScript',
+    //   textDocument: params.textDocument,
+    //   position: params.position,
+    //   results: [],
+    //   server: this.server,
+    // });
 
-    const addonResults = await queryELSAddonsAPIChain(project.providers.definitionProviders, root, {
-      focusPath: astPath,
-      type: 'glimmerScript',
-      textDocument: params.textDocument,
-      position: params.position,
-      results,
-      server: this.server,
-    });
+    // const addonResults = await queryELSAddonsAPIChain(project.providers.definitionProviders, root, {
+    //   focusPath: astPath,
+    //   type: 'glimmerScript',
+    //   textDocument: params.textDocument,
+    //   position: params.position,
+    //   results,
+    //   server: this.server,
+    // });
 
-    return addonResults;
+    // return addonResults;
   }
 }

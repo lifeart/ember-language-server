@@ -1,11 +1,30 @@
 import { getTemplateLocals, preprocess, ASTv1 } from '@glimmer/syntax';
-import { Range as LSRange } from 'vscode-languageserver/node';
+import { Range as LSRange, Position } from 'vscode-languageserver/node';
 import { parseScriptFile as parse } from 'ember-meta-explorer';
 import traverse from '@babel/traverse';
+import { containsPosition, toPosition } from '../estree-utils';
 
 interface IBabelScope {
   bindings: Record<string, unknown>;
   parent?: IBabelScope;
+}
+
+export function documentPartForPosition(templates: TemplateData[], position: Position) {
+  return templates.find((el) => {
+    return containsPosition(
+      {
+        start: {
+          line: el.loc.start.line,
+          column: el.loc.start.character,
+        },
+        end: {
+          line: el.loc.end.line,
+          column: el.loc.end.character,
+        },
+      },
+      toPosition(position)
+    );
+  });
 }
 
 export function getPlaceholderPathFromAst(ast: any, key: string): null | { scope: IBabelScope } {
