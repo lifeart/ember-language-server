@@ -102,7 +102,15 @@ export default class GlimmerScriptCompletionProvider {
       return result;
     }
 
-    let p = path.relative(project.root, script).replace('app', project.name).replace('.js', '').replace('.ts', '').split('\\').join('/');
+    let p = path
+      .relative(project.root, script)
+      .replace('app', project.name)
+      .replace('.js', '')
+      .replace('.ts', '')
+      .replace('.gjs', '')
+      .replace('.gts', '')
+      .split('\\')
+      .join('/');
 
     if (p.endsWith('/index')) {
       p = p.replace('/index', '');
