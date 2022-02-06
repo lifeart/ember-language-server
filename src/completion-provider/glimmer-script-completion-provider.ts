@@ -110,6 +110,8 @@ export default class GlimmerScriptCompletionProvider {
 
     const file = files[meta.indexOf(fileRef)];
 
+    result.data.resolvedFile = file;
+
     const fileProject = project.addonForFile(file);
     let p = '';
 
