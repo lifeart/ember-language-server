@@ -32,6 +32,8 @@ import {
   ExecuteCommandRequest,
   HoverParams,
   Hover,
+  FoldingRangeParams,
+  FoldingRange,
 } from 'vscode-languageserver';
 
 import ProjectRoots from './project-roots';
@@ -66,6 +68,7 @@ import { Config, Initializer } from './types';
 import { asyncGetJSON, isFileBelongsToRoots, mGetProjectAddonsInfo, setRequireSupport, setSyncFSSupport } from './utils/layout-helpers';
 import FSProvider, { AsyncFsProvider, setFSImplementation } from './fs-provider';
 import { HoverProvider } from './hover-provider/entry';
+import TemplateFoldingProvider from './folding-provider/template-folding-provider';
 
 export interface IServerConfig {
   local: Config;
@@ -419,7 +422,26 @@ export default class Server {
     this.connection.onReferences(this.onReference.bind(this));
     this.connection.onHover(this.onHover.bind(this));
     this.connection.onCodeAction(this.onCodeAction.bind(this));
+    this.connection.onFoldingRanges(this.onFoldingRanges.bind(this));
     this.connection.telemetry.logEvent({ connected: true });
+  }
+
+  onFoldingRanges(params: FoldingRangeParams): FoldingRange[] | null {
+    const document = this.documents.get(params.textDocument.uri);
+
+    if (!document) {
+      return null;
+    }
+
+    if (document.languageId !== 'handlebars') {
+      return null;
+    }
+
+    try {
+      return new TemplateFoldingProvider().handle(document);
+    } catch (e) {
+      return null;
+    }
   }
 
   /**
@@ -545,6 +567,7 @@ export default class Server {
           ],
         },
         documentSymbolProvider: true,
+        foldingRangeProvider: true,
         codeActionProvider: true,
         referencesProvider: true,
         hoverProvider: true,
