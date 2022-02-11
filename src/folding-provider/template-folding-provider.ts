@@ -3,7 +3,7 @@ import { TextDocument } from 'vscode-languageserver-textdocument';
 import { preprocess, traverse, ASTv1 } from '@glimmer/syntax';
 
 export default class TemplateFoldingProvider {
-  handle(document: TextDocument): FoldingRange[] | null {
+  handle(document: TextDocument): FoldingRange[] {
     const content = document.getText();
     const ast = preprocess(content);
     const results: FoldingRange[] = [];
