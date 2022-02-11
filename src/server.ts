@@ -68,7 +68,7 @@ import { Config, Initializer } from './types';
 import { asyncGetJSON, isFileBelongsToRoots, mGetProjectAddonsInfo, setRequireSupport, setSyncFSSupport } from './utils/layout-helpers';
 import FSProvider, { AsyncFsProvider, setFSImplementation } from './fs-provider';
 import { HoverProvider } from './hover-provider/entry';
-import TemplateFoldingProvider from './folding-provider/template-folding-provider';
+import FoldingProvider from './folding-provider/entry';
 
 export interface IServerConfig {
   local: Config;
@@ -154,6 +154,7 @@ export default class Server {
   scriptCompletionProvider!: ScriptCompletionProvider;
 
   definitionProvider!: DefinitionProvider;
+  foldingProvider!: FoldingProvider;
 
   templateLinter!: TemplateLinter;
 
@@ -401,6 +402,7 @@ export default class Server {
     this.referenceProvider = new ReferenceProvider(this);
     this.hoverProvider = new HoverProvider(this);
     this.codeActionProvider = new CodeActionProvider(this);
+    this.foldingProvider = new FoldingProvider(this);
 
     this.documents.listen(this.connection);
 
@@ -427,21 +429,7 @@ export default class Server {
   }
 
   onFoldingRanges(params: FoldingRangeParams): FoldingRange[] | null {
-    const document = this.documents.get(params.textDocument.uri);
-
-    if (!document) {
-      return null;
-    }
-
-    if (document.languageId !== 'handlebars') {
-      return null;
-    }
-
-    try {
-      return new TemplateFoldingProvider().handle(document);
-    } catch (e) {
-      return null;
-    }
+    return this.foldingProvider.onFoldingRanges(params);
   }
 
   /**
