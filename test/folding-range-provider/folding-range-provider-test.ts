@@ -30,7 +30,91 @@ describe('has folding range support', function () {
                 hello
             {{/if}}
           </div>
-        `;
+        `.trim();
+        const result = await getResult(
+          FoldingRangeRequest.method,
+          connection,
+          {
+            'app/components/hello/index.hbs': tpl,
+          },
+          'app/components/hello/index.hbs',
+          cursor
+        );
+
+        expect(result).toMatchSnapshot();
+      });
+      it('able to provide folding ranges for comments', async () => {
+        const tpl = `
+          
+            {{!--
+            {{#if a}}
+                hello
+            {{else}}
+                hello
+            {{/if}}
+            --}}
+    
+        `.trim();
+        const result = await getResult(
+          FoldingRangeRequest.method,
+          connection,
+          {
+            'app/components/hello/index.hbs': tpl,
+          },
+          'app/components/hello/index.hbs',
+          cursor
+        );
+
+        expect(result).toMatchSnapshot();
+      });
+      it('able to provide folding ranges for tags', async () => {
+        const tpl = `
+          
+            <MyComponent>
+
+            </MyComponent>
+    
+        `.trim();
+        const result = await getResult(
+          FoldingRangeRequest.method,
+          connection,
+          {
+            'app/components/hello/index.hbs': tpl,
+          },
+          'app/components/hello/index.hbs',
+          cursor
+        );
+
+        expect(result).toMatchSnapshot();
+      });
+      it('able to provide folding ranges for blocks', async () => {
+        const tpl = `
+          
+            {{#if}}
+                a
+            {{/if}}
+        `.trim();
+        const result = await getResult(
+          FoldingRangeRequest.method,
+          connection,
+          {
+            'app/components/hello/index.hbs': tpl,
+          },
+          'app/components/hello/index.hbs',
+          cursor
+        );
+
+        expect(result).toMatchSnapshot();
+      });
+      it('able to provide folding ranges for inverse blocks', async () => {
+        const tpl = `
+          
+            {{#if}}
+                a
+            {{else}}
+                b
+            {{/if}}
+        `.trim();
         const result = await getResult(
           FoldingRangeRequest.method,
           connection,
@@ -51,7 +135,7 @@ describe('has folding range support', function () {
             {{el
             {{/if}}
           </div>
-        `;
+        `.trim();
         const result = await getResult(
           FoldingRangeRequest.method,
           connection,
@@ -76,8 +160,8 @@ describe('has folding range support', function () {
               {{else}}
                   hello
               {{/if}}
-            </div>\`;
-          `;
+            </div>\`
+          `.trim();
         const result = await getResult(
           FoldingRangeRequest.method,
           connection,
@@ -99,8 +183,8 @@ describe('has folding range support', function () {
           {{else}}
               hello
           {{/if}}
-        </div>\`;
-      `;
+        </div>\`
+      `.trim();
         const result = await getResult(
           FoldingRangeRequest.method,
           connection,
@@ -122,8 +206,8 @@ describe('has folding range support', function () {
           {{else}}
               hello
           {{/if}}
-        </div>\`;
-      `;
+        </div>\`
+      `.trim();
         const result = await getResult(
           FoldingRangeRequest.method,
           connection,
@@ -153,7 +237,7 @@ describe('has folding range support', function () {
                         </div>
                     </template>
                 }
-            `;
+            `.trim();
         const result = await getResult(
           FoldingRangeRequest.method,
           connection,
@@ -181,7 +265,7 @@ describe('has folding range support', function () {
                 </div>
             </template>
         }
-    `;
+    `.trim();
         const result = await getResult(
           FoldingRangeRequest.method,
           connection,
