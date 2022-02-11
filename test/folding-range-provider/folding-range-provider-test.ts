@@ -127,6 +127,54 @@ describe('has folding range support', function () {
 
         expect(result).toMatchSnapshot();
       });
+      it('does not provide ranges for inline tags', async () => {
+        const tpl = `
+          <div></div>
+        `.trim();
+        const result = await getResult(
+          FoldingRangeRequest.method,
+          connection,
+          {
+            'app/components/hello/index.hbs': tpl,
+          },
+          'app/components/hello/index.hbs',
+          cursor
+        );
+
+        expect(result.response.length).toBe(0);
+      });
+      it('does not provide ranges for inline blocks', async () => {
+        const tpl = `
+            {{#if a}}hello{{/if}}
+        `.trim();
+        const result = await getResult(
+          FoldingRangeRequest.method,
+          connection,
+          {
+            'app/components/hello/index.hbs': tpl,
+          },
+          'app/components/hello/index.hbs',
+          cursor
+        );
+
+        expect(result.response.length).toBe(0);
+      });
+      it('does not provide ranges for inline comments', async () => {
+        const tpl = `
+            {{!--{{#if a}}hello{{/if}}--}}
+        `.trim();
+        const result = await getResult(
+          FoldingRangeRequest.method,
+          connection,
+          {
+            'app/components/hello/index.hbs': tpl,
+          },
+          'app/components/hello/index.hbs',
+          cursor
+        );
+
+        expect(result.response.length).toBe(0);
+      });
       it('does not fail if syntax is incorrect and return null', async () => {
         const tpl = `
           <div>
