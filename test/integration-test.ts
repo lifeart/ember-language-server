@@ -684,6 +684,26 @@ describe('integration', function () {
         });
       });
 
+      describe('Ablet to provide autocomplete information for element attributes', () => {
+        it('support ...attributes autocomplete', async () => {
+          const result = await getResult(
+            CompletionRequest.method,
+            connection,
+            {
+              app: {
+                components: {
+                  'foo.hbs': '<input ./>',
+                },
+              },
+            },
+            'app/components/foo.hbs',
+            { line: 1, character: 8 }
+          );
+
+          expect(result).toMatchSnapshot();
+        });
+      });
+
       describe('Able to provide autocomplete information for local scoped params', () => {
         it('support tag blocks', async () => {
           const result = await getResult(

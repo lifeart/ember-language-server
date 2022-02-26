@@ -460,6 +460,10 @@ export function isComponentArgumentName(path: any): boolean {
   return hasNodeType(path.node, 'AttrNode') && path.node.name.startsWith('@');
 }
 
+export function isElementAttribute(path: any): boolean {
+  return hasNodeType(path.node, 'AttrNode');
+}
+
 export function isLinkComponentRouteTarget(path: any): boolean {
   return hasNodeType(path.node, 'TextNode') && hasNodeType(path.parent, 'AttrNode') && path.parent.name === '@route';
 }
