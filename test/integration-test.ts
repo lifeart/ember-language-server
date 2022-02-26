@@ -684,7 +684,7 @@ describe('integration', function () {
         });
       });
 
-      describe('Ablet to provide autocomplete information for element attributes', () => {
+      describe('Able to provide autocomplete information for element attributes', () => {
         it('support ...attributes autocomplete', async () => {
           const result = await getResult(
             CompletionRequest.method,
