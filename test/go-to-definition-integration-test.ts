@@ -45,6 +45,34 @@ describe('script files', function () {
 
         expect(result).toMatchSnapshot();
       });
+      it('unknown named import from addon', async () => {
+        const tpl = `
+            import { n⚡ames } from 'my-addon/utils/hello';    
+        `;
+        const { content, position } = createPointer(tpl);
+
+        const project = makeProject(
+          {
+            'app/components/hello/index.js': content,
+          },
+          {
+            'my-addon': {
+              'addon/utils/hello.js': `
+                    export default const a = 42;
+                    export const name = 'hello';
+                `,
+              'package.json': JSON.stringify({
+                name: 'my-addon',
+                keywords: ['ember-addon'],
+              }),
+            },
+          }
+        );
+
+        const result = await getResult(DefinitionRequest.method, connection, project, 'app/components/hello/index.js', position);
+
+        expect(result).toMatchSnapshot();
+      });
       it('default import from addon', async () => {
         const tpl = `
             import n⚡ame from 'my-addon/utils/hello';    
@@ -59,6 +87,33 @@ describe('script files', function () {
             'my-addon': {
               'addon/utils/hello.js': `
                     export default const a = 42;
+                `,
+              'package.json': JSON.stringify({
+                name: 'my-addon',
+                keywords: ['ember-addon'],
+              }),
+            },
+          }
+        );
+
+        const result = await getResult(DefinitionRequest.method, connection, project, 'app/components/hello/index.js', position);
+
+        expect(result).toMatchSnapshot();
+      });
+      it('not existing default import from addon', async () => {
+        const tpl = `
+            import n⚡ame from 'my-addon/utils/hello';    
+        `;
+        const { content, position } = createPointer(tpl);
+
+        const project = makeProject(
+          {
+            'app/components/hello/index.js': content,
+          },
+          {
+            'my-addon': {
+              'addon/utils/hello.js': `
+                    export const a = 42;
                 `,
               'package.json': JSON.stringify({
                 name: 'my-addon',

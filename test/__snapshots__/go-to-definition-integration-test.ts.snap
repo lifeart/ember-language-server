@@ -67,3 +67,71 @@ Object {
   ],
 }
 `;
+
+exports[`script files named import definition resolution addon case not existing default import from addon 1`] = `
+Object {
+  "addonsMeta": Array [
+    Object {
+      "name": "my-addon",
+      "root": "node_modules/my-addon",
+      "version": 1,
+    },
+  ],
+  "registry": Object {
+    "component": Object {
+      "hello": Array [
+        "app/components/hello/index.js",
+      ],
+    },
+  },
+  "response": Array [
+    Object {
+      "range": Object {
+        "end": Object {
+          "character": 0,
+          "line": 0,
+        },
+        "start": Object {
+          "character": 0,
+          "line": 0,
+        },
+      },
+      "uri": "/node_modules/my-addon/addon/utils/hello.js",
+    },
+  ],
+}
+`;
+
+exports[`script files named import definition resolution addon case unknown named import from addon 1`] = `
+Object {
+  "addonsMeta": Array [
+    Object {
+      "name": "my-addon",
+      "root": "node_modules/my-addon",
+      "version": 1,
+    },
+  ],
+  "registry": Object {
+    "component": Object {
+      "hello": Array [
+        "app/components/hello/index.js",
+      ],
+    },
+  },
+  "response": Array [
+    Object {
+      "range": Object {
+        "end": Object {
+          "character": 0,
+          "line": 0,
+        },
+        "start": Object {
+          "character": 0,
+          "line": 0,
+        },
+      },
+      "uri": "/node_modules/my-addon/addon/utils/hello.js",
+    },
+  ],
+}
+`;
