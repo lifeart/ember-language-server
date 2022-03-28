@@ -697,7 +697,7 @@ describe('integration', function () {
               },
             },
             'app/components/foo.hbs',
-            { line: 1, character: 8 }
+            { line: 0, character: 8 }
           );
 
           expect(result).toMatchSnapshot();
