@@ -274,7 +274,7 @@ export function isHashPair(path: ASTPath) {
 }
 
 export function isHashPairValue(path: ASTPath) {
-  return path.parent && isHashPair(path.parent) && path.parent.value === path.node;
+  return path.parent && isHashPair(path.parentPath as ASTPath) && path.parent.value === path.node;
 }
 
 export function isSubExpressionPath(path: ASTPath): boolean {
