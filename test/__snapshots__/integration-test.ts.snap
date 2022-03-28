@@ -364,7 +364,7 @@ Object {
   },
   "response": Array [
     Object {
-      "detail": "
+      "documentation": "
 In general, you should place ...attributes after any attributes you specify to give people using your component an opportunity to override your attribute.
 If ...attributes appears after an attribute, it overrides that attribute.
 If it appears before an attribute, it does not.
@@ -3481,7 +3481,7 @@ Object {
   },
   "response": Array [
     Object {
-      "detail": "
+      "documentation": "
 In general, you should place ...attributes after any attributes you specify to give people using your component an opportunity to override your attribute.
 If ...attributes appears after an attribute, it overrides that attribute.
 If it appears before an attribute, it does not.

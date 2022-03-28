@@ -48,6 +48,7 @@ import { ASTv1 } from '@glimmer/syntax';
 import { URI } from 'vscode-uri';
 import { componentsContextData } from './template-context-provider';
 import { IRegistry } from '../../utils/registry-api';
+import { docForAttribute } from '../doc/autocomplete';
 
 const mListModifiers = memoize(listModifiers, { length: 1, maxAge: 60000 }); // 1 second
 const mListComponents = memoize(listComponents, { length: 1, maxAge: 60000 }); // 1 second
@@ -429,22 +430,15 @@ export default class TemplateCompletionProvider {
         logDebugInfo(candidates, scopedValues);
         completions.push(...uniqBy([...candidates, ...scopedValues], 'label'));
       } else if (isElementAttribute(focusPath) && (focusPath.node as ASTv1.AttrNode).name.startsWith('.')) {
-        completions.push({
-          label: '...attributes',
-          detail: `
-          In general, you should place ...attributes after any attributes you specify to give people using your component an opportunity to override your attribute. 
-          If ...attributes appears after an attribute, it overrides that attribute. 
-          If it appears before an attribute, it does not.
-          Place ...attributes before your attributes only if you want to disallow tags from overriding your attributes.
-          This is likely to be unusual.
-          In addition, the class attribute is special, and will be merged with any existing classes on the element rather than overwriting them.
-          This allows you to progressively add CSS classes to your components, and makes them more flexible overall.
-          `
-            .split('\n')
-            .map((e) => e.trim())
-            .join('\n'),
-          kind: CompletionItemKind.Property,
-        });
+        const attrName = '...attributes';
+
+        if (!(focusPath.parent as ASTv1.ElementNode).attributes.find((attr) => attr.name === attrName)) {
+          completions.push({
+            label: attrName,
+            documentation: docForAttribute(attrName),
+            kind: CompletionItemKind.Property,
+          });
+        }
       } else if (isComponentArgumentName(focusPath)) {
         // <Foo @name.. />
 
