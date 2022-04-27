@@ -162,6 +162,10 @@ describe('template files', function () {
           `,
         });
 
+        project['$meta'] = {
+          waitForTemplateTokensToBeCollected: true,
+        };
+
         const result = await getResult(DefinitionRequest.method, connection, project, 'app/components/hello/index.hbs', position);
 
         expect(result).toMatchSnapshot();
