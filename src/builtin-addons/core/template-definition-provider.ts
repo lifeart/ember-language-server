@@ -92,7 +92,7 @@ export default class TemplateDefinitionProvider {
     } else if (this.isMayBeComponentFromPath(focusPath)) {
       const [key, ...tail] = (focusPath.node as ASTv1.ElementNode).tag.split('.');
       const scopes = getLocalScope(focusPath);
-      const target = scopes.reverse().find((el) => el.name === key);
+      const target = scopes.find((el) => el.name === key);
 
       if (target) {
         const keyPath = `${target.slotName}:${target.index}:${tail.join('.')}`;
