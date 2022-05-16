@@ -1,6 +1,6 @@
 import * as path from 'path';
 
-import { Definition, Location } from 'vscode-languageserver/node';
+import { Definition, Location, Range } from 'vscode-languageserver/node';
 import { DefinitionFunctionParams } from './../../utils/addon-api';
 import { isLinkToTarget, isLinkComponentRouteTarget, isOutlet } from './../../utils/ast-helpers';
 import ASTPath, { getLocalScope } from './../../glimmer-utils';
@@ -68,6 +68,12 @@ export default class TemplateDefinitionProvider {
     this.server = server;
     this.project = project;
   }
+  isStringPath(focusPath: ASTPath): boolean {
+    const node = focusPath.node as ASTv1.StringLiteral | ASTv1.TextNode;
+    const isStringable = node.type === 'StringLiteral' || node.type === 'TextNode';
+
+    return isStringable ? true : false;
+  }
   async onDefinition(_: string, params: DefinitionFunctionParams): Promise<Definition | null> {
     const uri = params.textDocument.uri;
 
@@ -131,6 +137,17 @@ export default class TemplateDefinitionProvider {
       definitions = await this.provideHashPropertyUsage(focusPath);
     } else if (isLinkToTarget(focusPath)) {
       definitions = await this.provideRouteDefinition((focusPath.node as ASTv1.PathExpression).original);
+    }
+
+    // Fallind back to script assets lookup in case of empty definitions
+    if (!definitions.length && this.isStringPath(focusPath)) {
+      const node = focusPath.node as ASTv1.StringLiteral | ASTv1.TextNode;
+      const text = node.type === 'StringLiteral' ? node.original : node.chars;
+      const itemPath = path.join(this.project.root, 'public', text);
+
+      if (await this.server.fs.exists(itemPath)) {
+        definitions = [Location.create(URI.file(itemPath).toString(), Range.create(0, 0, 0, 0))];
+      }
     }
 
     return definitions;

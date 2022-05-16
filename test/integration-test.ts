@@ -83,6 +83,38 @@ describe('integration', function () {
       });
 
       describe('Go to definition works for all supported cases', () => {
+        it('works for string asset paths in public folder [TextNode]', async () => {
+          const key = 'assets/img.jpg';
+          const entry = 'app/components/hello.hbs';
+          const result = await getResult(
+            DefinitionRequest.method,
+            connection,
+            {
+              [`public/${key}`]: '',
+              [entry]: `<img src="${key}">`,
+            },
+            entry,
+            { line: 0, character: 11 }
+          );
+
+          expect(result).toMatchSnapshot();
+        });
+        it('works for string asset paths in public folder [StringLiteral]', async () => {
+          const key = 'assets/img.jpg';
+          const entry = 'app/components/hello.hbs';
+          const result = await getResult(
+            DefinitionRequest.method,
+            connection,
+            {
+              [`public/${key}`]: '',
+              [entry]: `{{img-src "${key}"}}>`,
+            },
+            entry,
+            { line: 0, character: 12 }
+          );
+
+          expect(result).toMatchSnapshot();
+        });
         it('to to route defintion from LinkTo component', async () => {
           const result = await getResult(
             DefinitionRequest.method,

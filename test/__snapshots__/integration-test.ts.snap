@@ -3184,6 +3184,62 @@ Object {
 }
 `;
 
+exports[`integration async fs enabled: false Go to definition works for all supported cases works for string asset paths in public folder [StringLiteral] 1`] = `
+Object {
+  "addonsMeta": Array [],
+  "registry": Object {
+    "component": Object {
+      "hello": Array [
+        "app/components/hello.hbs",
+      ],
+    },
+  },
+  "response": Array [
+    Object {
+      "range": Object {
+        "end": Object {
+          "character": 0,
+          "line": 0,
+        },
+        "start": Object {
+          "character": 0,
+          "line": 0,
+        },
+      },
+      "uri": "/public/assets/img.jpg",
+    },
+  ],
+}
+`;
+
+exports[`integration async fs enabled: false Go to definition works for all supported cases works for string asset paths in public folder [TextNode] 1`] = `
+Object {
+  "addonsMeta": Array [],
+  "registry": Object {
+    "component": Object {
+      "hello": Array [
+        "app/components/hello.hbs",
+      ],
+    },
+  },
+  "response": Array [
+    Object {
+      "range": Object {
+        "end": Object {
+          "character": 0,
+          "line": 0,
+        },
+        "start": Object {
+          "character": 0,
+          "line": 0,
+        },
+      },
+      "uri": "/public/assets/img.jpg",
+    },
+  ],
+}
+`;
+
 exports[`integration async fs enabled: false Initialize request returns an initialize request 1`] = `
 Object {
   "capabilities": Object {
@@ -6733,6 +6789,62 @@ Object {
         },
       },
       "uri": "/app/templates/foo/bar/baz.hbs",
+    },
+  ],
+}
+`;
+
+exports[`integration async fs enabled: true Go to definition works for all supported cases works for string asset paths in public folder [StringLiteral] 1`] = `
+Object {
+  "addonsMeta": Array [],
+  "registry": Object {
+    "component": Object {
+      "hello": Array [
+        "app/components/hello.hbs",
+      ],
+    },
+  },
+  "response": Array [
+    Object {
+      "range": Object {
+        "end": Object {
+          "character": 0,
+          "line": 0,
+        },
+        "start": Object {
+          "character": 0,
+          "line": 0,
+        },
+      },
+      "uri": "/public/assets/img.jpg",
+    },
+  ],
+}
+`;
+
+exports[`integration async fs enabled: true Go to definition works for all supported cases works for string asset paths in public folder [TextNode] 1`] = `
+Object {
+  "addonsMeta": Array [],
+  "registry": Object {
+    "component": Object {
+      "hello": Array [
+        "app/components/hello.hbs",
+      ],
+    },
+  },
+  "response": Array [
+    Object {
+      "range": Object {
+        "end": Object {
+          "character": 0,
+          "line": 0,
+        },
+        "start": Object {
+          "character": 0,
+          "line": 0,
+        },
+      },
+      "uri": "/public/assets/img.jpg",
     },
   ],
 }
