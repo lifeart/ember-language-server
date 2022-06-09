@@ -244,7 +244,7 @@ for (const asyncFsEnabled of testCaseAsyncFsOptions) {
         ]);
       });
 
-      it('should autocomplete sub folder translation in handlebars', async () => {
+      it.only('should autocomplete sub folder translation in handlebars', async () => {
         expect(
           (
             await getResult(
