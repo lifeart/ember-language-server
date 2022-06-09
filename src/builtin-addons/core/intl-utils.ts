@@ -103,10 +103,16 @@ async function objFromFile(server: Server, filePath: string): Promise<Translatio
 function addToHashMap(hash: TranslationsHashMap, translationFile: TranslationFile, locale: string, filePath: string) {
   const items: Record<string, string> = flat(translationFile.json);
   const extension = path.extname(filePath);
+  const dirname = path
+    .dirname(filePath)
+    .replace(new RegExp(`.*\\${path.sep}translations\\${path.sep}`), '')
+    .replace(new RegExp(`\\${path.sep}`, 'g'), '.');
 
   Object.keys(items).forEach((p) => {
-    if (!(p in hash)) {
-      hash[p] = [];
+    const key = `${dirname}.${p}`;
+
+    if (!(key in hash)) {
+      hash[key] = [];
     }
 
     const uri = URI.file(filePath).toString();
@@ -124,7 +130,7 @@ function addToHashMap(hash: TranslationsHashMap, translationFile: TranslationFil
     const endColumn = position ? position.end.column - 1 : 0;
     const range = Range.create(startLine, startColumn, endLine, endColumn);
 
-    hash[p].push({ locale, text: items[p], location: Location.create(uri, range) });
+    hash[key].push({ locale, text: items[p], location: Location.create(uri, range) });
   });
 }
 

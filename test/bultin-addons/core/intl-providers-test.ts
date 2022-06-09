@@ -11,6 +11,14 @@ const translations = {
     "rootFileTranslation": "text 1 in polish"
   }`,
   'sub-folder': {
+    'sub-sub-folder': {
+      'en-us.json': `{
+        "subsubFolderTranslation": {
+          "subSubTranslation": "text 3",
+          "anotherSubSubTranslation": "text 4"
+        }
+      }`,
+    },
     'en-us.json': `{
       "subFolderTranslation": {
         "subTranslation": "text 2",
@@ -258,9 +266,9 @@ for (const asyncFsEnabled of testCaseAsyncFsOptions) {
           {
             documentation: 'en-us : text 2',
             kind: 12,
-            label: 'subFolderTranslation.subTranslation',
+            label: 'sub-folder.subFolderTranslation.subTranslation',
             textEdit: {
-              newText: 'subFolderTranslation.subTranslation',
+              newText: 'sub-folder.subFolderTranslation.subTranslation',
               range: {
                 end: {
                   character: 5,
@@ -276,9 +284,45 @@ for (const asyncFsEnabled of testCaseAsyncFsOptions) {
           {
             documentation: 'en-us : another text',
             kind: 12,
-            label: 'subFolderTranslation.anotherTranslation',
+            label: 'sub-folder.subFolderTranslation.anotherTranslation',
             textEdit: {
-              newText: 'subFolderTranslation.anotherTranslation',
+              newText: 'sub-folder.subFolderTranslation.anotherTranslation',
+              range: {
+                end: {
+                  character: 5,
+                  line: 0,
+                },
+                start: {
+                  character: 5,
+                  line: 0,
+                },
+              },
+            },
+          },
+          {
+            documentation: 'en-us : text 3',
+            kind: 12,
+            label: 'sub-folder.sub-sub-folder.subsubFolderTranslation.subSubTranslation',
+            textEdit: {
+              newText: 'sub-folder.sub-sub-folder.subsubFolderTranslation.subSubTranslation',
+              range: {
+                end: {
+                  character: 5,
+                  line: 0,
+                },
+                start: {
+                  character: 5,
+                  line: 0,
+                },
+              },
+            },
+          },
+          {
+            documentation: 'en-us : text 4',
+            kind: 12,
+            label: 'sub-folder.sub-sub-folder.subsubFolderTranslation.anotherSubSubTranslation',
+            textEdit: {
+              newText: 'sub-folder.sub-sub-folder.subsubFolderTranslation.anotherSubSubTranslation',
               range: {
                 end: {
                   character: 5,
