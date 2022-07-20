@@ -342,110 +342,7 @@ for (const asyncFsEnabled of testCaseAsyncFsOptions) {
               },
             ]);
           });
-        });
 
-        describe('#wrapTranslationsWithNamespace is not set', () => {
-          it('should not autocomplete sub folder translation in handlebars', async () => {
-            expect(
-              (
-                await getResult(
-                  CompletionRequest.method,
-                  connection,
-                  {
-                    app: {
-                      components: {
-                        'test.hbs': `{{t "subFolderTranslat" }}`,
-                      },
-                    },
-                    config: {
-                      'ember-intl.js': `module.exports = function() { }`,
-                    },
-                    translations,
-                  },
-                  'app/components/test.hbs',
-                  { line: 0, character: 12 }
-                )
-              ).response
-            ).toEqual([
-              {
-                documentation: 'en-us : text 2',
-                kind: 12,
-                label: 'subFolderTranslation.subTranslation',
-                textEdit: {
-                  newText: 'subFolderTranslation.subTranslation',
-                  range: {
-                    end: {
-                      character: 5,
-                      line: 0,
-                    },
-                    start: {
-                      character: 5,
-                      line: 0,
-                    },
-                  },
-                },
-              },
-              {
-                documentation: 'en-us : another text',
-                kind: 12,
-                label: 'subFolderTranslation.anotherTranslation',
-                textEdit: {
-                  newText: 'subFolderTranslation.anotherTranslation',
-                  range: {
-                    end: {
-                      character: 5,
-                      line: 0,
-                    },
-                    start: {
-                      character: 5,
-                      line: 0,
-                    },
-                  },
-                },
-              },
-              {
-                documentation: 'en-us : text 3',
-                kind: 12,
-                label: 'subsubFolderTranslation.subSubTranslation',
-                textEdit: {
-                  newText: 'subsubFolderTranslation.subSubTranslation',
-                  range: {
-                    end: {
-                      character: 5,
-                      line: 0,
-                    },
-                    start: {
-                      character: 5,
-                      line: 0,
-                    },
-                  },
-                },
-              },
-              {
-                documentation: 'en-us : text 4',
-                kind: 12,
-                label: 'subsubFolderTranslation.anotherSubSubTranslation',
-                textEdit: {
-                  newText: 'subsubFolderTranslation.anotherSubSubTranslation',
-                  range: {
-                    end: {
-                      character: 5,
-                      line: 0,
-                    },
-                    start: {
-                      character: 5,
-                      line: 0,
-                    },
-                  },
-                },
-              },
-            ]);
-          });
-        });
-      });
-
-      describe('With ember-intl config', () => {
-        describe('#wrapTranslationsWithNamespace is true', () => {
           it('should autocomplete in JS files when in the end of expression', async () => {
             expect(
               (
@@ -552,6 +449,103 @@ for (const asyncFsEnabled of testCaseAsyncFsOptions) {
         });
 
         describe('#wrapTranslationsWithNamespace is not set', () => {
+          it('should not autocomplete sub folder translation in handlebars', async () => {
+            expect(
+              (
+                await getResult(
+                  CompletionRequest.method,
+                  connection,
+                  {
+                    app: {
+                      components: {
+                        'test.hbs': `{{t "subFolderTranslat" }}`,
+                      },
+                    },
+                    config: {
+                      'ember-intl.js': `module.exports = function() { }`,
+                    },
+                    translations,
+                  },
+                  'app/components/test.hbs',
+                  { line: 0, character: 12 }
+                )
+              ).response
+            ).toEqual([
+              {
+                documentation: 'en-us : text 2',
+                kind: 12,
+                label: 'subFolderTranslation.subTranslation',
+                textEdit: {
+                  newText: 'subFolderTranslation.subTranslation',
+                  range: {
+                    end: {
+                      character: 5,
+                      line: 0,
+                    },
+                    start: {
+                      character: 5,
+                      line: 0,
+                    },
+                  },
+                },
+              },
+              {
+                documentation: 'en-us : another text',
+                kind: 12,
+                label: 'subFolderTranslation.anotherTranslation',
+                textEdit: {
+                  newText: 'subFolderTranslation.anotherTranslation',
+                  range: {
+                    end: {
+                      character: 5,
+                      line: 0,
+                    },
+                    start: {
+                      character: 5,
+                      line: 0,
+                    },
+                  },
+                },
+              },
+              {
+                documentation: 'en-us : text 3',
+                kind: 12,
+                label: 'subsubFolderTranslation.subSubTranslation',
+                textEdit: {
+                  newText: 'subsubFolderTranslation.subSubTranslation',
+                  range: {
+                    end: {
+                      character: 5,
+                      line: 0,
+                    },
+                    start: {
+                      character: 5,
+                      line: 0,
+                    },
+                  },
+                },
+              },
+              {
+                documentation: 'en-us : text 4',
+                kind: 12,
+                label: 'subsubFolderTranslation.anotherSubSubTranslation',
+                textEdit: {
+                  newText: 'subsubFolderTranslation.anotherSubSubTranslation',
+                  range: {
+                    end: {
+                      character: 5,
+                      line: 0,
+                    },
+                    start: {
+                      character: 5,
+                      line: 0,
+                    },
+                  },
+                },
+              },
+            ]);
+          });
+
           it('should autocomplete in JS files when in the end of expression', async () => {
             expect(
               (
