@@ -47,7 +47,11 @@ export function getEmberIntlConfig(root: string): EmberIntlConfig | null {
     // eslint-disable-next-line @typescript-eslint/no-var-requires
     const intlConfig = requireFunc(path.join(root, 'config', 'ember-intl.js'));
 
-    return intlConfig || {};
+    if (!intlConfig) {
+      return null;
+    }
+
+    return typeof intlConfig === 'function' ? intlConfig() : intlConfig;
   } catch (e) {
     // logDebugInfo('catch', e);
     return null;
