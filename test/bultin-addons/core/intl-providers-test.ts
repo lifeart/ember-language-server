@@ -383,6 +383,24 @@ for (const asyncFsEnabled of testCaseAsyncFsOptions) {
                   },
                 },
               },
+              {
+                documentation: 'en-us : text 4',
+                kind: 12,
+                label: 'sub-folder.sub-sub-folder.subsubFolderTranslation.anotherSubSubTranslation',
+                textEdit: {
+                  newText: 'sub-folder.sub-sub-folder.subsubFolderTranslation.anotherSubSubTranslation',
+                  range: {
+                    end: {
+                      character: 59,
+                      line: 0,
+                    },
+                    start: {
+                      character: 59,
+                      line: 0,
+                    },
+                  },
+                },
+              },
             ]);
           });
 
@@ -432,6 +450,42 @@ for (const asyncFsEnabled of testCaseAsyncFsOptions) {
                 label: 'sub-folder.subFolderTranslation.anotherTranslation',
                 textEdit: {
                   newText: 'sub-folder.subFolderTranslation.anotherTranslation',
+                  range: {
+                    end: {
+                      character: 59,
+                      line: 0,
+                    },
+                    start: {
+                      character: 59,
+                      line: 0,
+                    },
+                  },
+                },
+              },
+              {
+                documentation: 'en-us : text 3',
+                kind: 12,
+                label: 'sub-folder.sub-sub-folder.subsubFolderTranslation.subSubTranslation',
+                textEdit: {
+                  newText: 'sub-folder.sub-sub-folder.subsubFolderTranslation.subSubTranslation',
+                  range: {
+                    end: {
+                      character: 59,
+                      line: 0,
+                    },
+                    start: {
+                      character: 59,
+                      line: 0,
+                    },
+                  },
+                },
+              },
+              {
+                documentation: 'en-us : text 4',
+                kind: 12,
+                label: 'sub-folder.sub-sub-folder.subsubFolderTranslation.anotherSubSubTranslation',
+                textEdit: {
+                  newText: 'sub-folder.sub-sub-folder.subsubFolderTranslation.anotherSubSubTranslation',
                   range: {
                     end: {
                       character: 59,
@@ -586,6 +640,24 @@ for (const asyncFsEnabled of testCaseAsyncFsOptions) {
                   },
                 },
               },
+              {
+                documentation: 'en-us : text 4',
+                kind: 12,
+                label: 'subsubFolderTranslation.anotherSubSubTranslation',
+                textEdit: {
+                  newText: 'subsubFolderTranslation.anotherSubSubTranslation',
+                  range: {
+                    end: {
+                      character: 59,
+                      line: 0,
+                    },
+                    start: {
+                      character: 59,
+                      line: 0,
+                    },
+                  },
+                },
+              },
             ]);
           });
 
@@ -635,6 +707,42 @@ for (const asyncFsEnabled of testCaseAsyncFsOptions) {
                 label: 'subFolderTranslation.anotherTranslation',
                 textEdit: {
                   newText: 'subFolderTranslation.anotherTranslation',
+                  range: {
+                    end: {
+                      character: 59,
+                      line: 0,
+                    },
+                    start: {
+                      character: 59,
+                      line: 0,
+                    },
+                  },
+                },
+              },
+              {
+                documentation: 'en-us : text 3',
+                kind: 12,
+                label: 'subsubFolderTranslation.subSubTranslation',
+                textEdit: {
+                  newText: 'subsubFolderTranslation.subSubTranslation',
+                  range: {
+                    end: {
+                      character: 59,
+                      line: 0,
+                    },
+                    start: {
+                      character: 59,
+                      line: 0,
+                    },
+                  },
+                },
+              },
+              {
+                documentation: 'en-us : text 4',
+                kind: 12,
+                label: 'subsubFolderTranslation.anotherSubSubTranslation',
+                textEdit: {
+                  newText: 'subsubFolderTranslation.anotherSubSubTranslation',
                   range: {
                     end: {
                       character: 59,
