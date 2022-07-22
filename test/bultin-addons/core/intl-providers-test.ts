@@ -343,6 +343,98 @@ for (const asyncFsEnabled of testCaseAsyncFsOptions) {
             ]);
           });
 
+          it('autocompletion bug #1', async () => {
+            expect(
+              (
+                await getResult(
+                  CompletionRequest.method,
+                  connection,
+                  {
+                    app: {
+                      components: {
+                        'test.hbs': `{{t "countries" }}`,
+                      },
+                    },
+                    config: {
+                      'ember-intl.js': `module.exports = function() { return { wrapTranslationsWithNamespace: true } }`,
+                    },
+                    translations: {
+                      'en.yml': `admin:
+  countries: Countries`,
+                    },
+                  },
+                  'app/components/test.hbs',
+                  { line: 0, character: 12 }
+                )
+              ).response
+            ).toEqual([
+              {
+                documentation: 'en : Countries',
+                kind: 12,
+                label: 'admin.countries',
+                textEdit: {
+                  newText: 'admin.countries',
+                  range: {
+                    end: {
+                      character: 5,
+                      line: 0,
+                    },
+                    start: {
+                      character: 5,
+                      line: 0,
+                    },
+                  },
+                },
+              },
+            ]);
+          });
+
+          it('autocompletion bug #2', async () => {
+            expect(
+              (
+                await getResult(
+                  CompletionRequest.method,
+                  connection,
+                  {
+                    app: {
+                      components: {
+                        'test.hbs': `{{t "foo" }}`,
+                      },
+                    },
+                    config: {
+                      'ember-intl.js': `module.exports = function() { return { wrapTranslationsWithNamespace: true } }`,
+                    },
+                    translations: {
+                      'en.yml': `admin:
+  foo: Bar`,
+                    },
+                  },
+                  'app/components/test.hbs',
+                  { line: 0, character: 12 }
+                )
+              ).response
+            ).toEqual([
+              {
+                documentation: 'en : Bar',
+                kind: 12,
+                label: 'admin.foo',
+                textEdit: {
+                  newText: 'admin.foo',
+                  range: {
+                    end: {
+                      character: 7,
+                      line: 0,
+                    },
+                    start: {
+                      character: 7,
+                      line: 0,
+                    },
+                  },
+                },
+              },
+            ]);
+          });
+
           it('should autocomplete when the translation is in the root file in handlebars', async () => {
             expect(
               (
