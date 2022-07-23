@@ -89,7 +89,7 @@
     "ts-loader": "^9.2.3",
     "ts-node": "^8.10.2",
     "typescript": "^4.6.3",
-    "webpack": "^5.44.0",
+    "webpack": "^5.72.0",
     "webpack-bundle-analyzer": "^4.5.0",
     "webpack-cli": "^4.7.2"
   },
@@ -109,6 +109,7 @@
     "clean": "rimraf lib/",
     "build:bundle:node": "webpack --mode production",
     "build:bundle:worker": "webpack --mode production && node ./fix-worker-bundle.js",
+    "build:bundle:linter-thread": "webpack --mode production",
     "compile": "tsc --skipLibCheck -p .",
     "lint": "eslint \"./{src,test}/**/*.ts\"",
     "prepublish": "yarn clean && yarn compile",

@@ -1,5 +1,5 @@
 import { Diagnostic, DiagnosticSeverity, Range } from 'vscode-languageserver/node';
-import { TemplateLinterError } from '../template-linter';
+import type { TemplateLinterError } from '../linter-thread';
 
 const ParseErrorExp = /^Parse error on line (\d+)/;
 const OnLineErrorExp = / \(on line (\d+)\)\.$/;

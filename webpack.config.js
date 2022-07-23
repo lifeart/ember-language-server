@@ -48,6 +48,41 @@ const nodeBundleConfig = {
   },
 };
 
+const linterWorkerBundle = /** @type WebpackConfig */ {
+  mode: 'production',
+  target: 'node',
+  entry: {
+    'linter-thread': './src/linter-thread.ts',
+  },
+  output: {
+    // the bundle is stored in the 'dist' folder (check package.json), 📖 -> https://webpack.js.org/configuration/output/
+    path: path.join(__dirname, 'dist', 'bundled'),
+    filename: 'linter-thread.js',
+    libraryTarget: 'commonjs2',
+    devtoolModuleFilenameTemplate: '../[resource-path]',
+  },
+  // devtool: 'source-map',
+  module: {
+    rules: [
+      {
+        test: /\.ts$/,
+        exclude: /node_modules/,
+        use: [
+          {
+            loader: 'ts-loader',
+          },
+        ],
+      },
+    ],
+  },
+  resolve: {
+    // support reading TypeScript and JavaScript files, 📖 -> https://github.com/TypeStrong/ts-loader
+    mainFields: ['module', 'main'],
+    extensions: ['.ts', '.js'], // support ts-files and js-files
+  },
+
+}
+
 const workerBundleConfig = /** @type WebpackConfig */ {
   mode: 'production',
   target: 'webworker', // web extensions run in a webworker context
@@ -85,6 +120,7 @@ const workerBundleConfig = /** @type WebpackConfig */ {
       // assert: false,
       // buffer: false,
       browserlist: false,
+      'worker_threads': false,
       '@babel/generator': false,
       '@babel/highlight': false,
       // '@babel/types': false,
@@ -134,6 +170,10 @@ const configs = [
     name: 'build:bundle:worker',
     config: workerBundleConfig,
   },
+  {
+    name: 'build:bundle:linter-thread',
+    config: linterWorkerBundle
+  }
 ];
 
 module.exports = configs.filter(({ name }) => name.startsWith(buildName)).map((e) => e.config);

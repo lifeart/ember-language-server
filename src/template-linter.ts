@@ -1,68 +1,115 @@
 import { Diagnostic, Files } from 'vscode-languageserver/node';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { getExtension } from './utils/file-extension';
-import { toDiagnostic, toHbsSource } from './utils/diagnostic';
-import { getTemplateNodes } from '@lifeart/ember-extract-inline-templates';
-import { parseScriptFile } from 'ember-meta-explorer';
-import { URI } from 'vscode-uri';
-import { log, logError, logDebugInfo } from './utils/logger';
-import { pathToFileURL } from 'url';
-
+import { log, logError, logInfo } from './utils/logger';
+import { Worker } from 'worker_threads';
 import Server from './server';
 import { Project } from './project';
 import { getRequireSupport } from './utils/layout-helpers';
-import { getFileRanges, RangeWalker } from './utils/glimmer-script';
+import { extensionsToLint, LinterMessage } from './linter-thread';
+import * as path from 'path';
 
 type FindUp = (name: string, opts: { cwd: string; type: string }) => Promise<string | undefined>;
-type LinterVerifyArgs = { source: string; moduleId: string; filePath: string };
-class Linter {
-  constructor() {
-    return this;
-  }
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  verify(_params: LinterVerifyArgs): TemplateLinterError[] {
-    return [];
-  }
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  verifyAndFix(_params: LinterVerifyArgs): { isFixed: boolean; output: string } {
-    return {
-      output: '',
-      isFixed: true,
-    };
-  }
-}
 
-export interface TemplateLinterError {
-  fatal?: boolean;
-  moduleId: string;
-  rule?: string;
-  filePath: string;
-  severity: number;
-  message: string;
-  isFixable?: boolean;
-  line?: number;
-  column?: number;
-  source?: string;
-}
+type WorkerLintMessage = {
+  id: string;
+  error: null | string;
+  diagnostics: Diagnostic[];
+};
 
-const extensionsToLint: string[] = ['.hbs', '.js', '.ts', '.gts', '.gjs'];
+type WorkerFixMessage = {
+  id: string;
+  error: null | string;
+  output: string;
+  isFixed: boolean;
+};
 
-function setCwd(cwd: string) {
-  try {
-    process.chdir(cwd);
-  } catch (err) {
-    logError(err);
+type WorkerMessage = WorkerFixMessage | WorkerLintMessage;
+
+type FixOutput = { isFixed: boolean; output: string };
+
+type QItem = {
+  id: string;
+  resolve: (value: PromiseLike<Diagnostic[]> | Diagnostic[] | FixOutput | PromiseLike<FixOutput>) => void;
+  reject: (reason: string) => void;
+  tId: number;
+};
+
+class WorkerWrapper {
+  worker: Worker;
+  queue: QItem[];
+  constructor(worker: Worker) {
+    this.worker = worker;
+    this.queue = [];
+    worker.on('message', (message: WorkerMessage) => {
+      const q = this.queue.find((q) => q.id === message.id);
+
+      logInfo(`Message for ${message.id}: ${JSON.stringify(message)}`);
+
+      if (q) {
+        this.queue = this.queue.filter((q) => q.id !== message.id);
+        clearTimeout(q.tId);
+
+        if (message.error !== null) {
+          logInfo(message.error);
+          q.reject(message.error);
+        } else {
+          if ('diagnostics' in message) {
+            q.resolve(message.diagnostics);
+          } else if ('output' in message) {
+            q.resolve({ isFixed: message.isFixed, output: message.output });
+          }
+        }
+      }
+    });
+    worker.on('error', (e) => {
+      logError(e as Error & { stack: string });
+    });
+  }
+  addToQueue(q: QItem, fn: () => LinterMessage) {
+    if (this.queue.length < 100) {
+      q.tId = setTimeout(() => {
+        this.queue = this.queue.filter((q) => q !== q);
+        logInfo(`Timeout for ${q.id}`);
+      }, 10000) as unknown as number;
+      this.queue.push(q);
+      logInfo(`Adding to queue ${q.id}`);
+      this.worker.postMessage(fn());
+    }
   }
 }
 
 export default class TemplateLinter {
-  private _linterCache = new Map<Project, typeof Linter>();
+  private _linterCache = new Map<Project, string>();
   private _isEnabled = true;
   private _findUp: FindUp;
+  private workers: WeakMap<Project, WorkerWrapper> = new WeakMap();
+  private _qID = 0;
 
   constructor(private server: Server) {
     if (this.server.options.type === 'worker') {
       this.disable();
+    }
+  }
+
+  initWorker(project: Project): WorkerWrapper | undefined {
+    try {
+      if (!this.workers.has(project)) {
+        const worker = new Worker(path.join(__dirname, './linter-thread.js'), {
+          workerData: {
+            cwd: project.root,
+          },
+        });
+        const wrapper = new WorkerWrapper(worker);
+
+        this.workers.set(project, wrapper);
+      }
+
+      return this.workers.get(project);
+    } catch (e) {
+      logError(e);
+
+      return undefined;
     }
   }
 
@@ -78,6 +125,12 @@ export default class TemplateLinter {
     return this._isEnabled;
   }
 
+  qID() {
+    this._qID++;
+
+    return String(this._qID);
+  }
+
   private getProjectForDocument(textDocument: TextDocument) {
     const ext = getExtension(textDocument);
 
@@ -88,127 +141,102 @@ export default class TemplateLinter {
     return this.server.projectRoots.projectForUri(textDocument.uri);
   }
 
-  private sourcesForDocument(textDocument: TextDocument) {
-    const ext = getExtension(textDocument);
-
-    if (ext !== null && !extensionsToLint.includes(ext)) {
-      return [];
-    }
-
-    const documentContent = textDocument.getText();
-
-    if (ext === '.hbs') {
-      if (documentContent.trim().length === 0) {
-        return [];
-      } else {
-        return [documentContent];
-      }
-    } else if (ext === '.gjs' || ext === '.gts') {
-      const ranges = getFileRanges(documentContent);
-
-      const rangeWalker = new RangeWalker(ranges);
-      const templates = rangeWalker.templates();
-
-      return templates.map((t) => {
-        return toHbsSource({
-          startLine: t.loc.start.line,
-          startColumn: t.loc.start.character,
-          endColumn: t.loc.end.character,
-          endLine: t.loc.end.line,
-          template: t.content,
-        });
-      });
-    } else {
-      const nodes = getTemplateNodes(documentContent, {
-        parse(source: string) {
-          return parseScriptFile(source);
-        },
-      });
-      const sources = nodes.filter((el) => {
-        return el.template.trim().length > 0;
-      });
-
-      return sources.map((el) => {
-        return toHbsSource(el);
-      });
-    }
-  }
-  async lint(textDocument: TextDocument): Promise<Diagnostic[] | undefined> {
+  async fix(textDocument: TextDocument): Promise<{ isFixed: boolean; output: string } | undefined> {
     if (this._isEnabled === false) {
       return;
     }
 
-    const cwd = process.cwd();
     const project = this.getProjectForDocument(textDocument);
 
     if (!project) {
       return;
     }
 
-    let sources = [];
+    const linterPath = await this.getLinter(project);
 
-    try {
-      sources = this.sourcesForDocument(textDocument);
-    } catch (e) {
+    if (!linterPath) {
       return;
     }
 
-    if (!sources.length) {
+    const wrapper = await this.initWorker(project);
+
+    if (!wrapper) {
       return;
     }
 
-    const TemplateLinterKlass = await this.getLinter(project);
+    const p: Promise<FixOutput> = new Promise((resolve, reject) => {
+      const id = this.qID();
+      const ref = { id, resolve, reject, tId: -1 };
 
-    if (!TemplateLinterKlass) {
-      return;
-    }
+      wrapper.addToQueue(ref, () => {
+        const msg: LinterMessage = {
+          id,
+          action: 'verifyAndFix',
+          content: textDocument.getText(),
+          uri: textDocument.uri,
+          projectRoot: project.root,
+          linterPath,
+        };
 
-    let linter: Linter;
-
-    try {
-      setCwd(project.root);
-      linter = new TemplateLinterKlass();
-    } catch (e) {
-      try {
-        setCwd(cwd);
-      } catch (e) {
-        logDebugInfo(e.stack);
-      }
-
-      return;
-    }
-
-    let diagnostics: Diagnostic[] = [];
-
-    try {
-      const results = await Promise.all(
-        sources.map(async (source) => {
-          const errors = await Promise.resolve(
-            linter.verify({
-              source,
-              moduleId: URI.parse(textDocument.uri).fsPath,
-              filePath: URI.parse(textDocument.uri).fsPath,
-            })
-          );
-
-          return errors.map((error: TemplateLinterError) => toDiagnostic(source, error));
-        })
-      );
-
-      results.forEach((result) => {
-        diagnostics = [...diagnostics, ...result];
+        return msg;
       });
-    } catch (e) {
-      logError(e);
+    });
+
+    const { isFixed, output } = await p;
+
+    return { isFixed, output: output ?? '' };
+  }
+
+  async lint(textDocument: TextDocument): Promise<Diagnostic[] | undefined> {
+    if (this._isEnabled === false) {
+      return;
     }
+
+    const project = this.getProjectForDocument(textDocument);
+
+    if (!project) {
+      return;
+    }
+
+    const linterPath = await this.getLinter(project);
+
+    if (!linterPath) {
+      return;
+    }
+
+    const wrapper = await this.initWorker(project);
+
+    if (!wrapper) {
+      return;
+    }
+
+    const p: Promise<Diagnostic[]> = new Promise((resolve, reject) => {
+      const id = this.qID();
+      const ref = { id, resolve, reject, tId: -1 };
+
+      wrapper.addToQueue(ref, () => {
+        const msg: LinterMessage = {
+          id,
+          action: 'verify',
+          content: textDocument.getText(),
+          uri: textDocument.uri,
+          projectRoot: project.root,
+          linterPath,
+        };
+
+        return msg;
+      });
+    });
 
     try {
-      setCwd(cwd);
-    } catch (e) {
-      logDebugInfo(e.stack);
-    }
+      const diagnostics: Diagnostic[] = await p;
 
-    return diagnostics;
+      return diagnostics;
+    } catch (e) {
+      logInfo(e);
+
+      return [];
+    }
   }
   async getFindUp(): Promise<FindUp> {
     if (!this._findUp) {
@@ -234,7 +262,7 @@ export default class TemplateLinter {
     return await this.getLinter(project);
   }
   // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-  private async getLinter(project: Project): Promise<typeof Linter | undefined> {
+  private async getLinter(project: Project): Promise<string | undefined> {
     if (this._linterCache.has(project)) {
       return this._linterCache.get(project);
     }
@@ -263,27 +291,9 @@ export default class TemplateLinter {
         return;
       }
 
-      try {
-        // commonjs behavior
+      this._linterCache.set(project, linterPath);
 
-        // @ts-expect-error @todo - fix webpack imports
-        const requireFunc = typeof __webpack_require__ === 'function' ? __non_webpack_require__ : require;
-
-        // eslint-disable-next-line @typescript-eslint/no-var-requires
-        const linter: typeof Linter = requireFunc(linterPath);
-
-        this._linterCache.set(project, linter);
-
-        return linter;
-      } catch {
-        // ember-template-lint v4 support (as esm module)
-        // using eval here to stop webpack from bundling it
-        const linter: typeof Linter = (await eval(`import("${pathToFileURL(linterPath)}")`)).default;
-
-        this._linterCache.set(project, linter);
-
-        return linter;
-      }
+      return linterPath;
     } catch (error) {
       log('Module ember-template-lint not found. ' + error.toString());
     }
