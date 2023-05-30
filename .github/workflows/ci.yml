@@ -112,7 +112,7 @@ jobs:
           node-version: 12.x
 
       - name: install dependencies
-        run: yarn install --no-lockfile
+        run: yarn install --no-lockfile --ignore-engines
 
       - name: compile
         run: yarn compile
