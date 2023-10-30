@@ -280,6 +280,75 @@ Object {
 }
 `;
 
+exports[`integration async fs enabled: false Able to provide autocomplete information for MustacheStatements inside ConcatStatements support helper names autocomplete inside class attribute values 1`] = `
+Object {
+  "addonsMeta": Array [],
+  "registry": Object {
+    "component": Object {
+      "hello": Array [
+        "app/components/hello/index.hbs",
+      ],
+    },
+    "helper": Object {
+      "bar": Array [
+        "app/helpers/bar.js",
+      ],
+      "baz": Array [
+        "app/helpers/baz.ts",
+      ],
+    },
+  },
+  "response": Array [
+    Object {
+      "data": Object {
+        "files": Array [
+          "app/helpers/bar.js",
+        ],
+      },
+      "detail": "helper",
+      "kind": 3,
+      "label": "bar",
+      "textEdit": Object {
+        "newText": "bar",
+        "range": Object {
+          "end": Object {
+            "character": 19,
+            "line": 0,
+          },
+          "start": Object {
+            "character": 18,
+            "line": 0,
+          },
+        },
+      },
+    },
+    Object {
+      "data": Object {
+        "files": Array [
+          "app/helpers/baz.ts",
+        ],
+      },
+      "detail": "helper",
+      "kind": 3,
+      "label": "baz",
+      "textEdit": Object {
+        "newText": "baz",
+        "range": Object {
+          "end": Object {
+            "character": 19,
+            "line": 0,
+          },
+          "start": Object {
+            "character": 18,
+            "line": 0,
+          },
+        },
+      },
+    },
+  ],
+}
+`;
+
 exports[`integration async fs enabled: false Able to provide autocomplete information for angle component arguments names support template-only collocated components arguments extraction 1`] = `
 Object {
   "addonsMeta": Array [],
@@ -4201,6 +4270,75 @@ Object {
         },
       },
       "uri": "/app/components/hello/index.hbs",
+    },
+  ],
+}
+`;
+
+exports[`integration async fs enabled: true Able to provide autocomplete information for MustacheStatements inside ConcatStatements support helper names autocomplete inside class attribute values 1`] = `
+Object {
+  "addonsMeta": Array [],
+  "registry": Object {
+    "component": Object {
+      "hello": Array [
+        "app/components/hello/index.hbs",
+      ],
+    },
+    "helper": Object {
+      "bar": Array [
+        "app/helpers/bar.js",
+      ],
+      "baz": Array [
+        "app/helpers/baz.ts",
+      ],
+    },
+  },
+  "response": Array [
+    Object {
+      "data": Object {
+        "files": Array [
+          "app/helpers/bar.js",
+        ],
+      },
+      "detail": "helper",
+      "kind": 3,
+      "label": "bar",
+      "textEdit": Object {
+        "newText": "bar",
+        "range": Object {
+          "end": Object {
+            "character": 19,
+            "line": 0,
+          },
+          "start": Object {
+            "character": 18,
+            "line": 0,
+          },
+        },
+      },
+    },
+    Object {
+      "data": Object {
+        "files": Array [
+          "app/helpers/baz.ts",
+        ],
+      },
+      "detail": "helper",
+      "kind": 3,
+      "label": "baz",
+      "textEdit": Object {
+        "newText": "baz",
+        "range": Object {
+          "end": Object {
+            "character": 19,
+            "line": 0,
+          },
+          "start": Object {
+            "character": 18,
+            "line": 0,
+          },
+        },
+      },
     },
   ],
 }
