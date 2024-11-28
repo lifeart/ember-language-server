@@ -31,6 +31,7 @@ import {
   isScopedAngleTagName,
   isSpecialHelperStringPositionalParam,
   isFirstParamOfOnModifier,
+  isAttributeValueConcatMustachePath,
 } from '../../utils/ast-helpers';
 import {
   listComponents,
@@ -576,6 +577,13 @@ export default class TemplateCompletionProvider {
         const yields = await this.getParentComponentYields(focusPath.parent);
 
         completions.push(...yields);
+      } else if (isAttributeValueConcatMustachePath(focusPath)) {
+        const ignoredHelpers = ['helper', 'modifier', 'component'];
+        const items = await this.getMustachePathCandidates(root);
+        const localCandidates = await this.getLocalPathExpressionCandidates(uri, originalText);
+
+        completions.push(...items.filter((el) => el.detail === 'helper' && !ignoredHelpers.includes(el.label)));
+        completions.push(...localCandidates);
       } else if (isAngleComponentPath(focusPath)) {
         logDebugInfo('isAngleComponentPath');
         // <Foo>

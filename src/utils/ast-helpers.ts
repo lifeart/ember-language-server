@@ -398,6 +398,36 @@ export function isScopedAngleTagName(path: ASTPath): boolean {
   return !HTML_TAGS.includes(node.tag);
 }
 
+export function isAttributeValueConcatMustachePath(path: ASTPath): boolean {
+  const node = path.node as ASTv1.PathExpression;
+
+  if (!isPathExpression(node)) {
+    return false;
+  }
+
+  const parent = path.parent as ASTv1.MustacheStatement;
+
+  if (!hasNodeType(parent, 'MustacheStatement')) {
+    return false;
+  }
+
+  if (parent.path !== node) {
+    return false;
+  }
+
+  const parentPath = path.parentPath;
+
+  if (!parentPath) {
+    return false;
+  }
+
+  if (!hasNodeType(parentPath.parent, 'ConcatStatement')) {
+    return false;
+  }
+
+  return true;
+}
+
 export function isAngleComponentPath(path: ASTPath): boolean {
   const node = path.node as unknown as ASTv1.ElementNode;
 

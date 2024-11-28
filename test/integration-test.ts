@@ -1629,6 +1629,32 @@ describe('integration', function () {
         });
       });
 
+      describe('Able to provide autocomplete information for MustacheStatements inside ConcatStatements', () => {
+        it('support helper names autocomplete inside class attribute values', async () => {
+          const result = await getResult(
+            CompletionRequest.method,
+            connection,
+            {
+              app: {
+                helpers: {
+                  'bar.js': '',
+                  'baz.ts': '',
+                },
+                components: {
+                  hello: {
+                    'index.hbs': '<div class="foo {{b">a</div>',
+                  },
+                },
+              },
+            },
+            'app/components/hello/index.hbs',
+            { line: 0, character: 19 }
+          );
+
+          expect(result).toMatchSnapshot();
+        });
+      });
+
       describe('Able to provide autocomplete information for local context access', () => {
         it('support collocated components', async () => {
           const result = await getResult(
