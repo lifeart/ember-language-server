@@ -16,7 +16,8 @@ import { getFileRanges, RangeWalker } from './utils/glimmer-script';
 type FindUp = (name: string, opts: { cwd: string; type: string }) => Promise<string | undefined>;
 type LinterVerifyArgs = { source: string; moduleId: string; filePath: string };
 class Linter {
-  constructor() {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  constructor(_config?: { workingDir?: string }) {
     return this;
   }
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -153,6 +154,7 @@ export default class TemplateLinter {
 
     const linterMeta = project.dependenciesMeta.find((dep) => dep.name === 'ember-template-lint');
     const linterVersion = linterMeta?.version.split('.')[0] || 'unknown';
+    const literSupportWorkingDir = linterVersion === '5' || linterVersion === '4';
 
     let sources = [];
 
@@ -175,11 +177,19 @@ export default class TemplateLinter {
     let linter: Linter;
 
     try {
-      setCwd(project.root);
-      linter = new TemplateLinterKlass();
+      if (!literSupportWorkingDir) {
+        setCwd(project.root);
+        linter = new TemplateLinterKlass();
+      } else {
+        linter = new TemplateLinterKlass({
+          workingDir: project.root,
+        });
+      }
     } catch (e) {
       try {
-        setCwd(cwd);
+        if (!literSupportWorkingDir) {
+          setCwd(cwd);
+        }
       } catch (e) {
         logDebugInfo(e.stack);
       }
@@ -212,7 +222,9 @@ export default class TemplateLinter {
     }
 
     try {
-      setCwd(cwd);
+      if (!literSupportWorkingDir) {
+        setCwd(cwd);
+      }
     } catch (e) {
       logDebugInfo(e.stack);
     }
