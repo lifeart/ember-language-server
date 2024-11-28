@@ -3,7 +3,7 @@
 import * as path from 'path';
 import { logError, logInfo } from './utils/logger';
 import { URI } from 'vscode-uri';
-import { isGlimmerXProject, isELSAddonRoot, isRootStartingWithFilePath, safeWalkAsync, asyncGetPackageJSON } from './utils/layout-helpers';
+import { isGlimmerXProject, isELSAddonRoot, isRootStartingWithFilePath, safeWalkAsync, asyncGetPackageJSON, asyncGetJSON } from './utils/layout-helpers';
 
 import Server from './server';
 
@@ -80,6 +80,16 @@ export default class ProjectRoots {
     this.ignoredProjects = ignoredProjects;
   }
 
+  /**
+   * Returns true If the project is a parent project of an ember project.
+   * @param root string
+   */
+  async isParentProject(root: string): Promise<boolean> {
+    const info = await asyncGetJSON(path.join(root, 'package.json'));
+
+    return !!info?.['ember-addon']?.projectRoot;
+  }
+
   async findProjectsInsideRoot(workspaceRoot: string) {
     const roots = await safeWalkAsync(workspaceRoot, {
       directories: false,
@@ -93,7 +103,7 @@ export default class ProjectRoots {
 
       if (filePath.endsWith('package.json')) {
         try {
-          if (await isGlimmerXProject(fullPath)) {
+          if ((await isGlimmerXProject(fullPath)) || (await this.isParentProject(fullPath))) {
             await this.onProjectAdd(fullPath);
           }
         } catch (e) {

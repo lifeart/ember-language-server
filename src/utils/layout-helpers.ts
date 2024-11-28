@@ -44,7 +44,9 @@ export interface PackageInfo {
   peerDependencies?: StringConfig;
   devDependencies?: StringConfig;
   dependencies?: StringConfig;
+  workspaces?: string;
   'ember-addon'?: {
+    projectRoot?: string;
     version?: number;
     paths?: string[];
     before?: string | string[];
@@ -274,7 +276,17 @@ export async function isGlimmerXProject(root: string) {
 }
 
 export async function getProjectAddonsRoots(root: string, resolvedItems: string[] = [], packageFolderName = 'node_modules') {
-  const pack = await asyncGetPackageJSON(root);
+  let pack = await asyncGetPackageJSON(root);
+  const maybeExtraRoot = pack['ember-addon']?.projectRoot;
+
+  if (maybeExtraRoot) {
+    // in case there is a different project root from the current one, then use that to get the dependencies.
+    if (!isEmberAddon(pack) && maybeExtraRoot) {
+      const newRoot = path.join(root, maybeExtraRoot);
+
+      pack = await asyncGetPackageJSON(newRoot);
+    }
+  }
 
   if (resolvedItems.length) {
     if (!isEmberAddon(pack)) {
